@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import UserReportPanel from './UserReportPanel';
 import OotdGenerator from './OotdGenerator';
+import AirQualityNav from './AirQualityNav';
 import AuthModal from './AuthModal';
 import UserProfile from './UserProfile';
 import { useAuth } from '../contexts/AuthContext';
@@ -12,7 +13,7 @@ const TARGET_OPTIONS = [
   { value: 'outdoor', label: '야외근로자' },
 ];
 
-function Sidebar({ selectedRegion, explanation, target, onTargetChange, loading, onReportSubmit }) {
+function Sidebar({ selectedRegion, explanation, target, onTargetChange, loading, onReportSubmit, allRegions, onRegionSelect }) {
   const { user, profile, isAuthenticated } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -78,6 +79,14 @@ function Sidebar({ selectedRegion, explanation, target, onTargetChange, loading,
             </button>
           ))}
         </div>
+      </div>
+
+      {/* 호흡기 안전 네비게이션 */}
+      <div className="nav-section">
+        <AirQualityNav
+          climateData={allRegions}
+          onRegionSelect={onRegionSelect}
+        />
       </div>
 
       {/* 지역 정보 */}

@@ -227,6 +227,8 @@ function App() {
           target={target}
           onTargetChange={handleTargetChange}
           loading={detailLoading}
+          allRegions={regions}
+          onRegionSelect={handleRegionSelect}
         />
         <ClimateMap
           regions={regions}
