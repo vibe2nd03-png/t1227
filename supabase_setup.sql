@@ -98,3 +98,39 @@ ON CONFLICT (region) DO UPDATE SET
 -- 6. 인덱스 생성
 CREATE INDEX IF NOT EXISTS idx_climate_data_region ON climate_data(region);
 CREATE INDEX IF NOT EXISTS idx_ai_explanations_region_target ON ai_explanations(region, target);
+
+-- 7. 기상 경보 테이블 생성
+CREATE TABLE IF NOT EXISTS weather_alerts (
+  id SERIAL PRIMARY KEY,
+  type VARCHAR(20) NOT NULL DEFAULT 'info',  -- danger, warning, watch, info
+  title VARCHAR(100) NOT NULL,
+  message TEXT NOT NULL,
+  region VARCHAR(100),
+  issued_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 8. weather_alerts RLS 및 정책
+ALTER TABLE weather_alerts ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow public read access on weather_alerts"
+  ON weather_alerts FOR SELECT
+  USING (true);
+
+CREATE POLICY "Allow public insert on weather_alerts"
+  ON weather_alerts FOR INSERT
+  WITH CHECK (true);
+
+-- 9. 기상 경보 인덱스
+CREATE INDEX IF NOT EXISTS idx_weather_alerts_expires ON weather_alerts(expires_at);
+CREATE INDEX IF NOT EXISTS idx_weather_alerts_type ON weather_alerts(type);
+
+-- 10. 초기 기상 경보 데이터
+INSERT INTO weather_alerts (type, title, message, region, issued_at, expires_at) VALUES
+('warning', '폭염주의보', '경기 남부지역(화성시, 오산시, 평택시)에 폭염주의보가 발효 중입니다. 야외활동을 자제해 주세요.', '경기 남부', NOW(), NOW() + INTERVAL '24 hours'),
+('info', '미세먼지 정보', '오늘 경기 북부지역 미세먼지 농도가 ''보통'' 수준입니다.', '경기 북부', NOW(), NOW() + INTERVAL '12 hours'),
+('watch', '자외선 지수 높음', '오후 12시~15시 자외선 지수가 ''매우 높음''으로 예상됩니다. 외출 시 자외선 차단제를 사용하세요.', '경기도 전역', NOW(), NOW() + INTERVAL '6 hours'),
+('danger', '폭염경보', '고양시, 화성시 지역에 폭염경보가 발효되었습니다. 실외 활동을 삼가고 충분한 수분을 섭취하세요.', '고양시, 화성시', NOW(), NOW() + INTERVAL '48 hours')
+ON CONFLICT DO NOTHING;

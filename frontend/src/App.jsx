@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ClimateMap from './components/ClimateMap';
 import Sidebar from './components/Sidebar';
+import WeatherAlertBanner from './components/WeatherAlertBanner';
 import { climateService } from './supabase';
 
 // 대상별 점수 조정 배율
@@ -218,18 +219,21 @@ function App() {
 
   return (
     <div className="app-container">
-      <Sidebar
-        selectedRegion={selectedRegion}
-        explanation={explanation}
-        target={target}
-        onTargetChange={handleTargetChange}
-        loading={detailLoading}
-      />
-      <ClimateMap
-        regions={regions}
-        selectedRegion={selectedRegion}
-        onRegionSelect={handleRegionSelect}
-      />
+      <WeatherAlertBanner />
+      <div className="main-content">
+        <Sidebar
+          selectedRegion={selectedRegion}
+          explanation={explanation}
+          target={target}
+          onTargetChange={handleTargetChange}
+          loading={detailLoading}
+        />
+        <ClimateMap
+          regions={regions}
+          selectedRegion={selectedRegion}
+          onRegionSelect={handleRegionSelect}
+        />
+      </div>
     </div>
   );
 }

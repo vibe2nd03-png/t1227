@@ -12,7 +12,14 @@ body {
 
 .app-container {
   display: flex;
+  flex-direction: column;
   height: 100vh;
+}
+
+.main-content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
 }
 
 /* 사이드바 */
@@ -396,9 +403,168 @@ body {
   }
 }
 
+/* 기상 경보 배너 */
+.weather-alert-banner {
+  position: relative;
+  width: 100%;
+  padding: 0;
+  z-index: 1001;
+  flex-shrink: 0;
+}
+
+.alert-container {
+  display: flex;
+  align-items: center;
+  padding: 10px 20px;
+  gap: 12px;
+}
+
+.alert-icon {
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.alert-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.alert-badge {
+  background: rgba(255, 255, 255, 0.25);
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.alert-message {
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.alert-region {
+  font-size: 0.8rem;
+  opacity: 0.9;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.alert-time {
+  font-size: 0.75rem;
+  opacity: 0.8;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.alert-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.nav-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: inherit;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.nav-btn:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.alert-counter {
+  font-size: 0.75rem;
+  opacity: 0.9;
+  min-width: 40px;
+  text-align: center;
+}
+
+.refresh-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: inherit;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.refresh-btn:hover {
+  background: rgba(255, 255, 255, 0.35);
+  transform: rotate(180deg);
+}
+
+.alert-expanded {
+  background: rgba(0, 0, 0, 0.15);
+  padding: 12px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.alert-expanded p {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+
+.alert-meta {
+  display: flex;
+  gap: 20px;
+  font-size: 0.75rem;
+  opacity: 0.85;
+}
+
+.progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.2);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: rgba(255, 255, 255, 0.6);
+  animation: progressSlide linear forwards;
+}
+
+@keyframes progressSlide {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
 /* 반응형 */
 @media (max-width: 768px) {
-  .app-container {
+  .main-content {
     flex-direction: column;
   }
 
@@ -411,5 +577,14 @@ body {
   .map-container {
     height: 50%;
     order: 1;
+  }
+
+  .alert-content {
+    flex-wrap: wrap;
+  }
+
+  .alert-region,
+  .alert-time {
+    display: none;
   }
 }
