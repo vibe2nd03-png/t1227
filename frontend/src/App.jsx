@@ -1,7 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import ClimateMap from './components/ClimateMap';
 import Sidebar from './components/Sidebar';
-import { climateApi } from './api';
+import { climateService } from './supabase';
+
+// 대상별 점수 조정 배율
+const TARGET_MULTIPLIERS = {
+  elderly: 1.3,
+  child: 1.25,
+  outdoor: 1.2,
+  general: 1.0,
+};
+
+// 위험 등급 계산
+const calculateRiskLevel = (score) => {
+  if (score >= 75) return { level: 'danger', label: '위험', color: '#F44336' };
+  if (score >= 50) return { level: 'warning', label: '경고', color: '#FF9800' };
+  if (score >= 30) return { level: 'caution', label: '주의', color: '#FFEB3B' };
+  return { level: 'safe', label: '안전', color: '#2196F3' };
+};
 
 function App() {
   const [regions, setRegions] = useState([]);
@@ -16,15 +32,50 @@ function App() {
     loadAllRegions();
   }, [target]);
 
-  // 모든 지역 데이터 로드
+  // Supabase에서 모든 지역 데이터 로드
   const loadAllRegions = async () => {
     try {
       setLoading(true);
-      const data = await climateApi.getAllRegions(target);
-      setRegions(data.regions);
+      const data = await climateService.getAllRegions();
+
+      if (data && data.length > 0) {
+        // Supabase 데이터를 프론트엔드 형식으로 변환
+        const formattedRegions = data.map(region => {
+          // 대상별 점수 조정
+          const baseScore = region.score || 0;
+          const multiplier = TARGET_MULTIPLIERS[target] || 1.0;
+          const adjustedScore = Math.min(100, Math.round(baseScore * multiplier));
+          const risk = calculateRiskLevel(adjustedScore);
+
+          return {
+            region: region.region,
+            lat: parseFloat(region.lat),
+            lng: parseFloat(region.lng),
+            score: baseScore,
+            adjusted_score: adjustedScore,
+            risk_level: risk.level,
+            risk_label: risk.label,
+            risk_color: risk.color,
+            climate_data: {
+              temperature: region.temperature,
+              apparent_temperature: region.apparent_temperature,
+              humidity: region.humidity,
+              pm10: region.pm10,
+              pm25: region.pm25,
+              uv_index: region.uv_index,
+              surface_temperature: region.surface_temperature,
+              wind_speed: region.wind_speed,
+              precipitation: region.precipitation,
+            }
+          };
+        });
+        setRegions(formattedRegions);
+      } else {
+        // Supabase 데이터 없을 시 Mock 데이터 사용
+        loadMockData();
+      }
     } catch (error) {
-      console.error('데이터 로드 실패:', error);
-      // API 연결 실패 시 Mock 데이터 사용
+      console.error('Supabase 데이터 로드 실패:', error);
       loadMockData();
     } finally {
       setLoading(false);
@@ -75,15 +126,44 @@ function App() {
     setDetailLoading(true);
 
     try {
-      const data = await climateApi.getExplanation(region.region, target);
-      setExplanation(data);
+      // Supabase에서 AI 설명 조회
+      const savedExplanation = await climateService.getExplanation(region.region, target);
+
+      if (savedExplanation && savedExplanation.explanation) {
+        setExplanation({
+          region: region.region,
+          score: region.adjusted_score || region.score,
+          risk_level: region.risk_level,
+          risk_label: region.risk_label,
+          explanation: savedExplanation.explanation,
+          action_guides: savedExplanation.action_guides || [],
+          target: getTargetLabel(target),
+        });
+      } else {
+        // 저장된 설명이 없으면 기본 설명 생성
+        const mockExplanation = generateMockExplanation(region, target);
+        setExplanation(mockExplanation);
+
+        // 생성된 설명을 Supabase에 저장
+        await climateService.saveExplanation(region.region, target, mockExplanation.explanation);
+      }
     } catch (error) {
       console.error('설명 로드 실패:', error);
-      // Mock 설명 생성
       setExplanation(generateMockExplanation(region, target));
     } finally {
       setDetailLoading(false);
     }
+  };
+
+  // 대상 라벨 반환
+  const getTargetLabel = (targetType) => {
+    const labels = {
+      general: '일반 시민',
+      elderly: '노인',
+      child: '아동',
+      outdoor: '야외근로자',
+    };
+    return labels[targetType] || '일반 시민';
   };
 
   // Mock 설명 생성
