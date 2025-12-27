@@ -69,7 +69,7 @@ function UserReportPanel({ selectedRegion, onReportSubmit }) {
     setIsSubmitting(true);
 
     try {
-      // 기본 제보 데이터 (user_id, nickname은 로그인 시에만 추가)
+      // 기본 제보 데이터만 전송 (user_id, nickname 컬럼이 없을 수 있음)
       const reportData = {
         region: selectedRegion.region,
         lat: selectedRegion.lat,
@@ -82,17 +82,15 @@ function UserReportPanel({ selectedRegion, onReportSubmit }) {
         is_air_quality: selectedFeeling.airQuality || false,
       };
 
-      // 로그인한 사용자인 경우에만 user_id, nickname 추가
-      if (isAuthenticated && user?.id) {
-        reportData.user_id = user.id;
-        reportData.nickname = profile?.display_name || null;
-      }
-
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('user_reports')
-        .insert([reportData]);
+        .insert([reportData])
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase 오류:', error);
+        throw new Error(error.message || '제보 저장 실패');
+      }
 
       // 성공 표시
       setShowSuccess(true);
@@ -104,7 +102,7 @@ function UserReportPanel({ selectedRegion, onReportSubmit }) {
 
       // 부모 컴포넌트에 알림
       if (onReportSubmit) {
-        onReportSubmit(reportData);
+        onReportSubmit(data?.[0] || reportData);
       }
 
       // 제보 목록 새로고침
@@ -112,7 +110,7 @@ function UserReportPanel({ selectedRegion, onReportSubmit }) {
 
     } catch (error) {
       console.error('제보 제출 실패:', error);
-      alert('제보 제출에 실패했습니다. 다시 시도해주세요.');
+      alert(`제보 제출 실패: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }
