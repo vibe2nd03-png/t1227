@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import UserReportPanel from './UserReportPanel';
 import OotdGenerator from './OotdGenerator';
 import AirQualityNav from './AirQualityNav';
 import AuthModal from './AuthModal';
 import UserProfile from './UserProfile';
+import NotificationManager from './NotificationManager';
 import { useAuth } from '../contexts/AuthContext';
 
 const TARGET_OPTIONS = [
@@ -17,6 +18,17 @@ function Sidebar({ selectedRegion, explanation, target, onTargetChange, loading,
   const { user, profile, isAuthenticated } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [isNotificationSubscribed, setIsNotificationSubscribed] = useState(false);
+
+  // 알림 구독 상태 확인
+  useEffect(() => {
+    const settings = localStorage.getItem('notificationSettings');
+    if (settings) {
+      const parsed = JSON.parse(settings);
+      setIsNotificationSubscribed(parsed.isActive || false);
+    }
+  }, [showNotificationModal]);
 
   return (
     <div className="sidebar">
@@ -87,7 +99,22 @@ function Sidebar({ selectedRegion, explanation, target, onTargetChange, loading,
           climateData={allRegions}
           onRegionSelect={onRegionSelect}
         />
+
+        {/* 위험 지역 알림 버튼 */}
+        <button
+          className={`notification-btn ${isNotificationSubscribed ? 'subscribed' : ''}`}
+          onClick={() => setShowNotificationModal(true)}
+        >
+          {isNotificationSubscribed ? '🔔 알림 설정됨' : '🔔 위험 지역 알림 받기'}
+        </button>
       </div>
+
+      {/* 알림 설정 모달 */}
+      <NotificationManager
+        climateData={allRegions}
+        isOpen={showNotificationModal}
+        onClose={() => setShowNotificationModal(false)}
+      />
 
       {/* 지역 정보 */}
       <div className="region-info">

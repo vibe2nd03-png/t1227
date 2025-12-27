@@ -307,3 +307,44 @@ DROP TRIGGER IF EXISTS on_report_created ON user_reports;
 CREATE TRIGGER on_report_created
   AFTER INSERT ON user_reports
   FOR EACH ROW EXECUTE FUNCTION public.update_user_report_stats();
+
+-- ========================================
+-- 푸시 알림 구독 테이블
+-- ========================================
+
+-- 25. 알림 구독 테이블 생성
+CREATE TABLE IF NOT EXISTS notification_subscriptions (
+  id SERIAL PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE UNIQUE,
+  regions TEXT[] NOT NULL DEFAULT '{}',           -- 관심 지역 목록
+  threshold INTEGER DEFAULT 50,                    -- 위험도 임계값 (30, 50, 75)
+  notify_types JSONB DEFAULT '{"highTemp": true, "dust": true, "uv": true}',
+  is_active BOOLEAN DEFAULT true,
+  push_subscription JSONB,                         -- Web Push 구독 정보
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 26. notification_subscriptions RLS 및 정책
+ALTER TABLE notification_subscriptions ENABLE ROW LEVEL SECURITY;
+
+-- 사용자 본인만 알림 설정 관리 가능
+CREATE POLICY "Users can view own notification settings"
+  ON notification_subscriptions FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own notification settings"
+  ON notification_subscriptions FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own notification settings"
+  ON notification_subscriptions FOR UPDATE
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own notification settings"
+  ON notification_subscriptions FOR DELETE
+  USING (auth.uid() = user_id);
+
+-- 27. notification_subscriptions 인덱스
+CREATE INDEX IF NOT EXISTS idx_notification_subscriptions_user ON notification_subscriptions(user_id);
+CREATE INDEX IF NOT EXISTS idx_notification_subscriptions_active ON notification_subscriptions(is_active) WHERE is_active = true;
