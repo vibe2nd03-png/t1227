@@ -231,8 +231,12 @@ CREATE TABLE IF NOT EXISTS user_favorite_regions (
 );
 
 -- 18. user_reports에 user_id 컬럼 추가 (기존 테이블 수정)
-ALTER TABLE user_reports ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users(id);
+-- 주의: 외래 키 제약 없이 추가 (비로그인 사용자도 제보 가능)
+ALTER TABLE user_reports ADD COLUMN IF NOT EXISTS user_id UUID;
 ALTER TABLE user_reports ADD COLUMN IF NOT EXISTS nickname VARCHAR(50);
+
+-- user_id 인덱스 (NULL 허용)
+CREATE INDEX IF NOT EXISTS idx_user_reports_user_id ON user_reports(user_id) WHERE user_id IS NOT NULL;
 
 -- 19. RLS 정책 설정
 ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;

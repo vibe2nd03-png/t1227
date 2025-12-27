@@ -69,6 +69,7 @@ function UserReportPanel({ selectedRegion, onReportSubmit }) {
     setIsSubmitting(true);
 
     try {
+      // 기본 제보 데이터 (user_id, nickname은 로그인 시에만 추가)
       const reportData = {
         region: selectedRegion.region,
         lat: selectedRegion.lat,
@@ -79,11 +80,13 @@ function UserReportPanel({ selectedRegion, onReportSubmit }) {
         temp_adjustment: selectedFeeling.tempAdjust,
         comment: comment || selectedFeeling.label,
         is_air_quality: selectedFeeling.airQuality || false,
-        created_at: new Date().toISOString(),
-        // 로그인한 사용자 정보 추가
-        user_id: user?.id || null,
-        nickname: profile?.display_name || null,
       };
+
+      // 로그인한 사용자인 경우에만 user_id, nickname 추가
+      if (isAuthenticated && user?.id) {
+        reportData.user_id = user.id;
+        reportData.nickname = profile?.display_name || null;
+      }
 
       const { error } = await supabase
         .from('user_reports')
