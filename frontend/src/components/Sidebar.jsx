@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import UserReportPanel from './UserReportPanel';
+import OotdGenerator from './OotdGenerator';
 import AuthModal from './AuthModal';
 import UserProfile from './UserProfile';
 import { useAuth } from '../contexts/AuthContext';
@@ -93,6 +94,8 @@ function Sidebar({ selectedRegion, explanation, target, onTargetChange, loading,
         ) : (
           <>
             <RegionCard region={selectedRegion} explanation={explanation} />
+            {/* AI OOTD 생성기 */}
+            <OotdGenerator selectedRegion={selectedRegion} />
             {/* 시민 제보 패널 */}
             <UserReportPanel
               selectedRegion={selectedRegion}

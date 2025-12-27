@@ -1855,3 +1855,279 @@ body {
   font-size: 0.7rem;
   color: #999;
 }
+
+/* ========================================
+   AI OOTD 생성기 스타일
+   ======================================== */
+
+.ootd-generator {
+  margin-top: 15px;
+}
+
+.ootd-toggle-btn {
+  width: 100%;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s;
+  box-shadow: 0 4px 15px rgba(240, 147, 251, 0.3);
+}
+
+.ootd-toggle-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(240, 147, 251, 0.4);
+}
+
+.ootd-toggle-btn.active {
+  background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
+  border-radius: 12px 12px 0 0;
+}
+
+.ootd-toggle-btn .toggle-icon {
+  font-size: 1.2rem;
+}
+
+.ootd-panel-content {
+  background: white;
+  border: 2px solid #f093fb;
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+  padding: 16px;
+  animation: slideDown 0.3s ease;
+}
+
+.ootd-header {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.ootd-header h3 {
+  font-size: 1.1rem;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.ootd-header p {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+/* 옵션 선택 */
+.ootd-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.option-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.option-group label {
+  font-size: 0.8rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.option-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.option-buttons.age-buttons {
+  gap: 6px;
+}
+
+.option-btn {
+  padding: 8px 14px;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  background: white;
+  cursor: pointer;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s;
+}
+
+.option-btn.small {
+  padding: 6px 12px;
+  font-size: 0.8rem;
+}
+
+.option-btn:hover {
+  border-color: #f093fb;
+  color: #f5576c;
+}
+
+.option-btn.selected {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+  border-color: transparent;
+}
+
+/* 날씨 요약 */
+.weather-summary {
+  display: flex;
+  justify-content: space-around;
+  padding: 10px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  font-size: 0.8rem;
+}
+
+.weather-summary span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 생성 버튼 */
+.generate-btn {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s;
+}
+
+.generate-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.generate-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* 로딩 스피너 */
+.loading-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid white;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 에러 메시지 */
+.ootd-error {
+  margin-top: 12px;
+  padding: 10px;
+  background: #fff5f5;
+  border: 1px solid #fed7d7;
+  border-radius: 8px;
+  color: #c53030;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+/* 결과 영역 */
+.ootd-result {
+  margin-top: 16px;
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.ootd-image-container {
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  margin-bottom: 12px;
+}
+
+.ootd-image-container img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* 옷차림 팁 */
+.outfit-tips {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.outfit-tips h4 {
+  font-size: 0.9rem;
+  color: #333;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.outfit-tips ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.outfit-tips li {
+  font-size: 0.85rem;
+  color: #555;
+  padding: 6px 10px;
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* 재생성 버튼 */
+.regenerate-btn {
+  width: 100%;
+  padding: 10px;
+  background: white;
+  border: 2px solid #667eea;
+  color: #667eea;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.regenerate-btn:hover:not(:disabled) {
+  background: #667eea;
+  color: white;
+}
+
+.regenerate-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
