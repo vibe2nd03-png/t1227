@@ -1,4 +1,5 @@
 import React from 'react';
+import UserReportPanel from './UserReportPanel';
 
 const TARGET_OPTIONS = [
   { value: 'general', label: '일반 시민' },
@@ -7,7 +8,7 @@ const TARGET_OPTIONS = [
   { value: 'outdoor', label: '야외근로자' },
 ];
 
-function Sidebar({ selectedRegion, explanation, target, onTargetChange, loading }) {
+function Sidebar({ selectedRegion, explanation, target, onTargetChange, loading, onReportSubmit }) {
   return (
     <div className="sidebar">
       {/* 헤더 */}
@@ -44,7 +45,14 @@ function Sidebar({ selectedRegion, explanation, target, onTargetChange, loading 
         ) : loading ? (
           <div className="loading">정보를 불러오는 중...</div>
         ) : (
-          <RegionCard region={selectedRegion} explanation={explanation} />
+          <>
+            <RegionCard region={selectedRegion} explanation={explanation} />
+            {/* 시민 제보 패널 */}
+            <UserReportPanel
+              selectedRegion={selectedRegion}
+              onReportSubmit={onReportSubmit}
+            />
+          </>
         )}
       </div>
     </div>

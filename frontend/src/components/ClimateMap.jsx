@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
+import FloatingReports from './FloatingReports';
+import RegionRanking from './RegionRanking';
 
 // 커스텀 이징 함수들
 const easingFunctions = {
@@ -189,6 +191,7 @@ function AnimatedMarker({ region, isSelected, onSelect, getMarkerRadius }) {
 
 function ClimateMap({ regions, selectedRegion, onRegionSelect }) {
   const [previousRegion, setPreviousRegion] = useState(null);
+  const [showReports, setShowReports] = useState(true);
   const gyeonggiCenter = [37.4138, 127.5183];
 
   // 이전 선택 지역 추적
@@ -244,6 +247,9 @@ function ClimateMap({ regions, selectedRegion, onRegionSelect }) {
             getMarkerRadius={getMarkerRadius}
           />
         ))}
+
+        {/* 떠다니는 시민 제보 마커 */}
+        <FloatingReports visible={showReports} />
       </MapContainer>
 
       {/* 선택된 지역 표시 */}
@@ -273,7 +279,19 @@ function ClimateMap({ regions, selectedRegion, onRegionSelect }) {
           <div className="legend-color" style={{ backgroundColor: '#F44336' }}></div>
           <span>위험 (75-100점)</span>
         </div>
+
+        {/* 제보 표시 토글 */}
+        <div className="legend-divider"></div>
+        <button
+          className={`report-toggle ${showReports ? 'active' : ''}`}
+          onClick={() => setShowReports(!showReports)}
+        >
+          {showReports ? '💬 제보 숨기기' : '💬 제보 보기'}
+        </button>
       </div>
+
+      {/* 지역별 랭킹 */}
+      <RegionRanking regions={regions} onRegionClick={onRegionSelect} />
     </div>
   );
 }

@@ -134,3 +134,68 @@ INSERT INTO weather_alerts (type, title, message, region, issued_at, expires_at)
 ('watch', '자외선 지수 높음', '오후 12시~15시 자외선 지수가 ''매우 높음''으로 예상됩니다. 외출 시 자외선 차단제를 사용하세요.', '경기도 전역', NOW(), NOW() + INTERVAL '6 hours'),
 ('danger', '폭염경보', '고양시, 화성시 지역에 폭염경보가 발효되었습니다. 실외 활동을 삼가고 충분한 수분을 섭취하세요.', '고양시, 화성시', NOW(), NOW() + INTERVAL '48 hours')
 ON CONFLICT DO NOTHING;
+
+-- ========================================
+-- 시민 제보 맵 (체감 짤 대항전) 테이블
+-- ========================================
+
+-- 11. 사용자 제보 테이블 생성
+CREATE TABLE IF NOT EXISTS user_reports (
+  id SERIAL PRIMARY KEY,
+  region VARCHAR(50) NOT NULL,
+  lat DECIMAL(10, 6) NOT NULL,
+  lng DECIMAL(10, 6) NOT NULL,
+  emoji VARCHAR(10) NOT NULL,
+  feeling_label VARCHAR(50),
+  sentiment_score INTEGER DEFAULT 0,      -- -3(매우더움) ~ +3(추움)
+  temp_adjustment DECIMAL(4, 2) DEFAULT 0, -- 보정 온도
+  comment VARCHAR(100),
+  is_air_quality BOOLEAN DEFAULT false,
+  likes INTEGER DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 12. user_reports RLS 및 정책
+ALTER TABLE user_reports ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow public read access on user_reports"
+  ON user_reports FOR SELECT
+  USING (true);
+
+CREATE POLICY "Allow public insert on user_reports"
+  ON user_reports FOR INSERT
+  WITH CHECK (true);
+
+CREATE POLICY "Allow public update likes on user_reports"
+  ON user_reports FOR UPDATE
+  USING (true);
+
+-- 13. user_reports 인덱스
+CREATE INDEX IF NOT EXISTS idx_user_reports_region ON user_reports(region);
+CREATE INDEX IF NOT EXISTS idx_user_reports_created ON user_reports(created_at);
+CREATE INDEX IF NOT EXISTS idx_user_reports_region_time ON user_reports(region, created_at);
+
+-- 14. 지역별 체감 통계 뷰 생성
+CREATE OR REPLACE VIEW region_feeling_stats AS
+SELECT
+  region,
+  COUNT(*) as report_count,
+  ROUND(AVG(sentiment_score)::numeric, 2) as avg_sentiment,
+  ROUND(AVG(temp_adjustment)::numeric, 2) as avg_temp_adjustment,
+  MODE() WITHIN GROUP (ORDER BY emoji) as most_common_emoji,
+  MAX(created_at) as latest_report
+FROM user_reports
+WHERE created_at > NOW() - INTERVAL '24 hours'
+GROUP BY region;
+
+-- 15. 샘플 제보 데이터 (테스트용)
+INSERT INTO user_reports (region, lat, lng, emoji, feeling_label, sentiment_score, temp_adjustment, comment, created_at) VALUES
+('화성시', 37.1996, 126.8312, '🥵', '너무 더워요', -3, 5, '녹아내리는 중 🫠', NOW() - INTERVAL '30 minutes'),
+('화성시', 37.1996, 126.8312, '🥵', '너무 더워요', -3, 5, '여긴 사우나인가요?', NOW() - INTERVAL '1 hour'),
+('고양시', 37.6584, 126.8320, '😰', '더워요', -2, 3, '에어컨 없이는 못 살아', NOW() - INTERVAL '2 hours'),
+('오산시', 37.1498, 127.0775, '🥵', '너무 더워요', -3, 5, '아스팔트에서 계란 익겠다', NOW() - INTERVAL '45 minutes'),
+('수원시', 37.2636, 127.0286, '😅', '조금 더워요', -1, 1, '그늘도 더워요', NOW() - INTERVAL '3 hours'),
+('가평군', 37.8315, 127.5095, '😊', '쾌적해요', 0, 0, '날씨 완전 좋아요! ✨', NOW() - INTERVAL '1 hour'),
+('연천군', 38.0966, 127.0750, '😌', '조금 쌀쌀해요', 1, -1, '산책하기 딱 좋은 날', NOW() - INTERVAL '2 hours'),
+('안산시', 37.3219, 126.8309, '😷', '공기 안좋아요', -2, 0, '미세먼지 폭탄 💣', NOW() - INTERVAL '4 hours')
+ON CONFLICT DO NOTHING;
