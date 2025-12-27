@@ -2,10 +2,13 @@ import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
 function AuthModal({ isOpen, onClose }) {
-  const { sendPhoneOtp, verifyPhoneOtp, signInWithEmail, authError } = useAuth();
+  const { signUpWithEmail, signInWithEmail, sendPhoneOtp, verifyPhoneOtp, authError } = useAuth();
   const [authMode, setAuthMode] = useState('select'); // select, phone, email
+  const [emailMode, setEmailMode] = useState('login'); // login, signup
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -55,22 +58,71 @@ function AuthModal({ isOpen, onClose }) {
       setMessage('올바른 이메일을 입력해주세요');
       return;
     }
+    if (!password || password.length < 6) {
+      setMessage('비밀번호는 6자 이상이어야 합니다');
+      return;
+    }
 
     setLoading(true);
-    const result = await signInWithEmail(email);
+    const result = await signInWithEmail(email, password);
     setLoading(false);
 
     if (result.success) {
-      setMessage('로그인 링크가 이메일로 발송되었습니다. 이메일을 확인해주세요.');
+      setMessage('로그인 성공!');
+      setTimeout(() => {
+        onClose();
+        resetForm();
+      }, 1000);
     } else {
-      setMessage(result.error || '이메일 발송에 실패했습니다');
+      // 계정이 없으면 회원가입 모드로 전환 안내
+      if (result.error?.includes('Invalid login')) {
+        setMessage('이메일 또는 비밀번호가 잘못되었습니다');
+      } else {
+        setMessage(result.error || '로그인에 실패했습니다');
+      }
+    }
+  };
+
+  const handleEmailSignUp = async () => {
+    if (!email || !email.includes('@')) {
+      setMessage('올바른 이메일을 입력해주세요');
+      return;
+    }
+    if (!password || password.length < 6) {
+      setMessage('비밀번호는 6자 이상이어야 합니다');
+      return;
+    }
+    if (password !== confirmPassword) {
+      setMessage('비밀번호가 일치하지 않습니다');
+      return;
+    }
+
+    setLoading(true);
+    const result = await signUpWithEmail(email, password);
+    setLoading(false);
+
+    if (result.success) {
+      if (result.needsConfirmation) {
+        setMessage('확인 이메일이 발송되었습니다. 이메일을 확인해주세요. (처음 1회만)');
+      } else {
+        setMessage('회원가입 성공!');
+        setTimeout(() => {
+          onClose();
+          resetForm();
+        }, 1000);
+      }
+    } else {
+      setMessage(result.error || '회원가입에 실패했습니다');
     }
   };
 
   const resetForm = () => {
     setAuthMode('select');
+    setEmailMode('login');
     setPhone('');
     setEmail('');
+    setPassword('');
+    setConfirmPassword('');
     setOtpCode('');
     setOtpSent(false);
     setMessage('');
@@ -86,7 +138,7 @@ function AuthModal({ isOpen, onClose }) {
           <h2>
             {authMode === 'select' && '로그인 / 회원가입'}
             {authMode === 'phone' && '📱 전화번호 로그인'}
-            {authMode === 'email' && '✉️ 이메일 로그인'}
+            {authMode === 'email' && (emailMode === 'login' ? '✉️ 이메일 로그인' : '✉️ 이메일 회원가입')}
           </h2>
           <button className="close-btn" onClick={onClose}>×</button>
         </div>
@@ -193,6 +245,22 @@ function AuthModal({ isOpen, onClose }) {
 
           {authMode === 'email' && (
             <>
+              {/* 로그인/회원가입 탭 */}
+              <div className="email-tabs">
+                <button
+                  className={`email-tab ${emailMode === 'login' ? 'active' : ''}`}
+                  onClick={() => { setEmailMode('login'); setMessage(''); }}
+                >
+                  로그인
+                </button>
+                <button
+                  className={`email-tab ${emailMode === 'signup' ? 'active' : ''}`}
+                  onClick={() => { setEmailMode('signup'); setMessage(''); }}
+                >
+                  회원가입
+                </button>
+              </div>
+
               <div className="input-group">
                 <label>이메일</label>
                 <input
@@ -201,16 +269,43 @@ function AuthModal({ isOpen, onClose }) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
-                <span className="input-hint">로그인 링크가 이메일로 발송됩니다</span>
               </div>
+
+              <div className="input-group">
+                <label>비밀번호</label>
+                <input
+                  type="password"
+                  placeholder="6자 이상 입력"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+
+              {emailMode === 'signup' && (
+                <div className="input-group">
+                  <label>비밀번호 확인</label>
+                  <input
+                    type="password"
+                    placeholder="비밀번호 다시 입력"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                  />
+                </div>
+              )}
 
               <button
                 className="auth-btn primary-btn"
-                onClick={handleEmailLogin}
-                disabled={loading || !email.includes('@')}
+                onClick={emailMode === 'login' ? handleEmailLogin : handleEmailSignUp}
+                disabled={loading || !email.includes('@') || password.length < 6}
               >
-                {loading ? '발송 중...' : '로그인 링크 받기'}
+                {loading ? '처리 중...' : (emailMode === 'login' ? '로그인' : '회원가입')}
               </button>
+
+              {emailMode === 'signup' && (
+                <p className="signup-notice">
+                  * 회원가입 시 이메일 확인이 필요합니다 (처음 1회만)
+                </p>
+              )}
 
               <button className="back-btn" onClick={resetForm}>
                 ← 다른 방법으로 로그인

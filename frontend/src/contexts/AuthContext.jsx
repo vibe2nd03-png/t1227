@@ -56,20 +56,48 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Google 로그인
-  const signInWithGoogle = async () => {
+  // 이메일+비밀번호 회원가입
+  const signUpWithEmail = async (email, password) => {
     setAuthError(null);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
         options: {
-          redirectTo: window.location.origin,
+          emailRedirectTo: window.location.origin,
         },
       });
+
       if (error) throw error;
+
+      // 이메일 확인이 필요한 경우
+      if (data?.user?.identities?.length === 0) {
+        return { success: false, error: '이미 가입된 이메일입니다. 로그인해주세요.' };
+      }
+
+      return { success: true, needsConfirmation: !data.session };
     } catch (error) {
       setAuthError(error.message);
-      console.error('Google 로그인 오류:', error);
+      console.error('회원가입 오류:', error);
+      return { success: false, error: error.message };
+    }
+  };
+
+  // 이메일+비밀번호 로그인
+  const signInWithEmail = async (email, password) => {
+    setAuthError(null);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+      return { success: true, data };
+    } catch (error) {
+      setAuthError(error.message);
+      console.error('로그인 오류:', error);
+      return { success: false, error: error.message };
     }
   };
 
@@ -114,26 +142,6 @@ export function AuthProvider({ children }) {
     } catch (error) {
       setAuthError(error.message);
       console.error('OTP 인증 오류:', error);
-      return { success: false, error: error.message };
-    }
-  };
-
-  // 이메일 로그인 (대안)
-  const signInWithEmail = async (email) => {
-    setAuthError(null);
-    try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          emailRedirectTo: window.location.origin,
-        },
-      });
-
-      if (error) throw error;
-      return { success: true };
-    } catch (error) {
-      setAuthError(error.message);
-      console.error('이메일 로그인 오류:', error);
       return { success: false, error: error.message };
     }
   };
@@ -230,10 +238,10 @@ export function AuthProvider({ children }) {
     profile,
     loading,
     authError,
-    signInWithGoogle,
+    signUpWithEmail,
+    signInWithEmail,
     sendPhoneOtp,
     verifyPhoneOtp,
-    signInWithEmail,
     signOut,
     updateProfile,
     addFavoriteRegion,
