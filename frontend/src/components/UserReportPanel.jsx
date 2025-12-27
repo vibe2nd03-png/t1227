@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabase';
+import { useAuth } from '../contexts/AuthContext';
 
 // 체감 이모지 옵션
 const FEELING_OPTIONS = [
@@ -29,6 +30,7 @@ const MEME_PRESETS = [
 ];
 
 function UserReportPanel({ selectedRegion, onReportSubmit }) {
+  const { user, profile, isAuthenticated } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedFeeling, setSelectedFeeling] = useState(null);
   const [comment, setComment] = useState('');
@@ -78,6 +80,9 @@ function UserReportPanel({ selectedRegion, onReportSubmit }) {
         comment: comment || selectedFeeling.label,
         is_air_quality: selectedFeeling.airQuality || false,
         created_at: new Date().toISOString(),
+        // 로그인한 사용자 정보 추가
+        user_id: user?.id || null,
+        nickname: profile?.display_name || null,
       };
 
       const { error } = await supabase
@@ -197,6 +202,14 @@ function UserReportPanel({ selectedRegion, onReportSubmit }) {
             {showSuccess ? '✓ 제보 완료!' : isSubmitting ? '제출 중...' : '🚀 제보하기'}
           </button>
 
+          {/* 로그인 안내 */}
+          {!isAuthenticated && (
+            <div className="login-prompt">
+              <span>💡</span>
+              <span>로그인하면 제보 기록이 저장됩니다</span>
+            </div>
+          )}
+
           {/* 최근 제보 목록 */}
           {recentReports.length > 0 && (
             <div className="recent-reports">
@@ -205,7 +218,12 @@ function UserReportPanel({ selectedRegion, onReportSubmit }) {
                 {recentReports.map((report, idx) => (
                   <div key={idx} className="report-item">
                     <span className="report-emoji">{report.emoji}</span>
-                    <span className="report-comment">{report.comment}</span>
+                    <div className="report-content">
+                      <span className="report-comment">{report.comment}</span>
+                      {report.nickname && (
+                        <span className="report-author">by {report.nickname}</span>
+                      )}
+                    </div>
                     <span className="report-time">{formatTimeAgo(report.created_at)}</span>
                   </div>
                 ))}

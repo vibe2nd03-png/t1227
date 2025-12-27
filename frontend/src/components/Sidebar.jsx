@@ -1,5 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import UserReportPanel from './UserReportPanel';
+import AuthModal from './AuthModal';
+import UserProfile from './UserProfile';
+import { useAuth } from '../contexts/AuthContext';
 
 const TARGET_OPTIONS = [
   { value: 'general', label: '일반 시민' },
@@ -9,13 +12,56 @@ const TARGET_OPTIONS = [
 ];
 
 function Sidebar({ selectedRegion, explanation, target, onTargetChange, loading, onReportSubmit }) {
+  const { user, profile, isAuthenticated } = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+
   return (
     <div className="sidebar">
       {/* 헤더 */}
       <div className="sidebar-header">
-        <h1>경기 기후 체감 맵</h1>
-        <p>경기도 기후 체감 지수 및 AI 설명 서비스</p>
+        <div className="header-top">
+          <div className="header-title">
+            <h1>경기 기후 체감 맵</h1>
+            <p>경기도 기후 체감 지수 및 AI 설명 서비스</p>
+          </div>
+
+          {/* 사용자 버튼 */}
+          <div className="user-section">
+            {isAuthenticated ? (
+              <button
+                className="user-avatar-btn"
+                onClick={() => setShowProfileModal(true)}
+              >
+                {profile?.avatar_url ? (
+                  <img src={profile.avatar_url} alt="프로필" />
+                ) : (
+                  <span>{profile?.display_name?.charAt(0) || user?.email?.charAt(0) || '👤'}</span>
+                )}
+              </button>
+            ) : (
+              <button
+                className="login-btn"
+                onClick={() => setShowAuthModal(true)}
+              >
+                로그인
+              </button>
+            )}
+          </div>
+        </div>
       </div>
+
+      {/* 로그인 모달 */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+      />
+
+      {/* 프로필 모달 */}
+      <UserProfile
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+      />
 
       {/* 대상 선택 */}
       <div className="target-selector">

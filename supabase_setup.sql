@@ -199,3 +199,107 @@ INSERT INTO user_reports (region, lat, lng, emoji, feeling_label, sentiment_scor
 ('연천군', 38.0966, 127.0750, '😌', '조금 쌀쌀해요', 1, -1, '산책하기 딱 좋은 날', NOW() - INTERVAL '2 hours'),
 ('안산시', 37.3219, 126.8309, '😷', '공기 안좋아요', -2, 0, '미세먼지 폭탄 💣', NOW() - INTERVAL '4 hours')
 ON CONFLICT DO NOTHING;
+
+-- ========================================
+-- 사용자 프로필 및 개인화 테이블
+-- ========================================
+
+-- 16. 사용자 프로필 테이블 생성
+CREATE TABLE IF NOT EXISTS user_profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  email VARCHAR(255),
+  phone VARCHAR(20),
+  display_name VARCHAR(100),
+  avatar_url TEXT,
+  preferred_region VARCHAR(50),        -- 관심 지역
+  preferred_target VARCHAR(20) DEFAULT 'general',  -- 기본 대상 (general, elderly, child, outdoor)
+  notification_enabled BOOLEAN DEFAULT true,
+  notification_threshold INTEGER DEFAULT 70,  -- 위험도 이상일 때 알림
+  total_reports INTEGER DEFAULT 0,     -- 총 제보 수
+  reputation_score INTEGER DEFAULT 0,  -- 평판 점수
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 17. 사용자 즐겨찾기 지역 테이블
+CREATE TABLE IF NOT EXISTS user_favorite_regions (
+  id SERIAL PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  region VARCHAR(50) NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(user_id, region)
+);
+
+-- 18. user_reports에 user_id 컬럼 추가 (기존 테이블 수정)
+ALTER TABLE user_reports ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users(id);
+ALTER TABLE user_reports ADD COLUMN IF NOT EXISTS nickname VARCHAR(50);
+
+-- 19. RLS 정책 설정
+ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_favorite_regions ENABLE ROW LEVEL SECURITY;
+
+-- 사용자 프로필: 본인만 읽기/수정 가능
+CREATE POLICY "Users can view own profile"
+  ON user_profiles FOR SELECT
+  USING (auth.uid() = id);
+
+CREATE POLICY "Users can update own profile"
+  ON user_profiles FOR UPDATE
+  USING (auth.uid() = id);
+
+CREATE POLICY "Users can insert own profile"
+  ON user_profiles FOR INSERT
+  WITH CHECK (auth.uid() = id);
+
+-- 즐겨찾기: 본인만 관리 가능
+CREATE POLICY "Users can manage own favorites"
+  ON user_favorite_regions FOR ALL
+  USING (auth.uid() = user_id);
+
+-- 20. user_profiles 인덱스
+CREATE INDEX IF NOT EXISTS idx_user_profiles_email ON user_profiles(email);
+CREATE INDEX IF NOT EXISTS idx_user_profiles_phone ON user_profiles(phone);
+CREATE INDEX IF NOT EXISTS idx_user_favorite_regions_user ON user_favorite_regions(user_id);
+
+-- 21. 프로필 자동 생성 함수 (회원가입 시)
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.user_profiles (id, email, phone, display_name, avatar_url)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    NEW.phone,
+    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name', '사용자'),
+    NEW.raw_user_meta_data->>'avatar_url'
+  );
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 22. 회원가입 트리거
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- 23. 제보 시 사용자 통계 업데이트 함수
+CREATE OR REPLACE FUNCTION public.update_user_report_stats()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.user_id IS NOT NULL THEN
+    UPDATE user_profiles
+    SET total_reports = total_reports + 1,
+        reputation_score = reputation_score + 1,
+        updated_at = NOW()
+    WHERE id = NEW.user_id;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 24. 제보 트리거
+DROP TRIGGER IF EXISTS on_report_created ON user_reports;
+CREATE TRIGGER on_report_created
+  AFTER INSERT ON user_reports
+  FOR EACH ROW EXECUTE FUNCTION public.update_user_report_stats();
