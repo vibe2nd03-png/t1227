@@ -281,29 +281,69 @@ export const getObservationData = async (regionName, date = new Date()) => {
 };
 
 /**
- * 경기도 31개 시군 실시간 기상 데이터 조회
- * 기상청 API에서 최신 관측 데이터를 가져와 각 지역에 매핑
+ * 경기도에서 사용하는 고유 관측소 목록 (중복 제거)
+ */
+const UNIQUE_STATIONS = [...new Set(Object.values(GYEONGGI_STATIONS).map(s => s.stn))];
+
+/**
+ * 경기도 31개 시군 실시간 기상 데이터 조회 (최적화 버전)
+ * 필요한 관측소만 병렬로 호출하여 속도 개선
  */
 export const getGyeonggiRealtimeWeather = async () => {
   try {
-    // 현재 시간 기준 가장 최근 정시 (1시간 전 데이터가 안정적)
+    // 한국 시간 기준 현재 정시 (UTC+9)
     const now = new Date();
-    now.setHours(now.getHours() - 1);
-    const datetime = formatDateTime(now);
+    const kstHour = (now.getUTCHours() + 9) % 24;
+    const kstDate = new Date(now);
+    if (now.getUTCHours() + 9 >= 24) {
+      kstDate.setUTCDate(kstDate.getUTCDate() + 1);
+    }
+    kstDate.setUTCHours((kstHour - 1 + 24) % 24, 0, 0, 0); // 1시간 전 데이터
 
-    // 전체 관측소 데이터 조회
-    const allData = await getSurfaceData(datetime, 0);
-    if (!allData || allData.length === 0) {
-      console.warn('기상청 API 데이터 없음, 이전 시간 시도');
-      // 2시간 전 데이터 시도
-      now.setHours(now.getHours() - 1);
-      const prevDatetime = formatDateTime(now);
-      const prevData = await getSurfaceData(prevDatetime, 0);
-      if (!prevData || prevData.length === 0) return null;
-      return processGyeonggiData(prevData, prevDatetime);
+    const year = kstDate.getUTCFullYear();
+    const month = String(kstDate.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(kstDate.getUTCDate()).padStart(2, '0');
+    const hour = String(kstDate.getUTCHours()).padStart(2, '0');
+    const datetime = `${year}${month}${day}${hour}00`;
+
+    console.log('기상청 API 요청 시간:', datetime);
+
+    // 필요한 관측소만 병렬 조회 (7개 관측소)
+    const stationPromises = UNIQUE_STATIONS.map(stn =>
+      getSurfaceData(datetime, stn).then(data => ({ stn, data }))
+    );
+
+    const results = await Promise.all(stationPromises);
+
+    // 관측소별 데이터 매핑
+    const stationData = {};
+    results.forEach(({ stn, data }) => {
+      if (data && data.length > 0) {
+        stationData[stn] = data[0];
+      }
+    });
+
+    // 데이터가 없으면 2시간 전 시도
+    if (Object.keys(stationData).length === 0) {
+      console.warn('기상청 API 데이터 없음, 2시간 전 시도');
+      kstDate.setUTCHours(kstDate.getUTCHours() - 1);
+      const prevDatetime = `${kstDate.getUTCFullYear()}${String(kstDate.getUTCMonth() + 1).padStart(2, '0')}${String(kstDate.getUTCDate()).padStart(2, '0')}${String(kstDate.getUTCHours()).padStart(2, '0')}00`;
+
+      const prevResults = await Promise.all(
+        UNIQUE_STATIONS.map(stn => getSurfaceData(prevDatetime, stn).then(data => ({ stn, data })))
+      );
+
+      prevResults.forEach(({ stn, data }) => {
+        if (data && data.length > 0) {
+          stationData[stn] = data[0];
+        }
+      });
+
+      if (Object.keys(stationData).length === 0) return null;
+      return processGyeonggiDataFromStations(stationData, prevDatetime);
     }
 
-    return processGyeonggiData(allData, datetime);
+    return processGyeonggiDataFromStations(stationData, datetime);
   } catch (error) {
     console.error('경기도 실시간 기상 데이터 조회 실패:', error);
     return null;
@@ -311,17 +351,9 @@ export const getGyeonggiRealtimeWeather = async () => {
 };
 
 /**
- * 기상청 데이터를 경기도 31개 시군 형식으로 변환
+ * 기상청 데이터를 경기도 31개 시군 형식으로 변환 (관측소 데이터 직접 전달)
  */
-const processGyeonggiData = (rawData, datetime) => {
-  // 관측소 코드별 데이터 매핑
-  const stationData = {};
-  rawData.forEach(obs => {
-    if (obs.STN) {
-      stationData[obs.STN] = obs;
-    }
-  });
-
+const processGyeonggiDataFromStations = (stationData, datetime) => {
   // 경기도 31개 시군 좌표
   const GYEONGGI_COORDS = {
     '수원시': { lat: 37.2636, lng: 127.0286 },
