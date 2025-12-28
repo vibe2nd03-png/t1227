@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -12,6 +12,7 @@ import {
   Filler,
 } from 'chart.js';
 import { Line, Bar } from 'react-chartjs-2';
+import { getHistorical10YearAverage, GYEONGGI_STATIONS } from '../services/kmaApi';
 
 // Chart.js 등록
 ChartJS.register(
@@ -26,12 +27,11 @@ ChartJS.register(
   Filler
 );
 
-// 과거 10년 평균 데이터 (기상청 API 연동 전 Mock 데이터)
-// 실제 기상청 API 키 발급 후 실시간 데이터로 대체 가능
-const HISTORICAL_DATA = {
-  // 월별 평균 데이터 (1월~12월)
-  temperature: [0.2, 2.5, 8.1, 14.2, 19.5, 24.1, 26.8, 27.2, 22.5, 15.8, 8.2, 2.1],
-  humidity: [55, 52, 53, 54, 60, 68, 78, 76, 68, 62, 58, 56],
+// 과거 10년 평균 기본 데이터 (API 로딩 전 또는 실패 시 사용)
+const DEFAULT_HISTORICAL_DATA = {
+  // 월별 평균 데이터 (1월~12월) - 경기도 평균
+  temperature: [-2.1, 0.5, 6.2, 12.8, 18.2, 22.8, 25.6, 26.1, 21.2, 14.5, 6.8, 0.1],
+  humidity: [58, 54, 52, 53, 62, 72, 82, 80, 72, 66, 62, 60],
   pm10: [52, 58, 62, 55, 48, 42, 38, 35, 40, 45, 50, 55],
   pm25: [28, 32, 35, 30, 25, 22, 20, 18, 21, 24, 27, 30],
   uv_index: [2.5, 3.2, 4.8, 6.2, 7.5, 8.8, 9.2, 8.5, 6.8, 4.5, 2.8, 2.2],
@@ -83,27 +83,77 @@ const CHART_TYPES = [
 function WeatherComparisonChart({ region, climateData }) {
   const [activeChart, setActiveChart] = useState('temperature');
   const [viewMode, setViewMode] = useState('comparison'); // comparison, trend, bar
+  const [historicalData, setHistoricalData] = useState(null);
+  const [isLoadingApi, setIsLoadingApi] = useState(false);
+  const [apiError, setApiError] = useState(null);
+  const [stationInfo, setStationInfo] = useState(null);
 
   const currentMonth = new Date().getMonth(); // 0-11
 
+  // 기상청 API에서 과거 10년 데이터 로드
+  const loadHistoricalFromApi = useCallback(async () => {
+    if (!region || !GYEONGGI_STATIONS[region]) return;
+
+    setIsLoadingApi(true);
+    setApiError(null);
+    setStationInfo(GYEONGGI_STATIONS[region]);
+
+    try {
+      // 현재 월의 10년 평균 데이터 조회
+      const monthData = await getHistorical10YearAverage(region, currentMonth + 1);
+
+      if (monthData) {
+        setHistoricalData(prevData => ({
+          ...(prevData || {}),
+          apiData: monthData,
+          hasApiData: true,
+        }));
+      }
+    } catch (error) {
+      console.error('기상청 API 로드 실패:', error);
+      setApiError('기상청 데이터를 불러오지 못했습니다');
+    } finally {
+      setIsLoadingApi(false);
+    }
+  }, [region, currentMonth]);
+
+  // 지역 변경 시 API 데이터 로드
+  useEffect(() => {
+    loadHistoricalFromApi();
+  }, [loadHistoricalFromApi]);
+
   // 지역별 보정된 과거 데이터 계산
-  const getHistoricalData = useMemo(() => {
+  const getHistoricalDataMemo = useMemo(() => {
     const adjustment = REGION_ADJUSTMENTS[region] || { temp: 1, humidity: 1, pm: 1 };
 
-    return {
-      temperature: HISTORICAL_DATA.temperature.map(v => +(v * adjustment.temp).toFixed(1)),
-      humidity: HISTORICAL_DATA.humidity.map(v => +(v * adjustment.humidity).toFixed(0)),
-      pm10: HISTORICAL_DATA.pm10.map(v => +(v * adjustment.pm).toFixed(0)),
-      pm25: HISTORICAL_DATA.pm25.map(v => +(v * adjustment.pm).toFixed(0)),
-      uv_index: HISTORICAL_DATA.uv_index.map(v => +v.toFixed(1)),
+    // API 데이터가 있으면 해당 월 데이터 업데이트
+    const baseData = {
+      temperature: DEFAULT_HISTORICAL_DATA.temperature.map(v => +(v * adjustment.temp).toFixed(1)),
+      humidity: DEFAULT_HISTORICAL_DATA.humidity.map(v => +(v * adjustment.humidity).toFixed(0)),
+      pm10: DEFAULT_HISTORICAL_DATA.pm10.map(v => +(v * adjustment.pm).toFixed(0)),
+      pm25: DEFAULT_HISTORICAL_DATA.pm25.map(v => +(v * adjustment.pm).toFixed(0)),
+      uv_index: DEFAULT_HISTORICAL_DATA.uv_index.map(v => +v.toFixed(1)),
     };
-  }, [region]);
+
+    // API에서 가져온 실제 데이터로 현재 월 업데이트
+    if (historicalData?.apiData) {
+      const api = historicalData.apiData;
+      if (api.temperature_avg !== null) {
+        baseData.temperature[currentMonth] = +api.temperature_avg.toFixed(1);
+      }
+      if (api.humidity_avg !== null) {
+        baseData.humidity[currentMonth] = +api.humidity_avg.toFixed(0);
+      }
+    }
+
+    return baseData;
+  }, [region, historicalData, currentMonth]);
 
   // 현재 데이터와 과거 평균 비교
   const comparisonData = useMemo(() => {
     if (!climateData) return null;
 
-    const historicalAvg = getHistoricalData;
+    const historicalAvg = getHistoricalDataMemo;
     const monthLabels = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
 
     // 현재 월 기준 과거 평균
@@ -132,7 +182,7 @@ function WeatherComparisonChart({ region, climateData }) {
       differences,
       currentMonth,
     };
-  }, [climateData, getHistoricalData, currentMonth]);
+  }, [climateData, getHistoricalDataMemo, currentMonth]);
 
   // 온도 차트 데이터
   const temperatureChartData = useMemo(() => {
@@ -464,11 +514,24 @@ function WeatherComparisonChart({ region, climateData }) {
 
       {/* 데이터 출처 안내 */}
       <div className="data-source-note">
-        <span>📌 과거 데이터: 기상청 10년 평균 (시뮬레이션)</span>
+        {isLoadingApi ? (
+          <span>🔄 기상청 API 데이터 로딩 중...</span>
+        ) : historicalData?.hasApiData ? (
+          <span>✅ 기상청 {stationInfo?.name || ''} 관측소 10년 평균</span>
+        ) : (
+          <span>📌 과거 데이터: 기상청 10년 평균 (추정)</span>
+        )}
         <a href="https://apihub.kma.go.kr" target="_blank" rel="noopener noreferrer">
           기상청 API 허브
         </a>
       </div>
+
+      {/* 관측소 정보 */}
+      {stationInfo?.note && (
+        <div className="station-info-note">
+          ℹ️ {stationInfo.note}
+        </div>
+      )}
     </div>
   );
 }
