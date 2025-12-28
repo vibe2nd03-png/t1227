@@ -14,7 +14,7 @@ export default async function handler(req, res) {
   }
 
   const { tm, stn = '0' } = req.query;
-  const AUTH_KEY = '-uv3O-FtR1Gr9zvhbYdRMA';
+  const AUTH_KEY = 'DbUh4_ekRRi1IeP3pPUYog';
 
   if (!tm) {
     return res.status(400).json({ error: 'tm parameter is required' });

@@ -10,7 +10,7 @@ const KMA_PROXY_API = '/api/kma';
 
 // 직접 API (서버사이드 전용)
 const KMA_API_BASE = 'https://apihub.kma.go.kr/api/typ01/url';
-const AUTH_KEY = '-uv3O-FtR1Gr9zvhbYdRMA';
+const AUTH_KEY = 'DbUh4_ekRRi1IeP3pPUYog';
 
 // 경기도 관측소 매핑 (지역명 -> 관측소 코드)
 // 일부 지역은 가장 가까운 관측소 사용
