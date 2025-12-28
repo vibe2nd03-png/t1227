@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import ClimateMap from './components/ClimateMap';
 import Sidebar from './components/Sidebar';
 import WeatherAlertBanner from './components/WeatherAlertBanner';
-import { climateService } from './supabase';
 import { getGyeonggiRealtimeWeather } from './services/kmaApi';
 
 // 대상별 점수 조정 배율
@@ -27,8 +26,7 @@ function App() {
   const [explanation, setExplanation] = useState(null);
   const [target, setTarget] = useState('general');
   const [loading, setLoading] = useState(true);
-  const [detailLoading, setDetailLoading] = useState(false);
-  const [dataSource, setDataSource] = useState('loading'); // 'kma', 'supabase', 'mock'
+  const [dataSource, setDataSource] = useState('loading');
   const [lastUpdated, setLastUpdated] = useState(null);
 
   // 초기 데이터 로드
@@ -36,90 +34,39 @@ function App() {
     loadAllRegions();
   }, [target]);
 
-  // 기상청 API에서 실시간 데이터 로드 (우선)
+  // 데이터 로드 (기상청 API 우선, 3초 타임아웃)
   const loadAllRegions = async () => {
-    try {
-      setLoading(true);
+    setLoading(true);
 
-      // 1. 기상청 API에서 실시간 데이터 시도
-      console.log('기상청 API에서 실시간 데이터 로딩 중...');
-      const kmaData = await getGyeonggiRealtimeWeather();
+    // 기상청 API 호출 (3초 타임아웃)
+    const kmaPromise = getGyeonggiRealtimeWeather();
+    const timeoutPromise = new Promise(resolve => setTimeout(() => resolve(null), 3000));
+
+    try {
+      const kmaData = await Promise.race([kmaPromise, timeoutPromise]);
 
       if (kmaData && kmaData.regions && kmaData.regions.length > 0) {
-        console.log('기상청 API 데이터 로드 성공:', kmaData.datetime);
-
-        // 대상별 점수 조정 적용
         const formattedRegions = kmaData.regions.map(region => {
           const baseScore = region.score || 0;
           const multiplier = TARGET_MULTIPLIERS[target] || 1.0;
           const adjustedScore = Math.min(100, Math.round(baseScore * multiplier));
           const risk = calculateRiskLevel(adjustedScore);
-
-          return {
-            ...region,
-            adjusted_score: adjustedScore,
-            risk_level: risk.level,
-            risk_label: risk.label,
-            risk_color: risk.color,
-          };
+          return { ...region, adjusted_score: adjustedScore, risk_level: risk.level, risk_label: risk.label, risk_color: risk.color };
         });
-
         setRegions(formattedRegions);
         setDataSource('kma');
         setLastUpdated(kmaData.datetime);
+        setLoading(false);
         return;
       }
-
-      // 2. 기상청 API 실패 시 Supabase 시도
-      console.log('기상청 API 실패, Supabase 시도...');
-      const data = await climateService.getAllRegions();
-
-      if (data && data.length > 0) {
-        // Supabase 데이터를 프론트엔드 형식으로 변환
-        const formattedRegions = data.map(region => {
-          // 대상별 점수 조정
-          const baseScore = region.score || 0;
-          const multiplier = TARGET_MULTIPLIERS[target] || 1.0;
-          const adjustedScore = Math.min(100, Math.round(baseScore * multiplier));
-          const risk = calculateRiskLevel(adjustedScore);
-
-          return {
-            region: region.region,
-            lat: parseFloat(region.lat),
-            lng: parseFloat(region.lng),
-            score: baseScore,
-            adjusted_score: adjustedScore,
-            risk_level: risk.level,
-            risk_label: risk.label,
-            risk_color: risk.color,
-            climate_data: {
-              temperature: region.temperature,
-              apparent_temperature: region.apparent_temperature,
-              humidity: region.humidity,
-              pm10: region.pm10,
-              pm25: region.pm25,
-              uv_index: region.uv_index,
-              surface_temperature: region.surface_temperature,
-              wind_speed: region.wind_speed,
-              precipitation: region.precipitation,
-            }
-          };
-        });
-        setRegions(formattedRegions);
-        setDataSource('supabase');
-        setLastUpdated(new Date().toISOString());
-      } else {
-        // 3. Supabase도 실패 시 Mock 데이터 사용
-        loadMockData();
-        setDataSource('mock');
-      }
-    } catch (error) {
-      console.error('데이터 로드 실패:', error);
-      loadMockData();
-      setDataSource('mock');
-    } finally {
-      setLoading(false);
+    } catch (e) {
+      console.warn('KMA API 실패:', e);
     }
+
+    // 실패 시 즉시 Mock 데이터 표시
+    loadMockData();
+    setDataSource('mock');
+    setLoading(false);
   };
 
   // Mock 데이터 (백엔드 없이 테스트용)
@@ -161,38 +108,9 @@ function App() {
   };
 
   // 지역 선택 시
-  const handleRegionSelect = async (region) => {
+  const handleRegionSelect = (region) => {
     setSelectedRegion(region);
-    setDetailLoading(true);
-
-    try {
-      // Supabase에서 AI 설명 조회
-      const savedExplanation = await climateService.getExplanation(region.region, target);
-
-      if (savedExplanation && savedExplanation.explanation) {
-        setExplanation({
-          region: region.region,
-          score: region.adjusted_score || region.score,
-          risk_level: region.risk_level,
-          risk_label: region.risk_label,
-          explanation: savedExplanation.explanation,
-          action_guides: savedExplanation.action_guides || [],
-          target: getTargetLabel(target),
-        });
-      } else {
-        // 저장된 설명이 없으면 기본 설명 생성
-        const mockExplanation = generateMockExplanation(region, target);
-        setExplanation(mockExplanation);
-
-        // 생성된 설명을 Supabase에 저장
-        await climateService.saveExplanation(region.region, target, mockExplanation.explanation);
-      }
-    } catch (error) {
-      console.error('설명 로드 실패:', error);
-      setExplanation(generateMockExplanation(region, target));
-    } finally {
-      setDetailLoading(false);
-    }
+    setExplanation(generateMockExplanation(region, target));
   };
 
   // 대상 라벨 반환
@@ -283,7 +201,7 @@ function App() {
           explanation={explanation}
           target={target}
           onTargetChange={handleTargetChange}
-          loading={detailLoading}
+          loading={false}
           allRegions={regions}
           onRegionSelect={handleRegionSelect}
         />
