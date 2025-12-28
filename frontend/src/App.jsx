@@ -34,16 +34,19 @@ function App() {
     loadAllRegions();
   }, [target]);
 
-  // 데이터 로드 (기상청 API 우선, 3초 타임아웃)
+  // 데이터 로드 (기상청 API 우선, 10초 타임아웃)
   const loadAllRegions = async () => {
     setLoading(true);
 
-    // 기상청 API 호출 (3초 타임아웃)
-    const kmaPromise = getGyeonggiRealtimeWeather();
-    const timeoutPromise = new Promise(resolve => setTimeout(() => resolve(null), 3000));
-
     try {
-      const kmaData = await Promise.race([kmaPromise, timeoutPromise]);
+      // 기상청 API 호출 (10초 타임아웃)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+      const kmaData = await getGyeonggiRealtimeWeather();
+      clearTimeout(timeoutId);
+
+      console.log('KMA 응답:', kmaData);
 
       if (kmaData && kmaData.regions && kmaData.regions.length > 0) {
         const formattedRegions = kmaData.regions.map(region => {
@@ -57,6 +60,7 @@ function App() {
         setDataSource('kma');
         setLastUpdated(kmaData.datetime);
         setLoading(false);
+        console.log('기상청 데이터 로드 완료:', formattedRegions.length, '개 지역');
         return;
       }
     } catch (e) {
@@ -64,6 +68,7 @@ function App() {
     }
 
     // 실패 시 즉시 Mock 데이터 표시
+    console.log('Mock 데이터 사용');
     loadMockData();
     setDataSource('mock');
     setLoading(false);
