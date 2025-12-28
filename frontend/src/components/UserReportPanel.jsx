@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '../supabase';
 
 // 체감 이모지 옵션
 const FEELING_OPTIONS = [
@@ -62,26 +63,42 @@ function UserReportPanel({ selectedRegion, onReportSubmit }) {
   const [recentReports, setRecentReports] = useState([]);
   const [showSuccess, setShowSuccess] = useState(false);
 
-  // 최근 제보 로드 (로컬 스토리지)
+  // 최근 제보 로드 (Supabase 우선, 실패시 로컬)
   useEffect(() => {
     if (selectedRegion) {
       loadRecentReports(selectedRegion.region);
     }
   }, [selectedRegion]);
 
-  const loadRecentReports = (regionName) => {
-    const allReports = getLocalReports();
-    const now = Date.now();
-    const dayAgo = now - 24 * 60 * 60 * 1000;
+  const loadRecentReports = async (regionName) => {
+    try {
+      // Supabase에서 24시간 이내 제보 조회
+      const { data, error } = await supabase
+        .from('user_reports')
+        .select('*')
+        .eq('region', regionName)
+        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+        .order('created_at', { ascending: false })
+        .limit(10);
 
-    // 해당 지역의 24시간 이내 제보만 필터링
+      if (!error && data) {
+        setRecentReports(data);
+        return;
+      }
+    } catch (err) {
+      console.warn('Supabase 조회 실패, 로컬 사용:', err);
+    }
+
+    // Supabase 실패시 로컬 스토리지 사용
+    const allReports = getLocalReports();
+    const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
     const filtered = allReports.filter(r =>
       r.region === regionName && new Date(r.created_at).getTime() > dayAgo
     );
     setRecentReports(filtered.slice(0, 10));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!selectedFeeling || !selectedRegion) return;
 
     setIsSubmitting(true);
@@ -89,7 +106,6 @@ function UserReportPanel({ selectedRegion, onReportSubmit }) {
     try {
       // 제보 데이터 생성
       const reportData = {
-        id: Date.now(),
         region: selectedRegion.region,
         lat: selectedRegion.lat,
         lng: selectedRegion.lng,
@@ -99,11 +115,19 @@ function UserReportPanel({ selectedRegion, onReportSubmit }) {
         temp_adjustment: selectedFeeling.tempAdjust,
         comment: comment || selectedFeeling.label,
         is_air_quality: selectedFeeling.airQuality || false,
-        created_at: new Date().toISOString(),
       };
 
-      // 로컬 스토리지에 저장
-      saveLocalReport(reportData);
+      // Supabase에 저장 시도
+      const { data, error } = await supabase
+        .from('user_reports')
+        .insert([reportData])
+        .select();
+
+      if (error) {
+        console.warn('Supabase 저장 실패, 로컬 저장:', error);
+        // 로컬 스토리지에 백업 저장
+        saveLocalReport({ ...reportData, id: Date.now(), created_at: new Date().toISOString() });
+      }
 
       // 성공 표시
       setShowSuccess(true);
@@ -115,7 +139,7 @@ function UserReportPanel({ selectedRegion, onReportSubmit }) {
 
       // 부모 컴포넌트에 알림
       if (onReportSubmit) {
-        onReportSubmit(reportData);
+        onReportSubmit(data?.[0] || reportData);
       }
 
       // 제보 목록 새로고침
@@ -219,7 +243,7 @@ function UserReportPanel({ selectedRegion, onReportSubmit }) {
           {/* 저장 안내 */}
           <div className="login-prompt">
             <span>💡</span>
-            <span>제보는 브라우저에 저장됩니다</span>
+            <span>제보는 서버에 저장되어 모두에게 공유됩니다</span>
           </div>
 
           {/* 최근 제보 목록 */}
