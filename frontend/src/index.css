@@ -3914,6 +3914,52 @@ body {
   margin-top: 8px;
 }
 
+/* 데이터 출처 배지 */
+.data-source-badge {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  z-index: 1500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  font-size: 0.75rem;
+  color: #333;
+  backdrop-filter: blur(10px);
+}
+
+.source-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+.source-indicator.kma {
+  background: #4CAF50;
+}
+
+.source-indicator.supabase {
+  background: #2196F3;
+}
+
+.source-indicator.mock {
+  background: #FF9800;
+}
+
+.source-indicator.loading {
+  background: #9E9E9E;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
 /* 반응형 차트 */
 @media (max-width: 480px) {
   .comparison-summary {

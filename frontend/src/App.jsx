@@ -3,6 +3,7 @@ import ClimateMap from './components/ClimateMap';
 import Sidebar from './components/Sidebar';
 import WeatherAlertBanner from './components/WeatherAlertBanner';
 import { climateService } from './supabase';
+import { getGyeonggiRealtimeWeather } from './services/kmaApi';
 
 // 대상별 점수 조정 배율
 const TARGET_MULTIPLIERS = {
@@ -27,16 +28,50 @@ function App() {
   const [target, setTarget] = useState('general');
   const [loading, setLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [dataSource, setDataSource] = useState('loading'); // 'kma', 'supabase', 'mock'
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   // 초기 데이터 로드
   useEffect(() => {
     loadAllRegions();
   }, [target]);
 
-  // Supabase에서 모든 지역 데이터 로드
+  // 기상청 API에서 실시간 데이터 로드 (우선)
   const loadAllRegions = async () => {
     try {
       setLoading(true);
+
+      // 1. 기상청 API에서 실시간 데이터 시도
+      console.log('기상청 API에서 실시간 데이터 로딩 중...');
+      const kmaData = await getGyeonggiRealtimeWeather();
+
+      if (kmaData && kmaData.regions && kmaData.regions.length > 0) {
+        console.log('기상청 API 데이터 로드 성공:', kmaData.datetime);
+
+        // 대상별 점수 조정 적용
+        const formattedRegions = kmaData.regions.map(region => {
+          const baseScore = region.score || 0;
+          const multiplier = TARGET_MULTIPLIERS[target] || 1.0;
+          const adjustedScore = Math.min(100, Math.round(baseScore * multiplier));
+          const risk = calculateRiskLevel(adjustedScore);
+
+          return {
+            ...region,
+            adjusted_score: adjustedScore,
+            risk_level: risk.level,
+            risk_label: risk.label,
+            risk_color: risk.color,
+          };
+        });
+
+        setRegions(formattedRegions);
+        setDataSource('kma');
+        setLastUpdated(kmaData.datetime);
+        return;
+      }
+
+      // 2. 기상청 API 실패 시 Supabase 시도
+      console.log('기상청 API 실패, Supabase 시도...');
       const data = await climateService.getAllRegions();
 
       if (data && data.length > 0) {
@@ -71,13 +106,17 @@ function App() {
           };
         });
         setRegions(formattedRegions);
+        setDataSource('supabase');
+        setLastUpdated(new Date().toISOString());
       } else {
-        // Supabase 데이터 없을 시 Mock 데이터 사용
+        // 3. Supabase도 실패 시 Mock 데이터 사용
         loadMockData();
+        setDataSource('mock');
       }
     } catch (error) {
-      console.error('Supabase 데이터 로드 실패:', error);
+      console.error('데이터 로드 실패:', error);
       loadMockData();
+      setDataSource('mock');
     } finally {
       setLoading(false);
     }
@@ -213,13 +252,31 @@ function App() {
     }
   };
 
+  // 데이터 출처 포맷
+  const formatDataSource = () => {
+    if (dataSource === 'kma') {
+      const time = lastUpdated ? `${lastUpdated.slice(8, 10)}:${lastUpdated.slice(10, 12)}` : '';
+      return `기상청 실시간 (${time} 관측)`;
+    } else if (dataSource === 'supabase') {
+      return 'Supabase DB';
+    }
+    return '오프라인 데이터';
+  };
+
   if (loading && regions.length === 0) {
-    return <div className="loading">데이터를 불러오는 중...</div>;
+    return <div className="loading">기상청 API에서 실시간 데이터를 불러오는 중...</div>;
   }
 
   return (
     <div className="app-container">
       <WeatherAlertBanner />
+
+      {/* 데이터 출처 배지 */}
+      <div className="data-source-badge">
+        <span className={`source-indicator ${dataSource}`}></span>
+        <span>{formatDataSource()}</span>
+      </div>
+
       <div className="main-content">
         <Sidebar
           selectedRegion={selectedRegion}
