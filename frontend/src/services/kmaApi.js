@@ -1,8 +1,14 @@
 /**
  * 기상청 API 허브 연동 서비스
  * https://apihub.kma.go.kr
+ *
+ * CORS 문제로 인해 Vercel Serverless Function 프록시 사용
  */
 
+// 프록시 API 엔드포인트 (Vercel Serverless Function)
+const KMA_PROXY_API = '/api/kma';
+
+// 직접 API (서버사이드 전용)
 const KMA_API_BASE = 'https://apihub.kma.go.kr/api/typ01/url';
 const AUTH_KEY = '-uv3O-FtR1Gr9zvhbYdRMA';
 
@@ -91,26 +97,23 @@ const parseKmaResponse = (text, columns) => {
 
 /**
  * 지상 시간 자료 조회 (현재/과거)
+ * Vercel Serverless Function 프록시를 통해 CORS 우회
  * @param {string} datetime - YYYYMMDDHHMM 형식
  * @param {number} stn - 관측소 코드 (0: 전체)
  */
 export const getSurfaceData = async (datetime, stn = 0) => {
   try {
-    const url = `${KMA_API_BASE}/kma_sfctm2.php?tm=${datetime}&stn=${stn}&authKey=${AUTH_KEY}`;
+    // 프록시 API 사용 (CORS 우회)
+    const url = `${KMA_PROXY_API}?tm=${datetime}&stn=${stn}`;
     const response = await fetch(url);
-    const text = await response.text();
+    const json = await response.json();
 
-    const columns = [
-      'TM', 'STN', 'WD', 'WS', 'GST_WD', 'GST_WS', 'GST_TM',
-      'PA', 'PS', 'PT', 'PR', 'TA', 'TD', 'HM', 'PV',
-      'RN', 'RN_DAY', 'RN_JUN', 'RN_INT', 'SD_HR3', 'SD_DAY', 'SD_TOT',
-      'WC', 'WP', 'WW', 'CA_TOT', 'CA_MID', 'CH_MIN', 'CT',
-      'CT_TOP', 'CT_MID', 'CT_LOW', 'VS', 'SS', 'SI',
-      'ST_GD', 'TS', 'TE_005', 'TE_01', 'TE_02', 'TE_03',
-      'ST_SEA', 'WH', 'BF', 'IR', 'IX'
-    ];
+    if (json.success && json.data) {
+      return json.data;
+    }
 
-    return parseKmaResponse(text, columns);
+    console.error('기상청 프록시 API 오류:', json.error);
+    return null;
   } catch (error) {
     console.error('기상청 API 오류:', error);
     return null;
