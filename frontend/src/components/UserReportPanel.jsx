@@ -103,54 +103,68 @@ function UserReportPanel({ selectedRegion, onReportSubmit }) {
 
     setIsSubmitting(true);
 
-    try {
-      // 제보 데이터 생성
-      const reportData = {
-        region: selectedRegion.region,
-        lat: selectedRegion.lat,
-        lng: selectedRegion.lng,
-        emoji: selectedFeeling.emoji,
-        feeling_label: selectedFeeling.label,
-        sentiment_score: selectedFeeling.sentiment,
-        temp_adjustment: selectedFeeling.tempAdjust,
-        comment: comment || selectedFeeling.label,
-        is_air_quality: selectedFeeling.airQuality || false,
-      };
+    // 제보 데이터 생성
+    const reportData = {
+      region: selectedRegion.region,
+      lat: selectedRegion.lat,
+      lng: selectedRegion.lng,
+      emoji: selectedFeeling.emoji,
+      feeling_label: selectedFeeling.label,
+      sentiment_score: selectedFeeling.sentiment,
+      temp_adjustment: selectedFeeling.tempAdjust,
+      comment: comment || selectedFeeling.label,
+      is_air_quality: selectedFeeling.airQuality || false,
+    };
 
-      // Supabase에 저장 시도
-      const { data, error } = await supabase
+    // 타임아웃 Promise 생성 (5초)
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Timeout')), 5000)
+    );
+
+    let savedData = null;
+
+    try {
+      // Supabase에 저장 시도 (5초 타임아웃)
+      const supabasePromise = supabase
         .from('user_reports')
         .insert([reportData])
         .select();
 
-      if (error) {
-        console.warn('Supabase 저장 실패, 로컬 저장:', error);
-        // 로컬 스토리지에 백업 저장
-        saveLocalReport({ ...reportData, id: Date.now(), created_at: new Date().toISOString() });
+      const result = await Promise.race([supabasePromise, timeoutPromise]);
+
+      if (result.error) {
+        throw result.error;
       }
 
-      // 성공 표시
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 2000);
-
-      // 폼 초기화
-      setSelectedFeeling(null);
-      setComment('');
-
-      // 부모 컴포넌트에 알림
-      if (onReportSubmit) {
-        onReportSubmit(data?.[0] || reportData);
-      }
-
-      // 제보 목록 새로고침
-      loadRecentReports(selectedRegion.region);
+      savedData = result.data?.[0];
+      console.log('Supabase 저장 성공:', savedData);
 
     } catch (error) {
-      console.error('제보 제출 실패:', error);
-      alert('제보 제출에 실패했습니다. 다시 시도해주세요.');
-    } finally {
-      setIsSubmitting(false);
+      console.warn('Supabase 저장 실패, 로컬 저장:', error.message);
+      // 로컬 스토리지에 백업 저장
+      const localData = { ...reportData, id: Date.now(), created_at: new Date().toISOString() };
+      saveLocalReport(localData);
+      savedData = localData;
     }
+
+    // 성공 표시
+    setShowSuccess(true);
+    setTimeout(() => setShowSuccess(false), 2000);
+
+    // 폼 초기화
+    setSelectedFeeling(null);
+    setComment('');
+
+    // 부모 컴포넌트에 알림
+    if (onReportSubmit) {
+      onReportSubmit(savedData || reportData);
+    }
+
+    // 제보 목록 새로고침
+    loadRecentReports(selectedRegion.region);
+
+    // 제출 상태 해제
+    setIsSubmitting(false);
   };
 
   const formatTimeAgo = (dateString) => {
