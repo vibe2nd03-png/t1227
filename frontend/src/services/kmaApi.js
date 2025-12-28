@@ -122,27 +122,23 @@ export const getSurfaceData = async (datetime, stn = 0) => {
 
 /**
  * 지상 시간자료 기간 조회 (kma_sfctm3)
+ * Vercel Serverless Function 프록시 사용 (CORS 우회)
  * @param {string} startDatetime - YYYYMMDDHHMM 형식 (시작)
  * @param {string} endDatetime - YYYYMMDDHHMM 형식 (끝)
  * @param {number} stn - 관측소 코드
  */
 export const getSurfaceDataPeriod = async (startDatetime, endDatetime, stn) => {
   try {
-    const url = `${KMA_API_BASE}/kma_sfctm3.php?tm1=${startDatetime}&tm2=${endDatetime}&stn=${stn}&authKey=${AUTH_KEY}`;
+    const url = `/api/kma-period?tm1=${startDatetime}&tm2=${endDatetime}&stn=${stn}`;
     const response = await fetch(url);
-    const text = await response.text();
+    const json = await response.json();
 
-    const columns = [
-      'TM', 'STN', 'WD', 'WS', 'GST_WD', 'GST_WS', 'GST_TM',
-      'PA', 'PS', 'PT', 'PR', 'TA', 'TD', 'HM', 'PV',
-      'RN', 'RN_DAY', 'RN_JUN', 'RN_INT', 'SD_HR3', 'SD_DAY', 'SD_TOT',
-      'WC', 'WP', 'WW', 'CA_TOT', 'CA_MID', 'CH_MIN', 'CT',
-      'CT_TOP', 'CT_MID', 'CT_LOW', 'VS', 'SS', 'SI',
-      'ST_GD', 'TS', 'TE_005', 'TE_01', 'TE_02', 'TE_03',
-      'ST_SEA', 'WH', 'BF', 'IR', 'IX'
-    ];
+    if (json.success && json.data) {
+      return json.data;
+    }
 
-    return parseKmaResponse(text, columns);
+    console.error('기상청 기간 조회 API 오류:', json.error);
+    return null;
   } catch (error) {
     console.error('기상청 기간 조회 API 오류:', error);
     return null;
