@@ -11,7 +11,9 @@ const AGE_OPTIONS = [
   { value: '20s', label: '20대', prompt: 'young adult in 20s' },
   { value: '30s', label: '30대', prompt: 'adult in 30s' },
   { value: '40s', label: '40대', prompt: 'adult in 40s' },
-  { value: '50s', label: '50대+', prompt: 'mature adult in 50s' },
+  { value: '50s', label: '50대', prompt: 'mature adult in 50s' },
+  { value: '60s', label: '60대', prompt: 'senior adult in 60s' },
+  { value: '70s', label: '70대', prompt: 'elderly person in 70s' },
 ];
 
 const STYLE_OPTIONS = [
