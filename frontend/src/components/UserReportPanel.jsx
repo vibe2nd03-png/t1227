@@ -59,7 +59,6 @@ function UserReportPanel({ selectedRegion, onReportSubmit }) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedFeeling, setSelectedFeeling] = useState(null);
   const [comment, setComment] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [recentReports, setRecentReports] = useState([]);
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -98,13 +97,13 @@ function UserReportPanel({ selectedRegion, onReportSubmit }) {
     setRecentReports(filtered.slice(0, 10));
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!selectedFeeling || !selectedRegion) return;
-
-    setIsSubmitting(true);
 
     // 제보 데이터 생성
     const reportData = {
+      id: Date.now(),
+      created_at: new Date().toISOString(),
       region: selectedRegion.region,
       lat: selectedRegion.lat,
       lng: selectedRegion.lng,
@@ -116,36 +115,8 @@ function UserReportPanel({ selectedRegion, onReportSubmit }) {
       is_air_quality: selectedFeeling.airQuality || false,
     };
 
-    // 타임아웃 Promise 생성 (5초)
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Timeout')), 5000)
-    );
-
-    let savedData = null;
-
-    try {
-      // Supabase에 저장 시도 (5초 타임아웃)
-      const supabasePromise = supabase
-        .from('user_reports')
-        .insert([reportData])
-        .select();
-
-      const result = await Promise.race([supabasePromise, timeoutPromise]);
-
-      if (result.error) {
-        throw result.error;
-      }
-
-      savedData = result.data?.[0];
-      console.log('Supabase 저장 성공:', savedData);
-
-    } catch (error) {
-      console.warn('Supabase 저장 실패, 로컬 저장:', error.message);
-      // 로컬 스토리지에 백업 저장
-      const localData = { ...reportData, id: Date.now(), created_at: new Date().toISOString() };
-      saveLocalReport(localData);
-      savedData = localData;
-    }
+    // 로컬 스토리지에 즉시 저장
+    saveLocalReport(reportData);
 
     // 성공 표시
     setShowSuccess(true);
@@ -157,14 +128,35 @@ function UserReportPanel({ selectedRegion, onReportSubmit }) {
 
     // 부모 컴포넌트에 알림
     if (onReportSubmit) {
-      onReportSubmit(savedData || reportData);
+      onReportSubmit(reportData);
     }
 
     // 제보 목록 새로고침
-    loadRecentReports(selectedRegion.region);
+    const allReports = getLocalReports();
+    const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
+    const filtered = allReports.filter(r =>
+      r.region === selectedRegion.region && new Date(r.created_at).getTime() > dayAgo
+    );
+    setRecentReports(filtered.slice(0, 10));
 
-    // 제출 상태 해제
-    setIsSubmitting(false);
+    // 백그라운드에서 Supabase 저장 시도 (실패해도 무시)
+    supabase
+      .from('user_reports')
+      .insert([{
+        region: reportData.region,
+        lat: reportData.lat,
+        lng: reportData.lng,
+        emoji: reportData.emoji,
+        feeling_label: reportData.feeling_label,
+        sentiment_score: reportData.sentiment_score,
+        temp_adjustment: reportData.temp_adjustment,
+        comment: reportData.comment,
+        is_air_quality: reportData.is_air_quality,
+      }])
+      .then(({ error }) => {
+        if (error) console.warn('Supabase 백업 실패:', error.message);
+        else console.log('Supabase 백업 성공');
+      });
   };
 
   const formatTimeAgo = (dateString) => {
@@ -249,9 +241,9 @@ function UserReportPanel({ selectedRegion, onReportSubmit }) {
           <button
             className={`submit-report-btn ${showSuccess ? 'success' : ''}`}
             onClick={handleSubmit}
-            disabled={!selectedFeeling || isSubmitting}
+            disabled={!selectedFeeling || showSuccess}
           >
-            {showSuccess ? '✓ 제보 완료!' : isSubmitting ? '제출 중...' : '🚀 제보하기'}
+            {showSuccess ? '✓ 제보 완료!' : '🚀 제보하기'}
           </button>
 
           {/* 저장 안내 */}
