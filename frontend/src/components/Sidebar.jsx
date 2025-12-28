@@ -5,6 +5,7 @@ import AirQualityNav from './AirQualityNav';
 import AuthModal from './AuthModal';
 import UserProfile from './UserProfile';
 import NotificationManager from './NotificationManager';
+import WeatherComparisonChart from './WeatherComparisonChart';
 import { useAuth } from '../contexts/AuthContext';
 
 const TARGET_OPTIONS = [
@@ -17,6 +18,7 @@ const TARGET_OPTIONS = [
 // 메인 탭 옵션
 const MAIN_TABS = [
   { id: 'info', label: '기후정보', icon: '🌡️' },
+  { id: 'chart', label: '10년비교', icon: '📊' },
   { id: 'ootd', label: '옷차림', icon: '👔' },
   { id: 'report', label: '체감제보', icon: '📢' },
 ];
@@ -151,6 +153,16 @@ function Sidebar({ selectedRegion, explanation, target, onTargetChange, loading,
             {activeTab === 'info' && (
               <div className="tab-panel">
                 <RegionCard region={selectedRegion} explanation={explanation} />
+              </div>
+            )}
+
+            {/* 10년 비교 차트 탭 */}
+            {activeTab === 'chart' && (
+              <div className="tab-panel">
+                <WeatherComparisonChart
+                  region={selectedRegion.region}
+                  climateData={selectedRegion.climate_data}
+                />
               </div>
             )}
 

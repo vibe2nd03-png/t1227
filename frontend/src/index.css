@@ -3736,3 +3736,190 @@ body {
   max-height: calc(80vh - 60px);
   overflow-y: auto;
 }
+
+/* ========================================
+   날씨 비교 차트 스타일
+   ======================================== */
+
+.weather-comparison-chart {
+  padding: 0;
+}
+
+.weather-chart-placeholder {
+  text-align: center;
+  padding: 40px 20px;
+  color: #999;
+}
+
+.weather-chart-placeholder .placeholder-icon {
+  font-size: 3rem;
+  margin-bottom: 15px;
+  opacity: 0.5;
+}
+
+.weather-chart-placeholder p {
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.chart-header h3 {
+  font-size: 1rem;
+  color: #333;
+  margin: 0;
+}
+
+.view-mode-toggle {
+  display: flex;
+  gap: 4px;
+  background: #f0f0f0;
+  padding: 3px;
+  border-radius: 8px;
+}
+
+.view-mode-toggle button {
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #666;
+  transition: all 0.2s;
+}
+
+.view-mode-toggle button.active {
+  background: white;
+  color: #667eea;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.chart-type-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+}
+
+.chart-tab {
+  padding: 8px 14px;
+  font-size: 0.8rem;
+  border: 2px solid #e0e0e0;
+  background: white;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #666;
+}
+
+.chart-tab:hover {
+  border-color: var(--tab-color, #667eea);
+  color: var(--tab-color, #667eea);
+}
+
+.chart-tab.active {
+  background: var(--tab-color, #667eea);
+  border-color: var(--tab-color, #667eea);
+  color: white;
+  font-weight: 600;
+}
+
+.chart-container {
+  height: 220px;
+  margin-bottom: 15px;
+  background: #fafafa;
+  border-radius: 12px;
+  padding: 10px;
+}
+
+.comparison-summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.summary-card {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 10px;
+  padding: 10px 8px;
+  text-align: center;
+  border: 1px solid #e0e0e0;
+}
+
+.summary-card .summary-label {
+  display: block;
+  font-size: 0.7rem;
+  color: #888;
+  margin-bottom: 4px;
+}
+
+.summary-card .summary-value {
+  display: block;
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.summary-card .summary-value.higher {
+  color: #e53935;
+}
+
+.summary-card .summary-value.lower {
+  color: #1e88e5;
+}
+
+.summary-card .summary-note {
+  display: block;
+  font-size: 0.65rem;
+  color: #aaa;
+}
+
+.data-source-note {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.7rem;
+  color: #999;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin-top: 10px;
+}
+
+.data-source-note a {
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.data-source-note a:hover {
+  text-decoration: underline;
+}
+
+/* 반응형 차트 */
+@media (max-width: 480px) {
+  .comparison-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .chart-container {
+    height: 180px;
+  }
+
+  .chart-type-tabs {
+    justify-content: center;
+  }
+
+  .chart-tab {
+    padding: 6px 10px;
+    font-size: 0.75rem;
+  }
+}
