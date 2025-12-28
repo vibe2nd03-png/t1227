@@ -306,18 +306,27 @@ export const getObservationData = async (regionName, date = new Date()) => {
 };
 
 /**
+ * 한국 시간(KST) 가져오기
+ */
+const getKSTDate = () => {
+  const now = new Date();
+  // UTC 시간에 9시간 추가하여 KST 계산
+  const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+  return new Date(utc + (9 * 60 * 60 * 1000));
+};
+
+/**
  * 경기도 31개 시군 실시간 기상 데이터 조회 (단일 API 호출)
  */
 export const getGyeonggiRealtimeWeather = async () => {
   try {
     // 한국 시간 기준 1시간 전 정시
-    const now = new Date();
-    now.setTime(now.getTime() + 9 * 60 * 60 * 1000); // UTC to KST
-    now.setHours(now.getHours() - 1, 0, 0, 0);
+    const kst = getKSTDate();
+    kst.setHours(kst.getHours() - 1, 0, 0, 0);
 
-    const datetime = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(now.getHours()).padStart(2, '0')}00`;
+    const datetime = `${kst.getFullYear()}${String(kst.getMonth() + 1).padStart(2, '0')}${String(kst.getDate()).padStart(2, '0')}${String(kst.getHours()).padStart(2, '0')}00`;
 
-    console.log('기상청 API 요청:', datetime);
+    console.log('기상청 API 요청 (KST):', datetime);
 
     // 전체 관측소 한 번에 조회 (stn=0)
     const allData = await getSurfaceData(datetime, 0);
@@ -331,8 +340,10 @@ export const getGyeonggiRealtimeWeather = async () => {
     }
 
     // 실패시 2시간 전 시도
-    now.setHours(now.getHours() - 1);
-    const prevDatetime = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${String(now.getHours()).padStart(2, '0')}00`;
+    kst.setHours(kst.getHours() - 1);
+    const prevDatetime = `${kst.getFullYear()}${String(kst.getMonth() + 1).padStart(2, '0')}${String(kst.getDate()).padStart(2, '0')}${String(kst.getHours()).padStart(2, '0')}00`;
+
+    console.log('기상청 API 재시도 (KST):', prevDatetime);
 
     const prevData = await getSurfaceData(prevDatetime, 0);
     if (prevData && prevData.length > 0) {
