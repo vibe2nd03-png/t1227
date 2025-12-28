@@ -121,6 +121,35 @@ export const getSurfaceData = async (datetime, stn = 0) => {
 };
 
 /**
+ * 지상 시간자료 기간 조회 (kma_sfctm3)
+ * @param {string} startDatetime - YYYYMMDDHHMM 형식 (시작)
+ * @param {string} endDatetime - YYYYMMDDHHMM 형식 (끝)
+ * @param {number} stn - 관측소 코드
+ */
+export const getSurfaceDataPeriod = async (startDatetime, endDatetime, stn) => {
+  try {
+    const url = `${KMA_API_BASE}/kma_sfctm3.php?tm1=${startDatetime}&tm2=${endDatetime}&stn=${stn}&authKey=${AUTH_KEY}`;
+    const response = await fetch(url);
+    const text = await response.text();
+
+    const columns = [
+      'TM', 'STN', 'WD', 'WS', 'GST_WD', 'GST_WS', 'GST_TM',
+      'PA', 'PS', 'PT', 'PR', 'TA', 'TD', 'HM', 'PV',
+      'RN', 'RN_DAY', 'RN_JUN', 'RN_INT', 'SD_HR3', 'SD_DAY', 'SD_TOT',
+      'WC', 'WP', 'WW', 'CA_TOT', 'CA_MID', 'CH_MIN', 'CT',
+      'CT_TOP', 'CT_MID', 'CT_LOW', 'VS', 'SS', 'SI',
+      'ST_GD', 'TS', 'TE_005', 'TE_01', 'TE_02', 'TE_03',
+      'ST_SEA', 'WH', 'BF', 'IR', 'IX'
+    ];
+
+    return parseKmaResponse(text, columns);
+  } catch (error) {
+    console.error('기상청 기간 조회 API 오류:', error);
+    return null;
+  }
+};
+
+/**
  * 지상 일 자료 조회
  * @param {string} startDate - YYYYMMDD 형식
  * @param {string} endDate - YYYYMMDD 형식
@@ -503,6 +532,7 @@ const processGyeonggiDataFromStations = (stationData, datetime) => {
 
 export default {
   getSurfaceData,
+  getSurfaceDataPeriod,
   getDailyData,
   getMonthlyData,
   getHistorical10YearAverage,
