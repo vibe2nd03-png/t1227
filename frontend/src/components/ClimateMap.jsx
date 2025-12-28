@@ -138,10 +138,51 @@ function MapAnimationController({ selectedRegion, previousRegion }) {
 // 펄스 애니메이션 마커 컴포넌트
 function AnimatedMarker({ region, isSelected, onSelect, getMarkerRadius }) {
   const [isHovered, setIsHovered] = useState(false);
+  const [animatedRadius, setAnimatedRadius] = useState(null);
+  const animationRef = useRef(null);
   const baseRadius = getMarkerRadius(region.risk_level);
 
   // 선택된 마커는 더 크게, 호버 시 약간 크게
-  const radius = isSelected ? baseRadius * 1.4 : isHovered ? baseRadius * 1.15 : baseRadius;
+  const targetRadius = isSelected ? baseRadius * 1.4 : isHovered ? baseRadius * 1.15 : baseRadius;
+
+  // 마커 크기 애니메이션
+  useEffect(() => {
+    if (animatedRadius === null) {
+      setAnimatedRadius(targetRadius);
+      return;
+    }
+
+    const startRadius = animatedRadius;
+    const startTime = performance.now();
+    const duration = isSelected ? 400 : 200; // 선택 시 더 긴 애니메이션
+
+    const animate = (currentTime) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      // easeOutBack 이징 (살짝 오버슈트 효과)
+      const eased = isSelected
+        ? 1 + 2.70158 * Math.pow(progress - 1, 3) + 1.70158 * Math.pow(progress - 1, 2)
+        : 1 - Math.pow(1 - progress, 3); // easeOutCubic
+
+      const currentRadius = startRadius + (targetRadius - startRadius) * eased;
+      setAnimatedRadius(currentRadius);
+
+      if (progress < 1) {
+        animationRef.current = requestAnimationFrame(animate);
+      }
+    };
+
+    animationRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [targetRadius, isSelected]);
+
+  const radius = animatedRadius || targetRadius;
 
   return (
     <CircleMarker
@@ -152,7 +193,7 @@ function AnimatedMarker({ region, isSelected, onSelect, getMarkerRadius }) {
         fillOpacity: isSelected ? 1 : isHovered ? 0.9 : 0.75,
         color: isSelected ? '#1a1a2e' : isHovered ? '#333' : '#fff',
         weight: isSelected ? 4 : isHovered ? 3 : 2,
-        className: isSelected ? 'selected-marker' : '',
+        className: isSelected ? 'selected-marker pulse-animation' : '',
       }}
       eventHandlers={{
         click: () => onSelect(region),
