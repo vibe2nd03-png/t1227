@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../supabase';
-import { useAuth } from '../contexts/AuthContext';
 
 // 체감 이모지 옵션
 const FEELING_OPTIONS = [
@@ -29,8 +27,34 @@ const MEME_PRESETS = [
   '산책하기 딱 좋은 날',
 ];
 
+// 로컬 스토리지 키
+const REPORTS_STORAGE_KEY = 'climate_user_reports';
+
+// 로컬 스토리지에서 제보 가져오기
+const getLocalReports = () => {
+  try {
+    const stored = localStorage.getItem(REPORTS_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+};
+
+// 로컬 스토리지에 제보 저장
+const saveLocalReport = (report) => {
+  try {
+    const reports = getLocalReports();
+    reports.unshift(report);
+    // 최대 100개까지만 저장
+    const trimmed = reports.slice(0, 100);
+    localStorage.setItem(REPORTS_STORAGE_KEY, JSON.stringify(trimmed));
+    return trimmed;
+  } catch {
+    return [];
+  }
+};
+
 function UserReportPanel({ selectedRegion, onReportSubmit }) {
-  const { user, profile, isAuthenticated } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedFeeling, setSelectedFeeling] = useState(null);
   const [comment, setComment] = useState('');
@@ -38,39 +62,34 @@ function UserReportPanel({ selectedRegion, onReportSubmit }) {
   const [recentReports, setRecentReports] = useState([]);
   const [showSuccess, setShowSuccess] = useState(false);
 
-  // 최근 제보 로드
+  // 최근 제보 로드 (로컬 스토리지)
   useEffect(() => {
     if (selectedRegion) {
       loadRecentReports(selectedRegion.region);
     }
   }, [selectedRegion]);
 
-  const loadRecentReports = async (regionName) => {
-    try {
-      const { data, error } = await supabase
-        .from('user_reports')
-        .select('*')
-        .eq('region', regionName)
-        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-        .order('created_at', { ascending: false })
-        .limit(10);
+  const loadRecentReports = (regionName) => {
+    const allReports = getLocalReports();
+    const now = Date.now();
+    const dayAgo = now - 24 * 60 * 60 * 1000;
 
-      if (!error && data) {
-        setRecentReports(data);
-      }
-    } catch (error) {
-      console.error('제보 로드 실패:', error);
-    }
+    // 해당 지역의 24시간 이내 제보만 필터링
+    const filtered = allReports.filter(r =>
+      r.region === regionName && new Date(r.created_at).getTime() > dayAgo
+    );
+    setRecentReports(filtered.slice(0, 10));
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!selectedFeeling || !selectedRegion) return;
 
     setIsSubmitting(true);
 
     try {
-      // 기본 제보 데이터만 전송 (user_id, nickname 컬럼이 없을 수 있음)
+      // 제보 데이터 생성
       const reportData = {
+        id: Date.now(),
         region: selectedRegion.region,
         lat: selectedRegion.lat,
         lng: selectedRegion.lng,
@@ -80,17 +99,11 @@ function UserReportPanel({ selectedRegion, onReportSubmit }) {
         temp_adjustment: selectedFeeling.tempAdjust,
         comment: comment || selectedFeeling.label,
         is_air_quality: selectedFeeling.airQuality || false,
+        created_at: new Date().toISOString(),
       };
 
-      const { data, error } = await supabase
-        .from('user_reports')
-        .insert([reportData])
-        .select();
-
-      if (error) {
-        console.error('Supabase 오류:', error);
-        throw new Error(error.message || '제보 저장 실패');
-      }
+      // 로컬 스토리지에 저장
+      saveLocalReport(reportData);
 
       // 성공 표시
       setShowSuccess(true);
@@ -102,7 +115,7 @@ function UserReportPanel({ selectedRegion, onReportSubmit }) {
 
       // 부모 컴포넌트에 알림
       if (onReportSubmit) {
-        onReportSubmit(data?.[0] || reportData);
+        onReportSubmit(reportData);
       }
 
       // 제보 목록 새로고침
@@ -110,7 +123,7 @@ function UserReportPanel({ selectedRegion, onReportSubmit }) {
 
     } catch (error) {
       console.error('제보 제출 실패:', error);
-      alert(`제보 제출 실패: ${error.message}`);
+      alert('제보 제출에 실패했습니다. 다시 시도해주세요.');
     } finally {
       setIsSubmitting(false);
     }
@@ -203,13 +216,11 @@ function UserReportPanel({ selectedRegion, onReportSubmit }) {
             {showSuccess ? '✓ 제보 완료!' : isSubmitting ? '제출 중...' : '🚀 제보하기'}
           </button>
 
-          {/* 로그인 안내 */}
-          {!isAuthenticated && (
-            <div className="login-prompt">
-              <span>💡</span>
-              <span>로그인하면 제보 기록이 저장됩니다</span>
-            </div>
-          )}
+          {/* 저장 안내 */}
+          <div className="login-prompt">
+            <span>💡</span>
+            <span>제보는 브라우저에 저장됩니다</span>
+          </div>
 
           {/* 최근 제보 목록 */}
           {recentReports.length > 0 && (
