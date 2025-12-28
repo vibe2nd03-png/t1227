@@ -3013,3 +3013,726 @@ body {
 .notification-btn.subscribed:hover {
   box-shadow: 0 6px 20px rgba(17, 153, 142, 0.4);
 }
+
+/* ========================================
+   개선된 사이드바 UI
+   ======================================== */
+
+/* 컴팩트 대상 선택 */
+.target-selector-compact {
+  display: flex;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.target-chip {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 6px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: white;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.target-chip:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.target-chip.active {
+  background: white;
+  color: #667eea;
+  border-color: white;
+  font-weight: 600;
+}
+
+.target-chip .chip-label {
+  font-size: 0.75rem;
+}
+
+/* 퀵 액션 바 */
+.quick-actions {
+  display: flex;
+  gap: 8px;
+  padding: 10px 15px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #eee;
+}
+
+.quick-action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.quick-action-btn:hover {
+  background: #f0f4ff;
+  border-color: #667eea;
+}
+
+.quick-action-btn.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-color: transparent;
+}
+
+/* 메인 탭 */
+.main-tabs {
+  display: flex;
+  background: white;
+  border-bottom: 2px solid #eee;
+}
+
+.main-tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.main-tab:hover {
+  background: #f8f9fa;
+}
+
+.main-tab.active {
+  color: #667eea;
+}
+
+.main-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 3px 3px 0 0;
+}
+
+.main-tab .tab-icon {
+  font-size: 1.3rem;
+}
+
+.main-tab .tab-label {
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+/* 탭 콘텐츠 영역 */
+.tab-content-area {
+  flex: 1;
+  overflow-y: auto;
+  background: #f5f7fa;
+}
+
+.tab-panel {
+  padding: 15px;
+}
+
+/* 지역 선택 안내 */
+.no-selection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+.no-selection-icon {
+  font-size: 3rem;
+  margin-bottom: 15px;
+}
+
+.no-selection h3 {
+  font-size: 1.1rem;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.no-selection p {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+/* 컴팩트 지역 카드 */
+.region-card-compact {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.region-header-compact {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  color: white;
+}
+
+.region-title h2 {
+  font-size: 1.3rem;
+  margin-bottom: 4px;
+}
+
+.region-title .risk-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 10px;
+  font-size: 0.8rem;
+}
+
+.score-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 10px 15px;
+  border-radius: 12px;
+}
+
+.score-badge .score {
+  font-size: 1.8rem;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.score-badge .label {
+  font-size: 0.75rem;
+  opacity: 0.9;
+}
+
+/* 기후 데이터 그리드 */
+.climate-grid-compact {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 15px;
+  background: #f8f9fa;
+}
+
+.climate-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 5px;
+  background: white;
+  border-radius: 10px;
+}
+
+.climate-item .icon {
+  font-size: 1.2rem;
+  margin-bottom: 4px;
+}
+
+.climate-item .value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.climate-item .label {
+  font-size: 0.7rem;
+  color: #888;
+}
+
+/* AI 섹션 */
+.ai-section {
+  padding: 15px;
+}
+
+.ai-explanation-compact {
+  margin-bottom: 12px;
+}
+
+.ai-explanation-compact h4 {
+  font-size: 0.9rem;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.ai-explanation-compact p {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #555;
+  background: linear-gradient(135deg, #f0f4ff 0%, #fff0f5 100%);
+  padding: 12px;
+  border-radius: 10px;
+}
+
+.guides-compact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.guide-chip {
+  display: inline-block;
+  padding: 6px 12px;
+  background: #e8f5e9;
+  color: #2e7d32;
+  border-radius: 15px;
+  font-size: 0.8rem;
+}
+
+/* ========================================
+   인라인 OOTD 생성기
+   ======================================== */
+
+.ootd-inline {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.ootd-header-inline {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.ootd-header-inline h3 {
+  font-size: 1.1rem;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.ootd-header-inline p {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.weather-badge-row {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 15px;
+}
+
+.weather-badge {
+  padding: 6px 12px;
+  background: #f0f4ff;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  color: #5c6bc0;
+}
+
+.ootd-options-inline {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 15px;
+}
+
+.option-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.option-row label {
+  font-size: 0.8rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.option-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  padding: 8px 14px;
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.chip:hover {
+  background: #e8e8e8;
+}
+
+.chip.selected {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+  border-color: transparent;
+}
+
+.chip.small {
+  padding: 6px 12px;
+  font-size: 0.8rem;
+}
+
+.generate-btn-large {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s;
+}
+
+.generate-btn-large:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.generate-btn-large:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid white;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.error-msg {
+  margin-top: 10px;
+  padding: 10px;
+  background: #fff5f5;
+  border: 1px solid #fed7d7;
+  border-radius: 8px;
+  color: #c53030;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.ootd-result-inline {
+  margin-top: 15px;
+}
+
+.result-image {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  margin-bottom: 12px;
+}
+
+.result-image img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.tips-box {
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.tips-box h4 {
+  font-size: 0.9rem;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.tips-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tip-badge {
+  padding: 5px 10px;
+  background: white;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  color: #555;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.regenerate-btn-inline {
+  width: 100%;
+  padding: 10px;
+  background: white;
+  border: 2px solid #667eea;
+  color: #667eea;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.regenerate-btn-inline:hover:not(:disabled) {
+  background: #667eea;
+  color: white;
+}
+
+/* ========================================
+   인라인 제보 패널
+   ======================================== */
+
+.report-inline {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.report-header-inline {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.report-header-inline h3 {
+  font-size: 1.1rem;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.report-header-inline p {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.feeling-grid-inline {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 15px;
+}
+
+.feeling-btn-inline {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 5px;
+  background: #f8f9fa;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.feeling-btn-inline:hover {
+  background: #fff0f0;
+  border-color: #ffcdd2;
+}
+
+.feeling-btn-inline.selected {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ffa502 100%);
+  color: white;
+  border-color: transparent;
+}
+
+.feeling-btn-inline .emoji {
+  font-size: 1.5rem;
+  margin-bottom: 4px;
+}
+
+.feeling-btn-inline .label {
+  font-size: 0.7rem;
+  text-align: center;
+}
+
+.quick-comments {
+  margin-bottom: 15px;
+}
+
+.quick-comments label {
+  display: block;
+  font-size: 0.8rem;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.comment-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.comment-chip {
+  padding: 6px 10px;
+  background: #f0f0f0;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.comment-chip:hover {
+  background: #e8e8e8;
+}
+
+.comment-chip.selected {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+}
+
+.comment-input-inline {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.comment-input-inline:focus {
+  border-color: #667eea;
+}
+
+.submit-btn-large {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #ff6b6b 0%, #ffa502 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.submit-btn-large:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+}
+
+.submit-btn-large:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.submit-btn-large.success {
+  background: linear-gradient(135deg, #00c853 0%, #69f0ae 100%);
+}
+
+.login-hint {
+  font-size: 0.8rem;
+  color: #888;
+  text-align: center;
+  margin-top: 10px;
+}
+
+.recent-reports-inline {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+}
+
+.recent-reports-inline h4 {
+  font-size: 0.9rem;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.reports-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.report-item-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.report-item-inline .emoji {
+  font-size: 1.1rem;
+}
+
+.report-item-inline .comment {
+  flex: 1;
+  font-size: 0.85rem;
+  color: #333;
+}
+
+.report-item-inline .time {
+  font-size: 0.75rem;
+  color: #999;
+}
+
+/* 모달 오버레이 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.air-quality-modal {
+  background: white;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.air-quality-modal .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  color: white;
+}
+
+.air-quality-modal .modal-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.air-quality-modal .modal-body {
+  max-height: calc(80vh - 60px);
+  overflow-y: auto;
+}
