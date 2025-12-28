@@ -4,6 +4,25 @@ import 'leaflet/dist/leaflet.css';
 import FloatingReports from './FloatingReports';
 import RegionRanking from './RegionRanking';
 
+// 경기도 31개 시군 목록
+const GYEONGGI_REGIONS = [
+  '수원시', '성남시', '고양시', '용인시', '부천시', '안산시', '안양시', '남양주시',
+  '화성시', '평택시', '의정부시', '시흥시', '파주시', '김포시', '광명시', '광주시',
+  '군포시', '하남시', '오산시', '이천시', '안성시', '의왕시', '양주시', '포천시',
+  '여주시', '동두천시', '과천시', '구리시', '연천군', '가평군', '양평군'
+];
+
+// 경기도 외 주변 지역 (서울, 인천, 강원, 충북, 충남)
+const NEARBY_REGIONS = [
+  { region: '서울', lat: 37.5665, lng: 126.9780, isGyeonggi: false },
+  { region: '인천', lat: 37.4563, lng: 126.7052, isGyeonggi: false },
+  { region: '춘천', lat: 37.8813, lng: 127.7300, isGyeonggi: false },
+  { region: '원주', lat: 37.3422, lng: 127.9202, isGyeonggi: false },
+  { region: '충주', lat: 36.9910, lng: 127.9259, isGyeonggi: false },
+  { region: '천안', lat: 36.8151, lng: 127.1139, isGyeonggi: false },
+  { region: '세종', lat: 36.4800, lng: 127.2890, isGyeonggi: false },
+];
+
 // 커스텀 이징 함수들
 const easingFunctions = {
   // 부드러운 감속 (ease-out-cubic)
@@ -136,11 +155,14 @@ function MapAnimationController({ selectedRegion, previousRegion }) {
 }
 
 // 펄스 애니메이션 마커 컴포넌트
-function AnimatedMarker({ region, isSelected, onSelect, getMarkerRadius }) {
+function AnimatedMarker({ region, isSelected, onSelect, getMarkerRadius, isGyeonggi = true }) {
   const [isHovered, setIsHovered] = useState(false);
   const [animatedRadius, setAnimatedRadius] = useState(null);
   const animationRef = useRef(null);
-  const baseRadius = getMarkerRadius(region.risk_level);
+
+  // 경기도 외 지역은 50% 작게 표시
+  const sizeMultiplier = isGyeonggi ? 1 : 0.5;
+  const baseRadius = getMarkerRadius(region.risk_level) * sizeMultiplier;
 
   // 선택된 마커는 더 크게, 호버 시 약간 크게
   const targetRadius = isSelected ? baseRadius * 1.4 : isHovered ? baseRadius * 1.15 : baseRadius;
@@ -203,7 +225,10 @@ function AnimatedMarker({ region, isSelected, onSelect, getMarkerRadius }) {
     >
       <Popup>
         <div style={{ textAlign: 'center', minWidth: '140px' }}>
-          <strong style={{ fontSize: '15px', color: '#1a1a2e' }}>{region.region}</strong>
+          <strong style={{ fontSize: '15px', color: '#1a1a2e' }}>
+            {region.region}
+            {!isGyeonggi && <span style={{ fontSize: '11px', color: '#888', marginLeft: '4px' }}>(주변)</span>}
+          </strong>
           <br />
           <span
             style={{
@@ -213,16 +238,17 @@ function AnimatedMarker({ region, isSelected, onSelect, getMarkerRadius }) {
               borderRadius: '12px',
               backgroundColor: region.risk_color,
               color: region.risk_level === 'caution' ? '#333' : '#fff',
-              fontSize: '13px',
+              fontSize: isGyeonggi ? '13px' : '11px',
               fontWeight: '600',
               boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+              opacity: isGyeonggi ? 1 : 0.8,
             }}
           >
             {region.risk_label} ({region.adjusted_score || region.score}점)
           </span>
           <br />
           <span style={{ fontSize: '13px', color: '#555', marginTop: '6px', display: 'block' }}>
-            체감온도 {region.climate_data.apparent_temperature}°C
+            체감온도 {region.climate_data?.apparent_temperature || region.climate_data?.temperature || '-'}°C
           </span>
         </div>
       </Popup>
@@ -252,8 +278,27 @@ function ClimateMap({ regions, selectedRegion, onRegionSelect }) {
     }
   };
 
+  // 경기도 지역과 주변 지역 분류
+  const gyeonggiRegions = regions.filter(r => GYEONGGI_REGIONS.includes(r.region));
+  const nearbyRegionsWithData = NEARBY_REGIONS.map(nearby => {
+    // 주변 지역에 대한 임시 데이터 생성 (실제 데이터는 추후 API 연동)
+    return {
+      ...nearby,
+      score: Math.floor(Math.random() * 40) + 20,
+      risk_level: 'caution',
+      risk_label: '주의',
+      risk_color: '#FFEB3B',
+      adjusted_score: Math.floor(Math.random() * 40) + 20,
+      climate_data: {
+        temperature: -3 + Math.random() * 4,
+        apparent_temperature: -5 + Math.random() * 4,
+        humidity: 50 + Math.random() * 20,
+      },
+    };
+  });
+
   // 선택된 지역이 맨 위에 렌더링되도록 정렬
-  const sortedRegions = [...regions].sort((a, b) => {
+  const sortedGyeonggiRegions = [...gyeonggiRegions].sort((a, b) => {
     if (a.region === selectedRegion?.region) return 1;
     if (b.region === selectedRegion?.region) return -1;
     return 0;
@@ -279,13 +324,27 @@ function ClimateMap({ regions, selectedRegion, onRegionSelect }) {
           previousRegion={previousRegion}
         />
 
-        {sortedRegions.map((region) => (
+        {/* 주변 지역 마커 (50% 작게) */}
+        {nearbyRegionsWithData.map((region) => (
+          <AnimatedMarker
+            key={region.region}
+            region={region}
+            isSelected={false}
+            onSelect={() => {}}
+            getMarkerRadius={getMarkerRadius}
+            isGyeonggi={false}
+          />
+        ))}
+
+        {/* 경기도 지역 마커 (정상 크기) */}
+        {sortedGyeonggiRegions.map((region) => (
           <AnimatedMarker
             key={region.region}
             region={region}
             isSelected={selectedRegion?.region === region.region}
             onSelect={onRegionSelect}
             getMarkerRadius={getMarkerRadius}
+            isGyeonggi={true}
           />
         ))}
 
