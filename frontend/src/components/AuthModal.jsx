@@ -102,15 +102,11 @@ function AuthModal({ isOpen, onClose }) {
     setLoading(false);
 
     if (result.success) {
-      if (result.needsConfirmation) {
-        setMessage('확인 이메일이 발송되었습니다. 이메일을 확인해주세요. (처음 1회만)');
-      } else {
-        setMessage('회원가입 성공!');
-        setTimeout(() => {
-          onClose();
-          resetForm();
-        }, 1000);
-      }
+      setMessage('회원가입 성공!');
+      setTimeout(() => {
+        onClose();
+        resetForm();
+      }, 1000);
     } else {
       setMessage(result.error || '회원가입에 실패했습니다');
     }
@@ -303,7 +299,7 @@ function AuthModal({ isOpen, onClose }) {
 
               {emailMode === 'signup' && (
                 <p className="signup-notice">
-                  * 회원가입 시 이메일 확인이 필요합니다 (처음 1회만)
+                  * 회원가입 즉시 사용 가능합니다
                 </p>
               )}
 

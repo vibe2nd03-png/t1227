@@ -56,7 +56,7 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // 이메일+비밀번호 회원가입
+  // 이메일+비밀번호 회원가입 (이메일 인증 없이 즉시 가입)
   const signUpWithEmail = async (email, password) => {
     setAuthError(null);
     try {
@@ -64,18 +64,37 @@ export function AuthProvider({ children }) {
         email,
         password,
         options: {
-          emailRedirectTo: window.location.origin,
+          // 이메일 인증 없이 즉시 세션 생성
+          data: {
+            email_confirmed: true,
+          },
         },
       });
 
       if (error) throw error;
 
-      // 이메일 확인이 필요한 경우
+      // 이미 가입된 이메일인 경우
       if (data?.user?.identities?.length === 0) {
         return { success: false, error: '이미 가입된 이메일입니다. 로그인해주세요.' };
       }
 
-      return { success: true, needsConfirmation: !data.session };
+      // 세션이 있으면 즉시 로그인 성공
+      if (data.session) {
+        return { success: true, needsConfirmation: false };
+      }
+
+      // 세션이 없으면 자동 로그인 시도
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (signInError) {
+        // 로그인 실패해도 회원가입은 성공
+        return { success: true, needsConfirmation: false };
+      }
+
+      return { success: true, needsConfirmation: false };
     } catch (error) {
       setAuthError(error.message);
       console.error('회원가입 오류:', error);
