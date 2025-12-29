@@ -165,7 +165,7 @@ function OotdGenerator({ selectedRegion }) {
 
     try {
       const climate = selectedRegion.climate_data;
-      const { prompt, temp, humidity, pm10, uvIndex, season } = generateFashionPrompt(
+      const { prompt, season } = generateFashionPrompt(
         climate, gender, age, style
       );
 
@@ -173,19 +173,43 @@ function OotdGenerator({ selectedRegion }) {
       const description = generateDescription(climate, season);
       setOutfitDescription(description);
 
-      // Pollinations.ai 무료 이미지 생성 API
-      const encodedPrompt = encodeURIComponent(prompt);
-      const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=512&height=768&seed=${Date.now()}&nologo=true`;
+      // Pollinations.ai 무료 이미지 생성 API (더 간단한 프롬프트)
+      const simplePrompt = `fashion photo, ${gender === 'male' ? 'man' : 'woman'}, ${style} style, ${season} outfit, full body, white background`;
+      const encodedPrompt = encodeURIComponent(simplePrompt);
+      const seed = Math.floor(Math.random() * 100000);
+      const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=512&height=768&seed=${seed}&nologo=true`;
+
+      console.log('OOTD 이미지 URL:', imageUrl);
+
+      // 타임아웃 설정 (30초)
+      const timeoutId = setTimeout(() => {
+        setError('이미지 생성 시간이 초과되었습니다. 다시 시도해주세요.');
+        setIsGenerating(false);
+      }, 30000);
 
       // 이미지 로드 확인
       const img = new Image();
+      img.crossOrigin = 'anonymous';
       img.onload = () => {
+        clearTimeout(timeoutId);
         setGeneratedImage(imageUrl);
         setIsGenerating(false);
       };
       img.onerror = () => {
-        setError('이미지 생성에 실패했습니다. 다시 시도해주세요.');
-        setIsGenerating(false);
+        clearTimeout(timeoutId);
+        // 재시도 URL 생성
+        const retryUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=512&height=768&seed=${seed + 1}&nologo=true`;
+        const retryImg = new Image();
+        retryImg.crossOrigin = 'anonymous';
+        retryImg.onload = () => {
+          setGeneratedImage(retryUrl);
+          setIsGenerating(false);
+        };
+        retryImg.onerror = () => {
+          setError('이미지 생성에 실패했습니다. 다시 시도해주세요.');
+          setIsGenerating(false);
+        };
+        retryImg.src = retryUrl;
       };
       img.src = imageUrl;
 
