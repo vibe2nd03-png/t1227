@@ -6,6 +6,43 @@ from typing import Dict, Any, Tuple
 from enum import Enum
 
 
+# ============================================
+# 상수 정의 (Frontend constants/climate.js와 동기화)
+# ============================================
+
+# 위험 등급 임계값
+RISK_THRESHOLDS = {
+    "DANGER": 75,   # 75점 이상: 위험
+    "WARNING": 50,  # 50-74점: 경고
+    "CAUTION": 30,  # 30-49점: 주의
+    "SAFE": 0,      # 0-29점: 안전
+}
+
+# 대상별 점수 조정 배율
+TARGET_MULTIPLIERS = {
+    "elderly": 1.3,      # 노인: 30% 가중
+    "child": 1.25,       # 아동: 25% 가중
+    "outdoor": 1.2,      # 야외근로자: 20% 가중
+    "general": 1.0,      # 일반: 기본값
+}
+
+# 위험 등급 색상
+RISK_COLORS = {
+    "safe": "#2196F3",      # 파랑
+    "caution": "#FFEB3B",   # 노랑
+    "warning": "#FF9800",   # 주황
+    "danger": "#F44336",    # 빨강
+}
+
+# 위험 등급 라벨
+RISK_LABELS = {
+    "safe": "안전",
+    "caution": "주의",
+    "warning": "경고",
+    "danger": "위험",
+}
+
+
 class RiskLevel(str, Enum):
     SAFE = "safe"           # 안전 (파랑)
     CAUTION = "caution"     # 주의 (노랑)
@@ -132,12 +169,12 @@ def calculate_climate_score(data: Dict[str, Any]) -> Tuple[int, RiskLevel]:
     # 최종 점수 정규화
     final_score = min(100, max(0, int(score)))
 
-    # 위험 등급 결정
-    if final_score >= 75:
+    # 위험 등급 결정 (상수 사용)
+    if final_score >= RISK_THRESHOLDS["DANGER"]:
         risk_level = RiskLevel.DANGER
-    elif final_score >= 50:
+    elif final_score >= RISK_THRESHOLDS["WARNING"]:
         risk_level = RiskLevel.WARNING
-    elif final_score >= 30:
+    elif final_score >= RISK_THRESHOLDS["CAUTION"]:
         risk_level = RiskLevel.CAUTION
     else:
         risk_level = RiskLevel.SAFE
@@ -147,24 +184,12 @@ def calculate_climate_score(data: Dict[str, Any]) -> Tuple[int, RiskLevel]:
 
 def get_risk_color(risk_level: RiskLevel) -> str:
     """위험 등급별 색상 코드 반환"""
-    colors = {
-        RiskLevel.SAFE: "#2196F3",      # 파랑
-        RiskLevel.CAUTION: "#FFEB3B",   # 노랑
-        RiskLevel.WARNING: "#FF9800",   # 주황
-        RiskLevel.DANGER: "#F44336",    # 빨강
-    }
-    return colors.get(risk_level, "#9E9E9E")
+    return RISK_COLORS.get(risk_level.value, "#9E9E9E")
 
 
 def get_risk_label(risk_level: RiskLevel) -> str:
     """위험 등급 한글 라벨"""
-    labels = {
-        RiskLevel.SAFE: "안전",
-        RiskLevel.CAUTION: "주의",
-        RiskLevel.WARNING: "경고",
-        RiskLevel.DANGER: "위험",
-    }
-    return labels.get(risk_level, "알 수 없음")
+    return RISK_LABELS.get(risk_level.value, "알 수 없음")
 
 
 def adjust_score_for_target(base_score: int, target: TargetGroup) -> int:
@@ -172,13 +197,6 @@ def adjust_score_for_target(base_score: int, target: TargetGroup) -> int:
     대상별 점수 조정
     취약계층은 동일 조건에서 더 높은 위험도
     """
-    adjustments = {
-        TargetGroup.ELDERLY: 1.3,      # 노인: 30% 가중
-        TargetGroup.CHILD: 1.25,       # 아동: 25% 가중
-        TargetGroup.OUTDOOR_WORKER: 1.2,  # 야외근로자: 20% 가중
-        TargetGroup.GENERAL: 1.0,      # 일반: 기본
-    }
-
-    multiplier = adjustments.get(target, 1.0)
+    multiplier = TARGET_MULTIPLIERS.get(target.value, 1.0)
     adjusted = int(base_score * multiplier)
     return min(100, adjusted)

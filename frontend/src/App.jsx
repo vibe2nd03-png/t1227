@@ -3,22 +3,15 @@ import ClimateMap from './components/ClimateMap';
 import Sidebar from './components/Sidebar';
 import WeatherAlertBanner from './components/WeatherAlertBanner';
 import { getGyeonggiRealtimeWeather } from './services/kmaApi';
+import {
+  TARGET_MULTIPLIERS,
+  TARGET_LABELS,
+  calculateRiskLevel,
+  getTargetLabel,
+} from './constants/climate';
+import { createLogger } from './utils/logger';
 
-// 대상별 점수 조정 배율
-const TARGET_MULTIPLIERS = {
-  elderly: 1.3,
-  child: 1.25,
-  outdoor: 1.2,
-  general: 1.0,
-};
-
-// 위험 등급 계산
-const calculateRiskLevel = (score) => {
-  if (score >= 75) return { level: 'danger', label: '위험', color: '#F44336' };
-  if (score >= 50) return { level: 'warning', label: '경고', color: '#FF9800' };
-  if (score >= 30) return { level: 'caution', label: '주의', color: '#FFEB3B' };
-  return { level: 'safe', label: '안전', color: '#2196F3' };
-};
+const log = createLogger('App');
 
 function App() {
   const [regions, setRegions] = useState([]);
@@ -46,7 +39,7 @@ function App() {
       const kmaData = await getGyeonggiRealtimeWeather();
       clearTimeout(timeoutId);
 
-      console.log('KMA 응답:', kmaData);
+      log.debug('KMA API 응답 수신', { regions: kmaData?.regions?.length || 0 });
 
       if (kmaData && kmaData.regions && kmaData.regions.length > 0) {
         const formattedRegions = kmaData.regions.map(region => {
@@ -60,15 +53,15 @@ function App() {
         setDataSource('kma');
         setLastUpdated(kmaData.datetime);
         setLoading(false);
-        console.log('기상청 데이터 로드 완료:', formattedRegions.length, '개 지역');
+        log.info('기상청 데이터 로드 완료', { regionCount: formattedRegions.length });
         return;
       }
     } catch (e) {
-      console.warn('KMA API 실패:', e);
+      log.warn('KMA API 실패', { error: e.message });
     }
 
     // 실패 시 즉시 Mock 데이터 표시
-    console.log('Mock 데이터 사용');
+    log.info('Mock 데이터 사용');
     loadMockData();
     setDataSource('mock');
     setLoading(false);
@@ -118,25 +111,8 @@ function App() {
     setExplanation(generateMockExplanation(region, target));
   };
 
-  // 대상 라벨 반환
-  const getTargetLabel = (targetType) => {
-    const labels = {
-      general: '일반 시민',
-      elderly: '노인',
-      child: '아동',
-      outdoor: '야외근로자',
-    };
-    return labels[targetType] || '일반 시민';
-  };
-
   // Mock 설명 생성
   const generateMockExplanation = (region, targetType) => {
-    const targetLabels = {
-      general: '일반 시민',
-      elderly: '노인',
-      child: '아동',
-      outdoor: '야외근로자',
-    };
 
     const temp = region.climate_data.apparent_temperature;
     let explanation = '';
@@ -163,7 +139,7 @@ function App() {
       risk_label: region.risk_label,
       explanation,
       action_guides: guides,
-      target: targetLabels[targetType] || '일반 시민',
+      target: getTargetLabel(targetType),
     };
   };
 

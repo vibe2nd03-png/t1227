@@ -5,12 +5,39 @@
  * CORS 문제로 인해 Vercel Serverless Function 프록시 사용
  */
 
+import { RISK_THRESHOLDS, RISK_LEVELS } from '../constants/climate';
+import { createLogger } from '../utils/logger';
+
+const log = createLogger('kmaApi');
+
 // 프록시 API 엔드포인트 (Vercel Serverless Function)
 const KMA_PROXY_API = '/api/kma';
 
 // 직접 API (서버사이드 전용)
 const KMA_API_BASE = 'https://apihub.kma.go.kr/api/typ01/url';
 const AUTH_KEY = 'DbUh4_ekRRi1IeP3pPUYog';
+
+// 캐시 설정 (메모리 캐시)
+const cache = new Map();
+const CACHE_TTL = 30 * 60 * 1000; // 30분
+
+/**
+ * 캐시에서 데이터 조회 또는 API 호출
+ * @param {string} key - 캐시 키
+ * @param {Function} fetchFn - 데이터 조회 함수
+ */
+const getCachedOrFetch = async (key, fetchFn) => {
+  const cached = cache.get(key);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.data;
+  }
+
+  const data = await fetchFn();
+  if (data !== null) {
+    cache.set(key, { data, timestamp: Date.now() });
+  }
+  return data;
+};
 
 // 경기도 관측소 매핑 (지역명 -> 관측소 코드)
 // 일부 지역은 가장 가까운 관측소 사용
@@ -112,10 +139,10 @@ export const getSurfaceData = async (datetime, stn = 0) => {
       return json.data;
     }
 
-    console.error('기상청 프록시 API 오류:', json.error);
+    log.error('기상청 프록시 API 오류', null, { error: json.error });
     return null;
   } catch (error) {
-    console.error('기상청 API 오류:', error);
+    log.error('기상청 API 오류', error);
     return null;
   }
 };
@@ -137,10 +164,10 @@ export const getSurfaceDataPeriod = async (startDatetime, endDatetime, stn) => {
       return json.data;
     }
 
-    console.error('기상청 기간 조회 API 오류:', json.error);
+    log.error('기상청 기간 조회 API 오류', null, { error: json.error });
     return null;
   } catch (error) {
-    console.error('기상청 기간 조회 API 오류:', error);
+    log.error('기상청 기간 조회 API 오류', error);
     return null;
   }
 };
@@ -171,62 +198,71 @@ export const getDailyData = async (startDate, endDate, stn) => {
 
     return parseKmaResponse(text, columns);
   } catch (error) {
-    console.error('기상청 일별 API 오류:', error);
+    log.error('기상청 일별 API 오류', error);
     return null;
   }
 };
 
 /**
- * 지상 월 자료 조회
+ * 지상 월 자료 조회 (캐시 적용)
  * @param {string} yearMonth - YYYYMM 형식
  * @param {number} stn - 관측소 코드
  */
 export const getMonthlyData = async (yearMonth, stn) => {
-  try {
-    const url = `${KMA_API_BASE}/kma_sfcmm.php?tm=${yearMonth}&stn=${stn}&authKey=${AUTH_KEY}`;
-    const response = await fetch(url);
-    const text = await response.text();
+  const cacheKey = `monthly_${yearMonth}_${stn}`;
 
-    const columns = [
-      'TM', 'STN', 'TA_AVG', 'TA_AVG_MAX', 'TA_AVG_MIN',
-      'TA_MAX', 'TA_MAX_TM', 'TA_MIN', 'TA_MIN_TM',
-      'HM_AVG', 'WS_AVG', 'WS_MAX', 'WS_MAX_TM', 'WS_MAX_DIR',
-      'RN_MON', 'RN_DAY_MAX', 'RN_DAY_MAX_TM', 'RN_1HR_MAX', 'RN_1HR_MAX_TM',
-      'SD_NEW_MAX', 'SD_NEW_MAX_TM', 'SD_MAX', 'SD_MAX_TM',
-      'SS_MON', 'SI_MON', 'CA_TOT', 'CA_MID'
-    ];
+  return getCachedOrFetch(cacheKey, async () => {
+    try {
+      const url = `${KMA_API_BASE}/kma_sfcmm.php?tm=${yearMonth}&stn=${stn}&authKey=${AUTH_KEY}`;
+      const response = await fetch(url, { timeout: 10000 });
+      const text = await response.text();
 
-    return parseKmaResponse(text, columns);
-  } catch (error) {
-    console.error('기상청 월별 API 오류:', error);
-    return null;
-  }
+      const columns = [
+        'TM', 'STN', 'TA_AVG', 'TA_AVG_MAX', 'TA_AVG_MIN',
+        'TA_MAX', 'TA_MAX_TM', 'TA_MIN', 'TA_MIN_TM',
+        'HM_AVG', 'WS_AVG', 'WS_MAX', 'WS_MAX_TM', 'WS_MAX_DIR',
+        'RN_MON', 'RN_DAY_MAX', 'RN_DAY_MAX_TM', 'RN_1HR_MAX', 'RN_1HR_MAX_TM',
+        'SD_NEW_MAX', 'SD_NEW_MAX_TM', 'SD_MAX', 'SD_MAX_TM',
+        'SS_MON', 'SI_MON', 'CA_TOT', 'CA_MID'
+      ];
+
+      return parseKmaResponse(text, columns);
+    } catch (error) {
+      log.error('기상청 월별 API 오류', error);
+      return null;
+    }
+  });
 };
 
 /**
- * 과거 10년 월별 평균 데이터 조회
+ * 과거 10년 월별 평균 데이터 조회 (병렬 처리)
  * @param {string} regionName - 지역명 (예: '수원시')
  * @param {number} month - 월 (1-12)
  */
 export const getHistorical10YearAverage = async (regionName, month) => {
   const station = GYEONGGI_STATIONS[regionName];
   if (!station) {
-    console.warn(`${regionName}의 관측소 정보가 없습니다.`);
+    log.warn(`${regionName}의 관측소 정보가 없습니다.`);
     return null;
   }
 
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 10 }, (_, i) => currentYear - 1 - i); // 작년부터 10년
 
-  const monthlyData = [];
-
-  for (const year of years) {
+  // 병렬로 모든 연도 데이터 조회
+  const promises = years.map(async (year) => {
     const yearMonth = `${year}${String(month).padStart(2, '0')}`;
-    const data = await getMonthlyData(yearMonth, station.stn);
-    if (data && data.length > 0) {
-      monthlyData.push(data[0]);
+    try {
+      const data = await getMonthlyData(yearMonth, station.stn);
+      return data && data.length > 0 ? data[0] : null;
+    } catch (e) {
+      log.warn(`${yearMonth} 데이터 조회 실패`, { error: e.message });
+      return null;
     }
-  }
+  });
+
+  const results = await Promise.all(promises);
+  const monthlyData = results.filter(d => d !== null);
 
   if (monthlyData.length === 0) return null;
 
@@ -254,20 +290,16 @@ export const getHistorical10YearAverage = async (regionName, month) => {
 };
 
 /**
- * 과거 10년 전체 월별 평균 데이터 조회 (1월~12월)
+ * 과거 10년 전체 월별 평균 데이터 조회 (1월~12월) - 병렬 처리
  * @param {string} regionName - 지역명
  */
 export const getHistorical10YearMonthlyAverages = async (regionName) => {
-  const results = [];
+  // 12개월 데이터 병렬 조회
+  const months = Array.from({ length: 12 }, (_, i) => i + 1);
+  const promises = months.map(month => getHistorical10YearAverage(regionName, month));
 
-  for (let month = 1; month <= 12; month++) {
-    const monthData = await getHistorical10YearAverage(regionName, month);
-    if (monthData) {
-      results.push(monthData);
-    }
-  }
-
-  return results;
+  const results = await Promise.all(promises);
+  return results.filter(data => data !== null);
 };
 
 /**
@@ -326,7 +358,7 @@ export const getGyeonggiRealtimeWeather = async () => {
 
     const datetime = `${kst.getFullYear()}${String(kst.getMonth() + 1).padStart(2, '0')}${String(kst.getDate()).padStart(2, '0')}${String(kst.getHours()).padStart(2, '0')}00`;
 
-    console.log('기상청 API 요청 (KST):', datetime);
+    log.info('기상청 API 요청', { datetime, timezone: 'KST' });
 
     // 전체 관측소 한 번에 조회 (stn=0)
     const allData = await getSurfaceData(datetime, 0);
@@ -343,7 +375,7 @@ export const getGyeonggiRealtimeWeather = async () => {
     kst.setHours(kst.getHours() - 1);
     const prevDatetime = `${kst.getFullYear()}${String(kst.getMonth() + 1).padStart(2, '0')}${String(kst.getDate()).padStart(2, '0')}${String(kst.getHours()).padStart(2, '0')}00`;
 
-    console.log('기상청 API 재시도 (KST):', prevDatetime);
+    log.info('기상청 API 재시도', { datetime: prevDatetime, timezone: 'KST' });
 
     const prevData = await getSurfaceData(prevDatetime, 0);
     if (prevData && prevData.length > 0) {
@@ -356,7 +388,7 @@ export const getGyeonggiRealtimeWeather = async () => {
 
     return null;
   } catch (error) {
-    console.error('기상청 API 오류:', error);
+    log.error('기상청 API 오류', error);
     return null;
   }
 };
@@ -492,17 +524,18 @@ const processGyeonggiDataFromStations = (stationData, datetime) => {
 
     score = Math.min(100, Math.max(0, score));
 
-    // 위험 등급 결정
-    let riskLevel, riskLabel, riskColor;
-    if (score >= 75) {
-      riskLevel = 'danger'; riskLabel = '위험'; riskColor = '#F44336';
-    } else if (score >= 50) {
-      riskLevel = 'warning'; riskLabel = '경고'; riskColor = '#FF9800';
-    } else if (score >= 30) {
-      riskLevel = 'caution'; riskLabel = '주의'; riskColor = '#FFEB3B';
+    // 위험 등급 결정 (상수 사용)
+    let risk;
+    if (score >= RISK_THRESHOLDS.DANGER) {
+      risk = RISK_LEVELS.danger;
+    } else if (score >= RISK_THRESHOLDS.WARNING) {
+      risk = RISK_LEVELS.warning;
+    } else if (score >= RISK_THRESHOLDS.CAUTION) {
+      risk = RISK_LEVELS.caution;
     } else {
-      riskLevel = 'safe'; riskLabel = '안전'; riskColor = '#2196F3';
+      risk = RISK_LEVELS.safe;
     }
+    const { level: riskLevel, label: riskLabel, color: riskColor } = risk;
 
     results.push({
       region: regionName,
@@ -537,6 +570,21 @@ const processGyeonggiDataFromStations = (stationData, datetime) => {
   };
 };
 
+/**
+ * 캐시 초기화
+ */
+export const clearCache = () => {
+  cache.clear();
+};
+
+/**
+ * 캐시 통계
+ */
+export const getCacheStats = () => ({
+  size: cache.size,
+  keys: Array.from(cache.keys()),
+});
+
 export default {
   getSurfaceData,
   getSurfaceDataPeriod,
@@ -546,5 +594,7 @@ export default {
   getHistorical10YearMonthlyAverages,
   getObservationData,
   getGyeonggiRealtimeWeather,
+  clearCache,
+  getCacheStats,
   GYEONGGI_STATIONS,
 };

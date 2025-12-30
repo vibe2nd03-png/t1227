@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../supabase';
+import { createLogger } from '../utils/logger';
 
+const log = createLogger('Auth');
 const AuthContext = createContext({});
 
 export const useAuth = () => useContext(AuthContext);
@@ -48,11 +50,11 @@ export function AuthProvider({ children }) {
         .single();
 
       if (error && error.code !== 'PGRST116') {
-        console.error('프로필 조회 오류:', error);
+        log.error('프로필 조회 오류', error);
       }
       setProfile(data);
     } catch (error) {
-      console.error('프로필 조회 실패:', error);
+      log.error('프로필 조회 실패', error);
     }
   };
 
@@ -97,7 +99,7 @@ export function AuthProvider({ children }) {
       return { success: true, needsConfirmation: false };
     } catch (error) {
       setAuthError(error.message);
-      console.error('회원가입 오류:', error);
+      log.error('회원가입 오류', error);
       return { success: false, error: error.message };
     }
   };
@@ -115,7 +117,7 @@ export function AuthProvider({ children }) {
       return { success: true, data };
     } catch (error) {
       setAuthError(error.message);
-      console.error('로그인 오류:', error);
+      log.error('로그인 오류', error);
       return { success: false, error: error.message };
     }
   };
@@ -137,7 +139,7 @@ export function AuthProvider({ children }) {
       return { success: true };
     } catch (error) {
       setAuthError(error.message);
-      console.error('OTP 발송 오류:', error);
+      log.error('OTP 발송 오류', error);
       return { success: false, error: error.message };
     }
   };
@@ -160,7 +162,7 @@ export function AuthProvider({ children }) {
       return { success: true, data };
     } catch (error) {
       setAuthError(error.message);
-      console.error('OTP 인증 오류:', error);
+      log.error('OTP 인증 오류', error);
       return { success: false, error: error.message };
     }
   };
@@ -173,7 +175,7 @@ export function AuthProvider({ children }) {
       setUser(null);
       setProfile(null);
     } catch (error) {
-      console.error('로그아웃 오류:', error);
+      log.error('로그아웃 오류', error);
     }
   };
 
@@ -193,7 +195,7 @@ export function AuthProvider({ children }) {
       setProfile(data);
       return { success: true, data };
     } catch (error) {
-      console.error('프로필 업데이트 오류:', error);
+      log.error('프로필 업데이트 오류', error);
       return { success: false, error: error.message };
     }
   };
@@ -210,7 +212,7 @@ export function AuthProvider({ children }) {
       if (error) throw error;
       return { success: true };
     } catch (error) {
-      console.error('즐겨찾기 추가 오류:', error);
+      log.error('즐겨찾기 추가 오류', error);
       return { success: false, error: error.message };
     }
   };
@@ -229,7 +231,7 @@ export function AuthProvider({ children }) {
       if (error) throw error;
       return { success: true };
     } catch (error) {
-      console.error('즐겨찾기 삭제 오류:', error);
+      log.error('즐겨찾기 삭제 오류', error);
       return { success: false, error: error.message };
     }
   };
@@ -247,7 +249,7 @@ export function AuthProvider({ children }) {
       if (error) throw error;
       return data.map((r) => r.region);
     } catch (error) {
-      console.error('즐겨찾기 조회 오류:', error);
+      log.error('즐겨찾기 조회 오류', error);
       return [];
     }
   };

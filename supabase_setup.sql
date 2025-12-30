@@ -258,7 +258,8 @@ CREATE POLICY "Users can insert own profile"
 -- 즐겨찾기: 본인만 관리 가능
 CREATE POLICY "Users can manage own favorites"
   ON user_favorite_regions FOR ALL
-  USING (auth.uid() = user_id);
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
 
 -- 20. user_profiles 인덱스
 CREATE INDEX IF NOT EXISTS idx_user_profiles_email ON user_profiles(email);

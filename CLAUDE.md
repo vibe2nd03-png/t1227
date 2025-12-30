@@ -19,15 +19,17 @@ uvicorn main:app --reload --port 8000
 ```bash
 cd frontend
 npm install
-npm run dev
+npm run dev      # 개발 서버
+npm run build    # 프로덕션 빌드
+npm run preview  # 빌드 미리보기
 ```
 
 ## 아키텍처
 
 ```
 [climate.gg.go.kr API] → [FastAPI Backend] → [React Frontend]
-                              ↓
-                    [체감지수 계산 모듈]
+                              ↓                      ↓
+                    [체감지수 계산 모듈]      [Supabase]
                               ↓
                     [OpenAI API - AI 설명]
 ```
@@ -44,6 +46,10 @@ npm run dev
 - `components/ClimateMap.jsx`: Leaflet 지도, CircleMarker
 - `components/Sidebar.jsx`: 지역 정보, AI 설명 표시
 - `api.js`: Backend API 클라이언트
+- 주요 라이브러리: React-Leaflet(지도), Chart.js(차트), Supabase(DB)
+
+### 데이터베이스
+- `supabase_setup.sql`: Supabase 테이블 스키마 및 초기 설정
 
 ## 핵심 로직
 
@@ -53,14 +59,18 @@ npm run dev
 - 대상별 가중치: 노인 1.3배, 아동 1.25배, 야외근로자 1.2배
 
 ### API 엔드포인트
+- `GET /api/regions`: 경기도 시군 목록
 - `GET /api/climate/all?target={group}`: 전체 지역 데이터
 - `GET /api/climate/{region}?target={group}`: 단일 지역
 - `GET /api/climate/{region}/explain?target={group}`: AI 설명
+- `GET /health`: 서버 상태 확인
 
 ## 환경변수 (.env)
 ```
-CLIMATE_API_KEY=4c58df36-82b2-40b2-b360-6450cca44b1e
-OPENAI_API_KEY=your_key_here  # AI 설명용 (없으면 규칙 기반)
+CLIMATE_API_KEY=your_climate_api_key
+OPENAI_API_KEY=your_openai_key  # AI 설명용 (없으면 규칙 기반)
+SUPABASE_URL=your_supabase_url
+SUPABASE_KEY=your_supabase_key
 ```
 
 ## 개발 참고사항

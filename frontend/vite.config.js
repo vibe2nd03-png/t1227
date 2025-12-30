@@ -11,5 +11,21 @@ export default defineConfig({
         changeOrigin: true
       }
     }
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // React 코어
+          'vendor-react': ['react', 'react-dom'],
+          // 지도 라이브러리
+          'vendor-map': ['leaflet', 'react-leaflet'],
+          // 차트 라이브러리
+          'vendor-chart': ['chart.js', 'react-chartjs-2'],
+          // Supabase
+          'vendor-supabase': ['@supabase/supabase-js'],
+        }
+      }
+    }
   }
 })

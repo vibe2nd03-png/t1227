@@ -1,5 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
+import { createLogger } from './utils/logger';
 
+const log = createLogger('Supabase');
 const supabaseUrl = 'https://pcdmrofcfqtyywtzyrfo.supabase.co';
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q';
 
@@ -15,7 +17,7 @@ export const climateService = {
       .order('region');
 
     if (error) {
-      console.error('데이터 조회 오류:', error);
+      log.error('데이터 조회 오류', error);
       return null;
     }
     return data;
@@ -30,7 +32,7 @@ export const climateService = {
       .single();
 
     if (error) {
-      console.error('지역 조회 오류:', error);
+      log.error('지역 조회 오류', error);
       return null;
     }
     return data;
@@ -45,7 +47,7 @@ export const climateService = {
       .select();
 
     if (error) {
-      console.error('데이터 업데이트 오류:', error);
+      log.error('데이터 업데이트 오류', error);
       return null;
     }
     return data;
@@ -64,7 +66,7 @@ export const climateService = {
       .select();
 
     if (error) {
-      console.error('설명 저장 오류:', error);
+      log.error('설명 저장 오류', error);
       return null;
     }
     return data;
@@ -80,7 +82,7 @@ export const climateService = {
       .single();
 
     if (error && error.code !== 'PGRST116') {
-      console.error('설명 조회 오류:', error);
+      log.error('설명 조회 오류', error);
       return null;
     }
     return data;

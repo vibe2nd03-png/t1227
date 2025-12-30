@@ -1,12 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import UserReportPanel from './UserReportPanel';
-import OotdGenerator from './OotdGenerator';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import AirQualityNav from './AirQualityNav';
-import AuthModal from './AuthModal';
-import UserProfile from './UserProfile';
-import NotificationManager from './NotificationManager';
-import WeatherComparisonChart from './WeatherComparisonChart';
 import { useAuth } from '../contexts/AuthContext';
+
+// Lazy load heavy components (탭/모달별 분리)
+const AuthModal = lazy(() => import('./AuthModal'));
+const UserProfile = lazy(() => import('./UserProfile'));
+const NotificationManager = lazy(() => import('./NotificationManager'));
+const WeatherComparisonChart = lazy(() => import('./WeatherComparisonChart'));
+
+// 로딩 폴백 컴포넌트
+const LoadingFallback = () => (
+  <div className="lazy-loading">로딩 중...</div>
+);
 
 const TARGET_OPTIONS = [
   { value: 'general', label: '일반', icon: '👤' },
@@ -90,16 +95,24 @@ function Sidebar({ selectedRegion, explanation, target, onTargetChange, loading,
       </div>
 
       {/* 로그인 모달 */}
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-      />
+      {showAuthModal && (
+        <Suspense fallback={<LoadingFallback />}>
+          <AuthModal
+            isOpen={showAuthModal}
+            onClose={() => setShowAuthModal(false)}
+          />
+        </Suspense>
+      )}
 
       {/* 프로필 모달 */}
-      <UserProfile
-        isOpen={showProfileModal}
-        onClose={() => setShowProfileModal(false)}
-      />
+      {showProfileModal && (
+        <Suspense fallback={<LoadingFallback />}>
+          <UserProfile
+            isOpen={showProfileModal}
+            onClose={() => setShowProfileModal(false)}
+          />
+        </Suspense>
+      )}
 
       {/* 퀵 액션 바 */}
       <div className="quick-actions">
@@ -117,11 +130,15 @@ function Sidebar({ selectedRegion, explanation, target, onTargetChange, loading,
       </div>
 
       {/* 알림 설정 모달 */}
-      <NotificationManager
-        climateData={allRegions}
-        isOpen={showNotificationModal}
-        onClose={() => setShowNotificationModal(false)}
-      />
+      {showNotificationModal && (
+        <Suspense fallback={<LoadingFallback />}>
+          <NotificationManager
+            climateData={allRegions}
+            isOpen={showNotificationModal}
+            onClose={() => setShowNotificationModal(false)}
+          />
+        </Suspense>
+      )}
 
       {/* 메인 탭 네비게이션 */}
       <div className="main-tabs">
@@ -159,10 +176,12 @@ function Sidebar({ selectedRegion, explanation, target, onTargetChange, loading,
             {/* 10년 비교 차트 탭 */}
             {activeTab === 'chart' && (
               <div className="tab-panel">
-                <WeatherComparisonChart
-                  region={selectedRegion.region}
-                  climateData={selectedRegion.climate_data}
-                />
+                <Suspense fallback={<LoadingFallback />}>
+                  <WeatherComparisonChart
+                    region={selectedRegion.region}
+                    climateData={selectedRegion.climate_data}
+                  />
+                </Suspense>
               </div>
             )}
 
