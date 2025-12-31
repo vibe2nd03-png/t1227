@@ -224,32 +224,49 @@ function AnimatedMarker({ region, isSelected, onSelect, getMarkerRadius, isGyeon
       }}
     >
       <Popup>
-        <div style={{ textAlign: 'center', minWidth: '140px' }}>
-          <strong style={{ fontSize: '15px', color: '#1a1a2e' }}>
+        <div className="marker-popup-content" style={{ textAlign: 'center', minWidth: '160px', padding: '4px' }}>
+          <div style={{
+            fontSize: '18px',
+            fontWeight: '700',
+            marginBottom: '10px',
+            letterSpacing: '-0.02em'
+          }}>
             {region.region}
-            {!isGyeonggi && <span style={{ fontSize: '11px', color: '#888', marginLeft: '4px' }}>(주변)</span>}
-          </strong>
-          <br />
-          <span
+            {!isGyeonggi && <span style={{ fontSize: '12px', opacity: 0.6, marginLeft: '6px' }}>(주변)</span>}
+          </div>
+          <div
             style={{
-              display: 'inline-block',
-              marginTop: '8px',
-              padding: '4px 12px',
-              borderRadius: '12px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '8px 16px',
+              borderRadius: '20px',
               backgroundColor: region.risk_color,
               color: region.risk_level === 'caution' ? '#333' : '#fff',
-              fontSize: isGyeonggi ? '13px' : '11px',
-              fontWeight: '600',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-              opacity: isGyeonggi ? 1 : 0.8,
+              fontSize: isGyeonggi ? '15px' : '13px',
+              fontWeight: '700',
+              boxShadow: `0 4px 12px ${region.risk_color}66`,
+              opacity: isGyeonggi ? 1 : 0.85,
             }}
           >
-            {region.risk_label} ({region.adjusted_score || region.score}점)
-          </span>
-          <br />
-          <span style={{ fontSize: '13px', color: '#555', marginTop: '6px', display: 'block' }}>
-            체감온도 {region.climate_data?.apparent_temperature || region.climate_data?.temperature || '-'}°C
-          </span>
+            <span style={{ fontSize: '1.2em' }}>
+              {region.risk_level === 'danger' ? '🔴' :
+               region.risk_level === 'warning' ? '🟠' :
+               region.risk_level === 'caution' ? '🟡' : '🔵'}
+            </span>
+            {region.risk_label} {region.adjusted_score || region.score}점
+          </div>
+          <div style={{
+            fontSize: '14px',
+            marginTop: '12px',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            gap: '6px'
+          }}>
+            <span style={{ fontSize: '1.3em' }}>🌡️</span>
+            <span>체감 <strong>{region.climate_data?.apparent_temperature || region.climate_data?.temperature || '-'}°C</strong></span>
+          </div>
         </div>
       </Popup>
     </CircleMarker>
