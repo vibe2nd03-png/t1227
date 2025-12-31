@@ -174,57 +174,14 @@ const formatTemperature = (climateData) => {
   return '데이터 없음';
 };
 
-// 펄스 애니메이션 마커 컴포넌트
+// 마커 컴포넌트 (간소화 - 떨림 방지)
 function AnimatedMarker({ region, isSelected, onSelect, getMarkerRadius, isGyeonggi = true }) {
-  const [isHovered, setIsHovered] = useState(false);
-  const [animatedRadius, setAnimatedRadius] = useState(null);
-  const animationRef = useRef(null);
-
   // 경기도 외 지역은 50% 작게 표시
   const sizeMultiplier = isGyeonggi ? 1 : 0.5;
   const baseRadius = getMarkerRadius(region.risk_level) * sizeMultiplier;
 
-  // 선택된 마커는 더 크게, 호버 시 약간 크게
-  const targetRadius = isSelected ? baseRadius * 1.4 : isHovered ? baseRadius * 1.15 : baseRadius;
-
-  // 마커 크기 애니메이션
-  useEffect(() => {
-    if (animatedRadius === null) {
-      setAnimatedRadius(targetRadius);
-      return;
-    }
-
-    const startRadius = animatedRadius;
-    const startTime = performance.now();
-    const duration = isSelected ? 400 : 200; // 선택 시 더 긴 애니메이션
-
-    const animate = (currentTime) => {
-      const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-
-      // easeOutBack 이징 (살짝 오버슈트 효과)
-      const eased = isSelected
-        ? 1 + 2.70158 * Math.pow(progress - 1, 3) + 1.70158 * Math.pow(progress - 1, 2)
-        : 1 - Math.pow(1 - progress, 3); // easeOutCubic
-
-      const currentRadius = startRadius + (targetRadius - startRadius) * eased;
-      setAnimatedRadius(currentRadius);
-
-      if (progress < 1) {
-        animationRef.current = requestAnimationFrame(animate);
-      }
-    };
-
-    animationRef.current = requestAnimationFrame(animate);
-
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-  }, [targetRadius, isSelected]);
-
-  const radius = animatedRadius || targetRadius;
+  // 선택된 마커만 크게 (호버 애니메이션 제거로 떨림 방지)
+  const radius = isSelected ? baseRadius * 1.3 : baseRadius;
 
   return (
     <CircleMarker
@@ -232,15 +189,13 @@ function AnimatedMarker({ region, isSelected, onSelect, getMarkerRadius, isGyeon
       radius={radius}
       pathOptions={{
         fillColor: region.risk_color,
-        fillOpacity: isSelected ? 1 : isHovered ? 0.9 : 0.75,
-        color: isSelected ? '#1a1a2e' : isHovered ? '#333' : '#fff',
-        weight: isSelected ? 4 : isHovered ? 3 : 2,
-        className: isSelected ? 'selected-marker pulse-animation' : '',
+        fillOpacity: isSelected ? 1 : 0.8,
+        color: isSelected ? '#1a1a2e' : '#fff',
+        weight: isSelected ? 4 : 2,
+        className: isSelected ? 'selected-marker' : '',
       }}
       eventHandlers={{
         click: () => onSelect(region),
-        mouseover: () => setIsHovered(true),
-        mouseout: () => setIsHovered(false),
       }}
     >
       <Popup>
@@ -317,22 +272,17 @@ function ClimateMap({ regions, selectedRegion, onRegionSelect }) {
 
   // 경기도 지역과 주변 지역 분류
   const gyeonggiRegions = regions.filter(r => GYEONGGI_REGIONS.includes(r.region));
-  const nearbyRegionsWithData = NEARBY_REGIONS.map(nearby => {
-    // 주변 지역에 대한 임시 데이터 생성 (실제 데이터는 추후 API 연동)
-    return {
-      ...nearby,
-      score: Math.floor(Math.random() * 40) + 20,
-      risk_level: 'caution',
-      risk_label: '주의',
-      risk_color: '#FFEB3B',
-      adjusted_score: Math.floor(Math.random() * 40) + 20,
-      climate_data: {
-        temperature: -3 + Math.random() * 4,
-        apparent_temperature: -5 + Math.random() * 4,
-        humidity: 50 + Math.random() * 20,
-      },
-    };
-  });
+
+  // 주변 지역 데이터 (고정값 - 겨울철 기준)
+  const nearbyRegionsWithData = [
+    { region: '서울', lat: 37.5665, lng: 126.9780, isGyeonggi: false, score: 35, risk_level: 'caution', risk_label: '주의', risk_color: '#FFEB3B', adjusted_score: 35, climate_data: { temperature: -2, apparent_temperature: -5, humidity: 45 }},
+    { region: '인천', lat: 37.4563, lng: 126.7052, isGyeonggi: false, score: 40, risk_level: 'caution', risk_label: '주의', risk_color: '#FFEB3B', adjusted_score: 40, climate_data: { temperature: -1, apparent_temperature: -4, humidity: 55 }},
+    { region: '춘천', lat: 37.8813, lng: 127.7300, isGyeonggi: false, score: 55, risk_level: 'warning', risk_label: '경고', risk_color: '#FF9800', adjusted_score: 55, climate_data: { temperature: -8, apparent_temperature: -14, humidity: 35 }},
+    { region: '원주', lat: 37.3422, lng: 127.9202, isGyeonggi: false, score: 45, risk_level: 'caution', risk_label: '주의', risk_color: '#FFEB3B', adjusted_score: 45, climate_data: { temperature: -5, apparent_temperature: -10, humidity: 40 }},
+    { region: '충주', lat: 36.9910, lng: 127.9259, isGyeonggi: false, score: 38, risk_level: 'caution', risk_label: '주의', risk_color: '#FFEB3B', adjusted_score: 38, climate_data: { temperature: -3, apparent_temperature: -7, humidity: 42 }},
+    { region: '천안', lat: 36.8151, lng: 127.1139, isGyeonggi: false, score: 32, risk_level: 'caution', risk_label: '주의', risk_color: '#FFEB3B', adjusted_score: 32, climate_data: { temperature: -1, apparent_temperature: -4, humidity: 48 }},
+    { region: '세종', lat: 36.4800, lng: 127.2890, isGyeonggi: false, score: 28, risk_level: 'safe', risk_label: '안전', risk_color: '#2196F3', adjusted_score: 28, climate_data: { temperature: 0, apparent_temperature: -2, humidity: 50 }},
+  ];
 
   // 선택된 지역이 맨 위에 렌더링되도록 정렬
   const sortedGyeonggiRegions = [...gyeonggiRegions].sort((a, b) => {

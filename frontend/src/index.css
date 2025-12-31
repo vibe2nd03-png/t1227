@@ -763,13 +763,11 @@ body::after {
    MAP MARKERS (CircleMarker) - Premium Style
    ───────────────────────────────────────────────────────────────────────────── */
 .leaflet-interactive {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+  filter: drop-shadow(0 3px 6px rgba(0,0,0,0.25));
 }
 
 .leaflet-interactive:hover {
-  filter: drop-shadow(0 8px 16px rgba(0,0,0,0.4)) brightness(1.15);
-  transform: scale(1.05);
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.35)) brightness(1.1);
 }
 
 /* Premium marker glow effect */
