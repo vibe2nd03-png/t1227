@@ -265,7 +265,13 @@ function AnimatedMarker({ region, isSelected, onSelect, getMarkerRadius, isGyeon
             gap: '6px'
           }}>
             <span style={{ fontSize: '1.3em' }}>🌡️</span>
-            <span>체감 <strong>{region.climate_data?.apparent_temperature || region.climate_data?.temperature || '-'}°C</strong></span>
+            <span>체감 <strong>{
+              region.climate_data?.apparent_temperature !== null && region.climate_data?.apparent_temperature !== undefined
+                ? `${region.climate_data.apparent_temperature}°C`
+                : region.climate_data?.temperature !== null && region.climate_data?.temperature !== undefined
+                  ? `${region.climate_data.temperature}°C`
+                  : '-'
+            }</strong></span>
           </div>
         </div>
       </Popup>
