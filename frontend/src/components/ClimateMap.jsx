@@ -3,6 +3,7 @@ import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaf
 import 'leaflet/dist/leaflet.css';
 import FloatingReports from './FloatingReports';
 import RegionRanking from './RegionRanking';
+import BonggongiGuide from './BonggongiGuide';
 
 // 경기도 31개 시군 목록
 const GYEONGGI_REGIONS = [
@@ -337,6 +338,9 @@ function ClimateMap({ regions, selectedRegion, onRegionSelect }) {
 
         {/* 떠다니는 시민 제보 마커 */}
         <FloatingReports visible={showReports} />
+
+        {/* AI 도우미 봉공이 */}
+        <BonggongiGuide regions={regions} selectedRegion={selectedRegion} />
       </MapContainer>
 
       {/* 선택된 지역 표시 */}
