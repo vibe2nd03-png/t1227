@@ -2455,3 +2455,268 @@ a:focus-visible {
   font-size: 0.8rem;
   margin-top: var(--space-sm);
 }
+
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   MOBILE FONT SIZE BOOST (1.5x)
+   ───────────────────────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  html {
+    font-size: 20px; /* 16px * 1.25 for readability */
+  }
+  
+  /* Header */
+  .header-title h1 {
+    font-size: 1.4rem;
+  }
+  
+  .sidebar-header h1 {
+    font-size: 1.4rem;
+  }
+  
+  /* Target chips */
+  .target-chip {
+    font-size: 0.9rem;
+    padding: 8px 12px;
+  }
+  
+  /* Quick actions */
+  .quick-action-btn {
+    font-size: 0.8rem;
+    padding: 10px;
+  }
+  
+  .quick-action-btn span:first-child {
+    font-size: 1.4rem;
+  }
+  
+  /* Main tabs */
+  .main-tab {
+    font-size: 0.8rem;
+    padding: 10px 6px;
+  }
+  
+  .main-tab .tab-icon {
+    font-size: 1.4rem;
+  }
+  
+  /* No selection */
+  .no-selection h3 {
+    font-size: 1.2rem;
+  }
+  
+  .no-selection p {
+    font-size: 1rem;
+  }
+  
+  .no-selection-icon {
+    font-size: 4rem;
+  }
+  
+  /* Region card */
+  .region-title h2 {
+    font-size: 1.5rem;
+  }
+  
+  .region-title .risk-badge {
+    font-size: 0.85rem;
+    padding: 4px 12px;
+  }
+  
+  .score-badge .score {
+    font-size: 2.5rem;
+  }
+  
+  .score-badge .label {
+    font-size: 1rem;
+  }
+  
+  /* Climate grid */
+  .climate-item .icon {
+    font-size: 1.3rem;
+  }
+  
+  .climate-item .value {
+    font-size: 1.1rem;
+  }
+  
+  .climate-item .label {
+    font-size: 0.75rem;
+  }
+  
+  /* AI section */
+  .ai-explanation-compact h4 {
+    font-size: 0.95rem;
+  }
+  
+  .ai-explanation-compact p {
+    font-size: 1rem;
+    line-height: 1.8;
+  }
+  
+  .guide-chip {
+    font-size: 0.85rem;
+    padding: 6px 10px;
+  }
+  
+  /* OOTD */
+  .ootd-header-inline h3 {
+    font-size: 1.2rem;
+  }
+  
+  .ootd-header-inline p {
+    font-size: 0.9rem;
+  }
+  
+  .weather-badge {
+    font-size: 0.85rem;
+    padding: 6px 10px;
+  }
+  
+  .option-row label {
+    font-size: 0.85rem;
+  }
+  
+  .chip {
+    font-size: 0.9rem;
+    padding: 8px 12px;
+  }
+  
+  .chip.small {
+    font-size: 0.8rem;
+    padding: 6px 10px;
+  }
+  
+  .generate-btn-large {
+    font-size: 1.1rem;
+    padding: 14px;
+  }
+  
+  .outfit-desc strong {
+    font-size: 1rem;
+  }
+  
+  .outfit-desc p {
+    font-size: 0.95rem;
+  }
+  
+  .tips-box h4 {
+    font-size: 0.9rem;
+  }
+  
+  .tip-badge {
+    font-size: 0.85rem;
+    padding: 6px 10px;
+  }
+  
+  /* Report */
+  .report-header-inline h3 {
+    font-size: 1.2rem;
+  }
+  
+  .report-header-inline p {
+    font-size: 0.9rem;
+  }
+  
+  .feeling-btn-inline {
+    padding: 10px;
+  }
+  
+  .feeling-btn-inline .emoji {
+    font-size: 1.6rem;
+  }
+  
+  .feeling-btn-inline .label {
+    font-size: 0.75rem;
+  }
+  
+  .quick-comments label {
+    font-size: 0.85rem;
+  }
+  
+  .comment-chip {
+    font-size: 0.8rem;
+    padding: 6px 10px;
+  }
+  
+  .comment-input-inline {
+    font-size: 1rem;
+    padding: 10px;
+  }
+  
+  .submit-btn-large {
+    font-size: 1.1rem;
+    padding: 14px;
+  }
+  
+  .login-hint {
+    font-size: 0.85rem;
+  }
+  
+  .recent-reports-inline h4 {
+    font-size: 0.9rem;
+  }
+  
+  .report-item-inline {
+    font-size: 0.9rem;
+    padding: 8px 10px;
+  }
+  
+  .report-item-inline .emoji {
+    font-size: 1.2rem;
+  }
+  
+  .report-item-inline .time {
+    font-size: 0.75rem;
+  }
+  
+  /* Ranking */
+  .ranking-toggle {
+    font-size: 1rem;
+    padding: 12px 16px;
+  }
+  
+  .toggle-icon {
+    font-size: 1.3rem;
+  }
+  
+  .tab-btn {
+    font-size: 0.9rem;
+    padding: 10px 8px;
+  }
+  
+  .rank-region {
+    font-size: 1rem;
+  }
+  
+  .rank-number {
+    font-size: 1.2rem;
+  }
+  
+  .rank-score {
+    font-size: 0.95rem;
+  }
+  
+  .rank-temp {
+    font-size: 0.85rem;
+  }
+  
+  .adjust-note {
+    font-size: 0.8rem;
+  }
+  
+  /* Data source badge */
+  .data-source-badge {
+    font-size: 0.75rem;
+    padding: 6px 12px;
+  }
+  
+  /* Loading */
+  .loading {
+    font-size: 1.1rem;
+  }
+  
+  .lazy-loading {
+    font-size: 1rem;
+  }
+}
