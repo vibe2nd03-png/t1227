@@ -3,10 +3,76 @@
 """
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
+from urllib.request import urlopen
+from urllib.error import URLError
 import json
 import random
 import re
 from datetime import datetime
+
+# 기상청 API 설정
+KMA_AUTH_KEY = "DbUh4_ekRRi1IeP3pPUYog"
+KMA_BASE_URL = "https://apihub.kma.go.kr/api/typ01/url"
+KMA_COLUMNS = [
+    'TM', 'STN', 'WD', 'WS', 'GST_WD', 'GST_WS', 'GST_TM',
+    'PA', 'PS', 'PT', 'PR', 'TA', 'TD', 'HM', 'PV',
+    'RN', 'RN_DAY', 'RN_JUN', 'RN_INT', 'SD_HR3', 'SD_DAY', 'SD_TOT',
+    'WC', 'WP', 'WW', 'CA_TOT', 'CA_MID', 'CH_MIN', 'CT',
+    'CT_TOP', 'CT_MID', 'CT_LOW', 'VS', 'SS', 'SI',
+    'ST_GD', 'TS', 'TE_005', 'TE_01', 'TE_02', 'TE_03',
+    'ST_SEA', 'WH', 'BF', 'IR', 'IX'
+]
+
+
+def parse_kma_response(text):
+    """기상청 API 텍스트 응답을 JSON으로 파싱"""
+    lines = [
+        line for line in text.split('\n')
+        if line.strip() and not line.startswith('#')
+        and 'END7777' not in line and 'START7777' not in line
+    ]
+
+    data = []
+    for line in lines:
+        values = line.strip().split()
+        record = {}
+        for idx, col in enumerate(KMA_COLUMNS):
+            if idx < len(values):
+                value = values[idx]
+                if value in ['-9', '-99.0', '-9.0']:
+                    record[col] = None
+                elif re.match(r'^-?\d+\.?\d*$', value):
+                    record[col] = float(value)
+                else:
+                    record[col] = value
+            else:
+                record[col] = None
+        data.append(record)
+    return data
+
+
+def fetch_kma_data(tm, stn="0"):
+    """기상청 API 호출"""
+    try:
+        url = f"{KMA_BASE_URL}/kma_sfctm2.php?tm={tm}&stn={stn}&authKey={KMA_AUTH_KEY}"
+        with urlopen(url, timeout=30) as response:
+            text = response.read().decode('utf-8')
+            data = parse_kma_response(text)
+            return {"success": True, "datetime": tm, "count": len(data), "data": data}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+def fetch_kma_period(tm1, tm2, stn="0"):
+    """기상청 기간 API 호출"""
+    try:
+        url = f"{KMA_BASE_URL}/kma_sfctm3.php?tm1={tm1}&tm2={tm2}&stn={stn}&authKey={KMA_AUTH_KEY}"
+        with urlopen(url, timeout=30) as response:
+            text = response.read().decode('utf-8')
+            data = parse_kma_response(text)
+            return {"success": True, "startTime": tm1, "endTime": tm2, "count": len(data), "data": data}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
 
 # 경기도 31개 시군 정보
 GYEONGGI_REGIONS = {
@@ -270,6 +336,21 @@ class handler(BaseHTTPRequestHandler):
             response = list(GYEONGGI_REGIONS.keys())
         elif path == '/api/health':
             response = {"status": "healthy", "service": "gyeonggi-climate-map"}
+        elif path == '/api/kma':
+            tm = query_params.get('tm', [None])[0]
+            stn = query_params.get('stn', ['0'])[0]
+            if tm:
+                response = fetch_kma_data(tm, stn)
+            else:
+                response = {"error": "tm 파라미터가 필요합니다"}
+        elif path == '/api/kma-period':
+            tm1 = query_params.get('tm1', [None])[0]
+            tm2 = query_params.get('tm2', [None])[0]
+            stn = query_params.get('stn', ['0'])[0]
+            if tm1 and tm2:
+                response = fetch_kma_period(tm1, tm2, stn)
+            else:
+                response = {"error": "tm1, tm2 파라미터가 필요합니다"}
         elif path == '/api/climate/all':
             target = query_params.get('target', [None])[0]
             response = get_all_climate_data(target)
