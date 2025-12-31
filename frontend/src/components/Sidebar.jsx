@@ -311,7 +311,59 @@ function OotdGeneratorInline({ selectedRegion }) {
     return tips;
   };
 
-  const generateImage = async () => {
+  // 온도별 옷차림 데이터
+  const getOutfitData = (temp, styleValue) => {
+    const outfits = {
+      hot: { // 33도 이상
+        casual: { top: '🎽', bottom: '🩳', outer: '', shoes: '🩴', desc: '민소매 + 반바지' },
+        office: { top: '👔', bottom: '👖', outer: '', shoes: '👞', desc: '반팔 셔츠 + 면바지' },
+        sporty: { top: '🎽', bottom: '🩳', outer: '', shoes: '👟', desc: '운동복 + 반바지' },
+        minimal: { top: '👕', bottom: '🩳', outer: '', shoes: '👟', desc: '무지 티셔츠 + 반바지' },
+      },
+      warm: { // 28-32도
+        casual: { top: '👕', bottom: '🩳', outer: '', shoes: '👟', desc: '반팔 티 + 반바지' },
+        office: { top: '👔', bottom: '👖', outer: '', shoes: '👞', desc: '반팔 셔츠 + 슬랙스' },
+        sporty: { top: '👕', bottom: '🩳', outer: '', shoes: '👟', desc: '기능성 티셔츠 + 반바지' },
+        minimal: { top: '👕', bottom: '👖', outer: '', shoes: '👟', desc: '무지 티셔츠 + 면바지' },
+      },
+      mild: { // 23-27도
+        casual: { top: '👕', bottom: '👖', outer: '', shoes: '👟', desc: '긴팔 티셔츠 + 청바지' },
+        office: { top: '👔', bottom: '👖', outer: '', shoes: '👞', desc: '셔츠 + 슬랙스' },
+        sporty: { top: '👕', bottom: '👖', outer: '', shoes: '👟', desc: '트레이닝복' },
+        minimal: { top: '👕', bottom: '👖', outer: '', shoes: '👟', desc: '기본 긴팔 + 바지' },
+      },
+      cool: { // 17-22도
+        casual: { top: '👕', bottom: '👖', outer: '🧥', shoes: '👟', desc: '긴팔 + 얇은 자켓' },
+        office: { top: '👔', bottom: '👖', outer: '🧥', shoes: '👞', desc: '셔츠 + 가벼운 자켓' },
+        sporty: { top: '👕', bottom: '👖', outer: '🧥', shoes: '👟', desc: '바람막이 + 운동복' },
+        minimal: { top: '👕', bottom: '👖', outer: '🧥', shoes: '👟', desc: '기본 레이어드' },
+      },
+      chilly: { // 12-16도
+        casual: { top: '👕', bottom: '👖', outer: '🧥', shoes: '👟', desc: '니트/맨투맨 + 자켓' },
+        office: { top: '👔', bottom: '👖', outer: '🧥', shoes: '👞', desc: '셔츠 + 가디건/자켓' },
+        sporty: { top: '👕', bottom: '👖', outer: '🧥', shoes: '👟', desc: '후드집업 + 트레이닝' },
+        minimal: { top: '🧥', bottom: '👖', outer: '', shoes: '👟', desc: '심플 니트 + 코트' },
+      },
+      cold: { // 12도 미만
+        casual: { top: '👕', bottom: '👖', outer: '🧥', shoes: '👢', desc: '패딩/코트 + 니트' },
+        office: { top: '👔', bottom: '👖', outer: '🧥', shoes: '👞', desc: '코트 + 정장' },
+        sporty: { top: '👕', bottom: '👖', outer: '🧥', shoes: '👟', desc: '패딩 + 기모 운동복' },
+        minimal: { top: '🧥', bottom: '👖', outer: '', shoes: '👢', desc: '롱코트 + 터틀넥' },
+      },
+    };
+
+    let tempCategory;
+    if (temp >= 33) tempCategory = 'hot';
+    else if (temp >= 28) tempCategory = 'warm';
+    else if (temp >= 23) tempCategory = 'mild';
+    else if (temp >= 17) tempCategory = 'cool';
+    else if (temp >= 12) tempCategory = 'chilly';
+    else tempCategory = 'cold';
+
+    return outfits[tempCategory][styleValue] || outfits[tempCategory].casual;
+  };
+
+  const generateOutfit = () => {
     if (!selectedRegion?.climate_data) return;
 
     setIsGenerating(true);
@@ -320,65 +372,13 @@ function OotdGeneratorInline({ selectedRegion }) {
     const climate = selectedRegion.climate_data;
     const temp = climate.apparent_temperature || climate.temperature || 25;
 
-    let temperatureOutfit = '';
-    if (temp >= 33) temperatureOutfit = 'summer tank top shorts';
-    else if (temp >= 28) temperatureOutfit = 'summer t-shirt';
-    else if (temp >= 23) temperatureOutfit = 'spring long sleeve';
-    else if (temp >= 17) temperatureOutfit = 'light jacket';
-    else if (temp >= 12) temperatureOutfit = 'sweater hoodie';
-    else temperatureOutfit = 'winter coat';
-
-    const genderText = gender === 'male' ? 'man' : 'woman';
-    const ageText = AGE_OPTIONS.find(a => a.value === age)?.label || '20s';
-
-    // 간단한 프롬프트 사용
-    const prompt = `${ageText} Korean ${genderText} wearing ${temperatureOutfit}, full body photo, white background`;
-
     // 팁 생성
     setOutfitTips(generateTips(climate));
 
-    // 이미지 로드 함수 (재시도 포함)
-    const loadImageWithRetry = async (retryCount = 0) => {
-      const maxRetries = 2;
-      const seed = Date.now() + retryCount;
-      const encodedPrompt = encodeURIComponent(prompt);
-      const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=400&height=600&seed=${seed}&nologo=true`;
-
-      return new Promise((resolve, reject) => {
-        const img = new Image();
-        const timeout = setTimeout(() => {
-          img.src = '';
-          reject(new Error('timeout'));
-        }, 30000); // 30초 타임아웃
-
-        img.onload = () => {
-          clearTimeout(timeout);
-          resolve(imageUrl);
-        };
-        img.onerror = () => {
-          clearTimeout(timeout);
-          reject(new Error('load_error'));
-        };
-        img.src = imageUrl;
-      });
-    };
-
-    // 최대 3번 시도
-    for (let attempt = 0; attempt < 3; attempt++) {
-      try {
-        const imageUrl = await loadImageWithRetry(attempt);
-        setGeneratedImage(imageUrl);
-        setIsGenerating(false);
-        return;
-      } catch (err) {
-        if (attempt === 2) {
-          setError('이미지 생성에 실패했습니다. 잠시 후 다시 시도해주세요.');
-          setIsGenerating(false);
-        }
-        // 다음 시도 전 잠시 대기
-        await new Promise(r => setTimeout(r, 1000));
-      }
-    }
+    // 옷차림 데이터 생성
+    const outfit = getOutfitData(temp, style);
+    setGeneratedImage(outfit);
+    setIsGenerating(false);
   };
 
   return (
@@ -446,13 +446,13 @@ function OotdGeneratorInline({ selectedRegion }) {
       {/* 생성 버튼 */}
       <button
         className="generate-btn-large"
-        onClick={generateImage}
+        onClick={generateOutfit}
         disabled={isGenerating}
       >
         {isGenerating ? (
-          <><span className="spinner"></span> AI가 생성 중... (10-20초)</>
+          <><span className="spinner"></span> 생성 중...</>
         ) : (
-          '✨ AI 옷차림 생성하기'
+          '👔 옷차림 추천받기'
         )}
       </button>
 
@@ -461,8 +461,17 @@ function OotdGeneratorInline({ selectedRegion }) {
       {/* 결과 */}
       {generatedImage && (
         <div className="ootd-result-inline">
-          <div className="result-image">
-            <img src={generatedImage} alt="AI 생성 옷차림" />
+          <div className="outfit-visual">
+            <div className="outfit-icons">
+              {generatedImage.outer && <span className="outfit-item outer">{generatedImage.outer}</span>}
+              <span className="outfit-item top">{generatedImage.top}</span>
+              <span className="outfit-item bottom">{generatedImage.bottom}</span>
+              <span className="outfit-item shoes">{generatedImage.shoes}</span>
+            </div>
+            <div className="outfit-desc">
+              <strong>추천 옷차림</strong>
+              <p>{generatedImage.desc}</p>
+            </div>
           </div>
 
           {outfitTips.length > 0 && (
@@ -475,14 +484,6 @@ function OotdGeneratorInline({ selectedRegion }) {
               </div>
             </div>
           )}
-
-          <button
-            className="regenerate-btn-inline"
-            onClick={generateImage}
-            disabled={isGenerating}
-          >
-            🔄 다른 스타일 보기
-          </button>
         </div>
       )}
     </div>
