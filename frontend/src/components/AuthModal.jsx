@@ -176,9 +176,11 @@ function AuthModal({ isOpen, onClose }) {
               {!otpSent ? (
                 <>
                   <div className="input-group">
-                    <label>전화번호</label>
+                    <label htmlFor="auth-phone">전화번호</label>
                     <input
                       type="tel"
+                      id="auth-phone"
+                      name="phone"
                       placeholder="010-1234-5678"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, ''))}
@@ -205,9 +207,11 @@ function AuthModal({ isOpen, onClose }) {
                   </div>
 
                   <div className="input-group">
-                    <label>인증번호</label>
+                    <label htmlFor="auth-otp">인증번호</label>
                     <input
                       type="text"
+                      id="auth-otp"
+                      name="otp"
                       placeholder="6자리 인증번호"
                       value={otpCode}
                       onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, ''))}
@@ -258,9 +262,11 @@ function AuthModal({ isOpen, onClose }) {
               </div>
 
               <div className="input-group">
-                <label>이메일</label>
+                <label htmlFor="auth-email">이메일</label>
                 <input
                   type="email"
+                  id="auth-email"
+                  name="email"
                   placeholder="example@gmail.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -268,9 +274,11 @@ function AuthModal({ isOpen, onClose }) {
               </div>
 
               <div className="input-group">
-                <label>비밀번호</label>
+                <label htmlFor="auth-password">비밀번호</label>
                 <input
                   type="password"
+                  id="auth-password"
+                  name="password"
                   placeholder="6자 이상 입력"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -279,9 +287,11 @@ function AuthModal({ isOpen, onClose }) {
 
               {emailMode === 'signup' && (
                 <div className="input-group">
-                  <label>비밀번호 확인</label>
+                  <label htmlFor="auth-confirm-password">비밀번호 확인</label>
                   <input
                     type="password"
+                    id="auth-confirm-password"
+                    name="confirmPassword"
                     placeholder="비밀번호 다시 입력"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}

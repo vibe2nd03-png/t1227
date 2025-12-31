@@ -203,10 +203,12 @@ function UserProfile({ isOpen, onClose }) {
             <div className="settings-section">
               {/* 닉네임 */}
               <div className="setting-item">
-                <label>닉네임</label>
+                <label htmlFor="profile-nickname">닉네임</label>
                 {editMode ? (
                   <input
                     type="text"
+                    id="profile-nickname"
+                    name="display_name"
                     value={formData.display_name}
                     onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
                     placeholder="닉네임을 입력하세요"
@@ -218,9 +220,11 @@ function UserProfile({ isOpen, onClose }) {
 
               {/* 관심 지역 */}
               <div className="setting-item">
-                <label>관심 지역</label>
+                <label htmlFor="profile-region">관심 지역</label>
                 {editMode ? (
                   <select
+                    id="profile-region"
+                    name="preferred_region"
                     value={formData.preferred_region}
                     onChange={(e) => setFormData({ ...formData, preferred_region: e.target.value })}
                   >
@@ -260,21 +264,25 @@ function UserProfile({ isOpen, onClose }) {
 
               {/* 알림 설정 */}
               <div className="setting-item">
-                <label>알림 설정</label>
+                <label id="notification-label">알림 설정</label>
                 {editMode ? (
-                  <div className="notification-settings">
-                    <label className="toggle-label">
+                  <div className="notification-settings" aria-labelledby="notification-label">
+                    <label className="toggle-label" htmlFor="notification-enabled">
                       <input
                         type="checkbox"
+                        id="notification-enabled"
+                        name="notification_enabled"
                         checked={formData.notification_enabled}
                         onChange={(e) => setFormData({ ...formData, notification_enabled: e.target.checked })}
                       />
                       <span>위험 알림 받기</span>
                     </label>
                     <div className="threshold-setting">
-                      <span>위험도 {formData.notification_threshold}점 이상 시 알림</span>
+                      <label htmlFor="notification-threshold">위험도 {formData.notification_threshold}점 이상 시 알림</label>
                       <input
                         type="range"
+                        id="notification-threshold"
+                        name="notification_threshold"
                         min="30"
                         max="90"
                         step="10"

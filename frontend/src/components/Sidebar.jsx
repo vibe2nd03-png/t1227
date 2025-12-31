@@ -492,7 +492,7 @@ function OotdGeneratorInline({ selectedRegion }) {
 
 // 인라인 제보 패널 (탭 내 표시용)
 function UserReportPanelInline({ selectedRegion, onReportSubmit }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [selectedFeeling, setSelectedFeeling] = useState(null);
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -558,6 +558,7 @@ function UserReportPanelInline({ selectedRegion, onReportSubmit }) {
         temp_adjustment: selectedFeeling.tempAdjust,
         comment: comment || selectedFeeling.label,
         is_air_quality: selectedFeeling.airQuality || false,
+        user_id: user?.id || null,
       };
 
       const { data, error } = await supabase
@@ -616,7 +617,7 @@ function UserReportPanelInline({ selectedRegion, onReportSubmit }) {
 
       {/* 빠른 코멘트 */}
       <div className="quick-comments">
-        <label>한마디 (선택)</label>
+        <label htmlFor="report-comment">한마디 (선택)</label>
         <div className="comment-chips">
           {QUICK_COMMENTS.map((c) => (
             <button
@@ -630,6 +631,8 @@ function UserReportPanelInline({ selectedRegion, onReportSubmit }) {
         </div>
         <input
           type="text"
+          id="report-comment"
+          name="report-comment"
           className="comment-input-inline"
           placeholder="직접 입력..."
           value={comment}
