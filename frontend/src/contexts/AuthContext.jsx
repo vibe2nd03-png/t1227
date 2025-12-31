@@ -71,17 +71,22 @@ export function AuthProvider({ children }) {
   // 이메일+비밀번호 회원가입 (이메일 인증 없이 즉시 가입)
   const signUpWithEmail = async (email, password) => {
     setAuthError(null);
+    log.info('회원가입 시도', { email });
+
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          // 이메일 인증 없이 즉시 세션 생성
-          data: {
-            email_confirmed: true,
+      const { data, error } = await withTimeout(
+        supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              email_confirmed: true,
+            },
           },
-        },
-      });
+        })
+      );
+
+      log.info('회원가입 응답', { data, error });
 
       if (error) throw error;
 
@@ -96,13 +101,14 @@ export function AuthProvider({ children }) {
       }
 
       // 세션이 없으면 자동 로그인 시도
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { data: signInData, error: signInError } = await withTimeout(
+        supabase.auth.signInWithPassword({
+          email,
+          password,
+        })
+      );
 
       if (signInError) {
-        // 로그인 실패해도 회원가입은 성공
         return { success: true, needsConfirmation: false };
       }
 
@@ -117,11 +123,17 @@ export function AuthProvider({ children }) {
   // 이메일+비밀번호 로그인
   const signInWithEmail = async (email, password) => {
     setAuthError(null);
+    log.info('로그인 시도', { email });
+
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { data, error } = await withTimeout(
+        supabase.auth.signInWithPassword({
+          email,
+          password,
+        })
+      );
+
+      log.info('로그인 응답', { data, error });
 
       if (error) throw error;
       return { success: true, data };
