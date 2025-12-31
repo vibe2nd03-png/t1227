@@ -2773,3 +2773,49 @@ a:focus-visible {
     min-height: 0;
   }
 }
+
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   MOBILE HEADER TITLE - Centered & Large
+   ───────────────────────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .sidebar-header {
+    padding: 16px;
+    text-align: center;
+  }
+  
+  .header-top {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  
+  .header-title {
+    order: 1;
+    width: 100%;
+    text-align: center;
+  }
+  
+  .header-title h1 {
+    font-size: 2rem !important;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, #f4f4f6 0%, #a0a0b0 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: 0 2px 20px rgba(99, 102, 241, 0.3);
+  }
+  
+  .user-section {
+    order: 2;
+    position: absolute;
+    top: 16px;
+    right: 16px;
+  }
+  
+  .target-selector-compact {
+    justify-content: center;
+    margin-top: 16px;
+  }
+}
