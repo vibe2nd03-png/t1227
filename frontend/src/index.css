@@ -1088,25 +1088,193 @@ body {
   border-color: #667eea;
 }
 
-/* 반응형 */
+/* ========================================
+   모바일 반응형 스타일 (768px 이하)
+   ======================================== */
 @media (max-width: 768px) {
+  /* 메인 레이아웃 - 지도 전체 화면, 사이드바 하단 시트 */
   .main-content {
     flex-direction: column;
+    position: relative;
   }
 
-  .sidebar {
-    width: 100%;
-    height: 50%;
-    order: 2;
-  }
-
+  /* 지도 전체 화면 */
   .map-container {
-    height: 50%;
+    height: 100%;
+    width: 100%;
     order: 1;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+
+  /* 사이드바 하단 시트 패턴 */
+  .sidebar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: auto;
+    max-height: 65vh;
+    min-height: 140px;
+    order: 2;
+    z-index: 1100;
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+    transition: max-height 0.3s ease-out;
+    overflow: hidden;
+  }
+
+  .sidebar.collapsed {
+    max-height: 140px;
+  }
+
+  /* 하단 시트 드래그 핸들 */
+  .sidebar-header::before {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 2px;
+    margin: 0 auto 12px;
+  }
+
+  /* 사이드바 헤더 모바일 최적화 */
+  .sidebar-header {
+    padding: 12px 16px 16px;
+    cursor: pointer;
+  }
+
+  .sidebar-header h1 {
+    font-size: 1.2rem;
+  }
+
+  .sidebar-header p {
+    font-size: 0.75rem;
+  }
+
+  /* 대상 선택 버튼 모바일 */
+  .target-selector {
+    padding: 12px 16px;
+  }
+
+  .target-buttons {
+    gap: 6px;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .target-btn {
+    padding: 10px 16px;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+    min-height: 44px;
+  }
+
+  /* 지역 정보 스크롤 영역 */
+  .region-info {
+    padding: 12px 16px;
+    max-height: calc(65vh - 180px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* 지역 카드 모바일 */
+  .region-card {
+    border-radius: 12px;
+  }
+
+  .region-header {
+    padding: 16px;
+  }
+
+  .region-header h2 {
+    font-size: 1.1rem;
+  }
+
+  /* 점수 표시 모바일 */
+  .score-display {
+    padding: 16px;
+  }
+
+  .score-circle {
+    width: 80px;
+    height: 80px;
+  }
+
+  .score-circle .score {
+    font-size: 1.8rem;
+  }
+
+  /* 기후 데이터 그리드 모바일 */
+  .climate-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    padding: 12px;
+  }
+
+  .climate-item {
+    padding: 10px;
+  }
+
+  .climate-item .label {
+    font-size: 0.7rem;
+  }
+
+  .climate-item .value {
+    font-size: 1rem;
+  }
+
+  /* AI 설명 섹션 모바일 */
+  .ai-explanation {
+    padding: 12px;
+  }
+
+  .ai-explanation h3 {
+    font-size: 0.9rem;
+  }
+
+  .explanation-text {
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+
+  /* 행동 가이드 모바일 */
+  .action-guides {
+    padding: 12px;
+  }
+
+  .action-guides li {
+    font-size: 0.85rem;
+    padding: 8px 0;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+
+  /* 알림 배너 모바일 */
+  .weather-alert-banner {
+    padding: 8px 12px;
   }
 
   .alert-content {
     flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .alert-icon {
+    font-size: 1rem;
+  }
+
+  .alert-message {
+    font-size: 0.8rem;
   }
 
   .alert-region,
@@ -1114,23 +1282,138 @@ body {
     display: none;
   }
 
+  /* 지역 랭킹 모바일 */
   .region-ranking {
-    left: 5px;
-    right: 5px;
+    left: 8px;
+    right: 8px;
+    top: 8px;
     max-width: none;
+    padding: 8px;
   }
 
+  .ranking-header {
+    padding: 8px;
+    font-size: 0.85rem;
+  }
+
+  .ranking-item {
+    padding: 8px;
+    min-height: 44px;
+  }
+
+  /* 체감 제보 그리드 모바일 */
   .feeling-grid {
     grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
   }
 
+  .feeling-btn {
+    padding: 10px 4px;
+    min-height: 44px;
+    font-size: 1.2rem;
+  }
+
+  .feeling-label {
+    font-size: 0.65rem;
+  }
+
+  /* 플로팅 버블 모바일 */
   .floating-bubble {
-    max-width: 120px;
-    padding: 4px 8px;
+    max-width: 100px;
+    padding: 4px 6px;
   }
 
   .bubble-text {
-    font-size: 0.65rem;
+    font-size: 0.6rem;
+  }
+
+  /* 인증 모달 모바일 */
+  .auth-modal,
+  .profile-modal {
+    width: 95%;
+    max-height: 85vh;
+    margin: auto 10px;
+  }
+
+  .auth-modal-header,
+  .profile-header {
+    padding: 16px;
+  }
+
+  .auth-form {
+    padding: 16px;
+  }
+
+  .auth-input {
+    padding: 14px;
+    font-size: 16px;
+    min-height: 48px;
+  }
+
+  .auth-btn {
+    padding: 14px;
+    font-size: 1rem;
+    min-height: 48px;
+  }
+
+  /* 사용자 프로필 모바일 */
+  .user-btn {
+    padding: 8px 12px;
+    min-height: 44px;
+  }
+
+  /* OOTD 생성기 모바일 */
+  .ootd-container {
+    padding: 12px;
+  }
+
+  .ootd-result {
+    font-size: 2rem;
+  }
+
+  /* 날씨 비교 차트 모바일 */
+  .comparison-chart {
+    padding: 12px;
+  }
+
+  .chart-container {
+    height: 200px;
+  }
+
+  .chart-type-tabs {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .chart-tab {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    min-height: 36px;
+  }
+
+  /* 알림 관리 모바일 */
+  .notification-settings {
+    padding: 12px;
+  }
+
+  .notification-toggle {
+    min-height: 44px;
+    padding: 12px;
+  }
+
+  /* 제보 패널 모바일 */
+  .report-panel {
+    padding: 12px;
+  }
+
+  .report-form textarea {
+    min-height: 80px;
+    font-size: 16px;
+  }
+
+  .report-submit-btn {
+    padding: 14px;
+    min-height: 48px;
   }
 }
 
@@ -4168,5 +4451,83 @@ body {
   .chart-tab {
     padding: 6px 10px;
     font-size: 0.75rem;
+  }
+}
+
+
+/* ========================================
+   Leaflet 지도 모바일 컨트롤
+   ======================================== */
+@media (max-width: 768px) {
+  /* 줌 컨트롤 위치 조정 */
+  .leaflet-control-zoom {
+    margin-top: 60px !important;
+    margin-right: 10px !important;
+  }
+
+  .leaflet-control-zoom a {
+    width: 36px !important;
+    height: 36px !important;
+    line-height: 36px !important;
+    font-size: 18px !important;
+  }
+
+  /* 마커 팝업 모바일 */
+  .leaflet-popup-content-wrapper {
+    border-radius: 12px;
+  }
+
+  .leaflet-popup-content {
+    margin: 12px;
+    font-size: 0.9rem;
+  }
+
+  /* 지도 터치 영역 확보 */
+  .leaflet-container {
+    touch-action: pan-x pan-y;
+  }
+
+  /* CircleMarker 터치 영역 확대 */
+  .leaflet-interactive {
+    cursor: pointer;
+  }
+}
+
+/* ========================================
+   Safe Area (노치 대응)
+   ======================================== */
+@supports (padding: env(safe-area-inset-bottom)) {
+  @media (max-width: 768px) {
+    .sidebar {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .auth-modal,
+    .profile-modal {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+  }
+}
+
+/* ========================================
+   터치 피드백 효과
+   ======================================== */
+@media (max-width: 768px) {
+  .target-btn:active,
+  .feeling-btn:active,
+  .auth-btn:active,
+  .login-btn:active,
+  .chart-tab:active,
+  .ranking-item:active {
+    transform: scale(0.97);
+    opacity: 0.8;
+  }
+
+  /* 버튼 터치 영역 확대 */
+  button, 
+  [role="button"],
+  .clickable {
+    min-height: 44px;
+    min-width: 44px;
   }
 }

@@ -35,6 +35,19 @@ function Sidebar({ selectedRegion, explanation, target, onTargetChange, loading,
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [isNotificationSubscribed, setIsNotificationSubscribed] = useState(false);
   const [activeTab, setActiveTab] = useState('info');
+  const [isMobileCollapsed, setIsMobileCollapsed] = useState(true);
+
+  // 모바일 사이드바 토글
+  const toggleMobileSidebar = () => {
+    setIsMobileCollapsed(!isMobileCollapsed);
+  };
+
+  // 지역 선택 시 사이드바 확장
+  useEffect(() => {
+    if (selectedRegion) {
+      setIsMobileCollapsed(false);
+    }
+  }, [selectedRegion]);
 
   // 알림 구독 상태 확인
   useEffect(() => {
@@ -46,9 +59,9 @@ function Sidebar({ selectedRegion, explanation, target, onTargetChange, loading,
   }, [showNotificationModal]);
 
   return (
-    <div className="sidebar">
+    <div className={`sidebar ${isMobileCollapsed ? 'collapsed' : ''}`}>
       {/* 헤더 */}
-      <div className="sidebar-header">
+      <div className="sidebar-header" onClick={toggleMobileSidebar}>
         <div className="header-top">
           <div className="header-title">
             <h1>경기 기후 체감 맵</h1>
