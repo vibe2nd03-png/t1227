@@ -544,11 +544,9 @@ function UserReportPanelInline({ selectedRegion, onReportSubmit }) {
     if (!selectedFeeling || !selectedRegion) return;
 
     setIsSubmitting(true);
-    console.log('[제보] 시작', { region: selectedRegion.region, feeling: selectedFeeling.label });
 
     try {
       const { supabase } = await import('../supabase');
-      console.log('[제보] Supabase 로드 완료');
 
       const reportData = {
         region: selectedRegion.region,
@@ -562,11 +560,10 @@ function UserReportPanelInline({ selectedRegion, onReportSubmit }) {
         is_air_quality: selectedFeeling.airQuality || false,
         user_id: user?.id || null,
       };
-      console.log('[제보] 데이터', reportData);
 
       // 타임아웃 적용 (10초)
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('요청 시간 초과 (10초)')), 10000)
+        setTimeout(() => reject(new Error('요청 시간 초과')), 10000)
       );
 
       const insertPromise = supabase
@@ -574,9 +571,7 @@ function UserReportPanelInline({ selectedRegion, onReportSubmit }) {
         .insert([reportData])
         .select();
 
-      console.log('[제보] Supabase 요청 시작');
       const { data, error } = await Promise.race([insertPromise, timeoutPromise]);
-      console.log('[제보] Supabase 응답', { data, error });
 
       if (error) throw new Error(error.message);
 
@@ -590,14 +585,7 @@ function UserReportPanelInline({ selectedRegion, onReportSubmit }) {
       if (onReportSubmit) {
         onReportSubmit(data?.[0] || reportData);
       }
-      console.log('[제보] 완료!');
     } catch (error) {
-      console.error('[제보] 오류 상세:', {
-        message: error?.message,
-        name: error?.name,
-        stack: error?.stack,
-        full: error
-      });
       alert(`제보 실패: ${error?.message || '알 수 없는 오류'}`);
     } finally {
       setIsSubmitting(false);
