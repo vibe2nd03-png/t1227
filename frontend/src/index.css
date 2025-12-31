@@ -2720,3 +2720,56 @@ a:focus-visible {
     font-size: 1rem;
   }
 }
+
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   MOBILE LAYOUT FIX - Prevent overlap
+   ───────────────────────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* Sidebar header - contains title and target selector */
+  .sidebar-header {
+    padding: 20px 16px 12px;
+    position: relative;
+    z-index: 1;
+  }
+  
+  /* Target selector should have its own row */
+  .target-selector-compact {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+    position: relative;
+    z-index: 2;
+  }
+  
+  /* Quick actions bar - should be separate section below header */
+  .quick-actions {
+    display: flex;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid var(--glass-border);
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+  }
+  
+  /* Ensure sidebar content flows correctly */
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* Main tabs after quick actions */
+  .main-tabs {
+    flex-shrink: 0;
+  }
+  
+  /* Tab content scrolls */
+  .tab-content-area {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+  }
+}
