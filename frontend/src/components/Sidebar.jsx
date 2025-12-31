@@ -273,7 +273,10 @@ function OotdGeneratorInline({ selectedRegion }) {
     { value: 'teen', label: '10대' },
     { value: '20s', label: '20대' },
     { value: '30s', label: '30대' },
-    { value: '40s', label: '40대+' },
+    { value: '40s', label: '40대' },
+    { value: '50s', label: '50대' },
+    { value: '60s', label: '60대' },
+    { value: '70s', label: '70대' },
   ];
 
   const STYLE_OPTIONS = [
@@ -314,42 +317,67 @@ function OotdGeneratorInline({ selectedRegion }) {
     setIsGenerating(true);
     setError(null);
 
-    try {
-      const climate = selectedRegion.climate_data;
-      const temp = climate.apparent_temperature || climate.temperature || 25;
+    const climate = selectedRegion.climate_data;
+    const temp = climate.apparent_temperature || climate.temperature || 25;
 
-      let temperatureOutfit = '';
-      if (temp >= 33) temperatureOutfit = 'very light summer clothes, tank top, shorts';
-      else if (temp >= 28) temperatureOutfit = 'light summer outfit, short sleeve t-shirt';
-      else if (temp >= 23) temperatureOutfit = 'light spring outfit, thin long sleeve';
-      else if (temp >= 17) temperatureOutfit = 'spring outfit, light jacket';
-      else if (temp >= 12) temperatureOutfit = 'autumn outfit, sweater or hoodie';
-      else temperatureOutfit = 'winter outfit, warm coat';
+    let temperatureOutfit = '';
+    if (temp >= 33) temperatureOutfit = 'summer tank top shorts';
+    else if (temp >= 28) temperatureOutfit = 'summer t-shirt';
+    else if (temp >= 23) temperatureOutfit = 'spring long sleeve';
+    else if (temp >= 17) temperatureOutfit = 'light jacket';
+    else if (temp >= 12) temperatureOutfit = 'sweater hoodie';
+    else temperatureOutfit = 'winter coat';
 
-      const genderText = gender === 'male' ? 'Korean man' : 'Korean woman';
-      const styleText = STYLE_OPTIONS.find(s => s.value === style)?.label || 'casual';
+    const genderText = gender === 'male' ? 'man' : 'woman';
+    const ageText = AGE_OPTIONS.find(a => a.value === age)?.label || '20s';
 
-      const prompt = `Fashion photo of a ${AGE_OPTIONS.find(a => a.value === age)?.label || '20s'} ${genderText}, ${styleText} style, ${temperatureOutfit}, full body, white background, high quality`;
+    // 간단한 프롬프트 사용
+    const prompt = `${ageText} Korean ${genderText} wearing ${temperatureOutfit}, full body photo, white background`;
+
+    // 팁 생성
+    setOutfitTips(generateTips(climate));
+
+    // 이미지 로드 함수 (재시도 포함)
+    const loadImageWithRetry = async (retryCount = 0) => {
+      const maxRetries = 2;
+      const seed = Date.now() + retryCount;
       const encodedPrompt = encodeURIComponent(prompt);
-      const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=400&height=600&seed=${Date.now()}&nologo=true`;
+      const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=400&height=600&seed=${seed}&nologo=true`;
 
-      // 팁 생성
-      setOutfitTips(generateTips(climate));
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        const timeout = setTimeout(() => {
+          img.src = '';
+          reject(new Error('timeout'));
+        }, 30000); // 30초 타임아웃
 
-      // 이미지 로드
-      const img = new Image();
-      img.onload = () => {
+        img.onload = () => {
+          clearTimeout(timeout);
+          resolve(imageUrl);
+        };
+        img.onerror = () => {
+          clearTimeout(timeout);
+          reject(new Error('load_error'));
+        };
+        img.src = imageUrl;
+      });
+    };
+
+    // 최대 3번 시도
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const imageUrl = await loadImageWithRetry(attempt);
         setGeneratedImage(imageUrl);
         setIsGenerating(false);
-      };
-      img.onerror = () => {
-        setError('이미지 생성 실패. 다시 시도해주세요.');
-        setIsGenerating(false);
-      };
-      img.src = imageUrl;
-    } catch (err) {
-      setError('생성 중 오류가 발생했습니다.');
-      setIsGenerating(false);
+        return;
+      } catch (err) {
+        if (attempt === 2) {
+          setError('이미지 생성에 실패했습니다. 잠시 후 다시 시도해주세요.');
+          setIsGenerating(false);
+        }
+        // 다음 시도 전 잠시 대기
+        await new Promise(r => setTimeout(r, 1000));
+      }
     }
   };
 
