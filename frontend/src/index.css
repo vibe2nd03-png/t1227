@@ -2819,3 +2819,90 @@ a:focus-visible {
     margin-top: 16px;
   }
 }
+
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   MOBILE OVERLAP COMPLETE FIX
+   ───────────────────────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* Reset all positioning */
+  .sidebar {
+    display: flex !important;
+    flex-direction: column !important;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+  }
+  
+  /* Header section - title and target buttons */
+  .sidebar-header {
+    position: relative !important;
+    z-index: 10 !important;
+    flex-shrink: 0 !important;
+    padding: 16px !important;
+    padding-top: 24px !important;
+    background: var(--bg-tertiary) !important;
+    border-bottom: 1px solid var(--glass-border) !important;
+  }
+  
+  .header-top {
+    position: relative !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+  
+  .user-section {
+    position: absolute !important;
+    top: 0 !important;
+    right: 0 !important;
+    z-index: 20 !important;
+  }
+  
+  .target-selector-compact {
+    position: relative !important;
+    z-index: 5 !important;
+    display: flex !important;
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    margin-top: 16px !important;
+    padding: 0 !important;
+  }
+  
+  /* Quick actions - MUST be separate block, no overlap */
+  .quick-actions {
+    position: relative !important;
+    z-index: 5 !important;
+    flex-shrink: 0 !important;
+    display: flex !important;
+    gap: 10px !important;
+    padding: 12px 16px !important;
+    background: var(--bg-secondary) !important;
+    border-bottom: 1px solid var(--glass-border) !important;
+    margin: 0 !important;
+  }
+  
+  .quick-action-btn {
+    flex: 1 !important;
+    min-width: 0 !important;
+  }
+  
+  /* Main tabs */
+  .main-tabs {
+    position: relative !important;
+    z-index: 5 !important;
+    flex-shrink: 0 !important;
+  }
+  
+  /* Content area */
+  .tab-content-area {
+    position: relative !important;
+    z-index: 1 !important;
+    flex: 1 !important;
+    overflow-y: auto !important;
+    min-height: 100px !important;
+  }
+}
