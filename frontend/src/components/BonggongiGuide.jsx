@@ -28,10 +28,10 @@ const PATROL_POINTS = [
   { lat: 37.4138, lng: 127.5183, name: '경기도 중앙' },
 ];
 
-// 봉공이 캐릭터 아이콘 (SVG)
+// 봉공이 캐릭터 아이콘 (SVG) - 큰 사이즈
 const createBonggongiIcon = () => {
   const svgIcon = `
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="60" height="60">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
       <!-- 몸통 (노란색 타원) -->
       <ellipse cx="50" cy="55" rx="28" fy="32" fill="#FFD93D" stroke="#E8A317" stroke-width="2"/>
       <!-- 줄무늬 -->
@@ -70,9 +70,9 @@ const createBonggongiIcon = () => {
   return L.divIcon({
     html: `<div class="bonggongi-container">${svgIcon}</div>`,
     className: 'bonggongi-icon',
-    iconSize: [60, 60],
-    iconAnchor: [30, 60],
-    popupAnchor: [0, -60],
+    iconSize: [100, 100],
+    iconAnchor: [50, 100],
+    popupAnchor: [0, -90],
   });
 };
 
