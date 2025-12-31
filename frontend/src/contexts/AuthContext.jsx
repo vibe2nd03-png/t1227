@@ -13,6 +13,16 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState(null);
 
+  // 타임아웃 헬퍼 함수
+  const withTimeout = (promise, ms = 10000) => {
+    return Promise.race([
+      promise,
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('요청 시간 초과')), ms)
+      )
+    ]);
+  };
+
   // 초기 세션 확인
   useEffect(() => {
     // 현재 세션 가져오기
@@ -169,27 +179,41 @@ export function AuthProvider({ children }) {
 
   // 로그아웃
   const signOut = async () => {
+    log.info('로그아웃 시도');
     try {
-      const { error } = await supabase.auth.signOut();
+      const { error } = await withTimeout(supabase.auth.signOut());
       if (error) throw error;
       setUser(null);
       setProfile(null);
+      log.info('로그아웃 성공');
     } catch (error) {
       log.error('로그아웃 오류', error);
+      // 타임아웃이어도 로컬 상태는 초기화
+      setUser(null);
+      setProfile(null);
     }
   };
 
-  // 프로필 업데이트
+  // 프로필 업데이트 (없으면 생성)
   const updateProfile = async (updates) => {
     if (!user) return { success: false, error: '로그인이 필요합니다' };
 
+    log.info('프로필 업데이트 시도', { userId: user.id, updates });
+
     try {
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .update({ ...updates, updated_at: new Date().toISOString() })
-        .eq('id', user.id)
-        .select()
-        .single();
+      const { data, error } = await withTimeout(
+        supabase
+          .from('user_profiles')
+          .upsert({
+            id: user.id,
+            ...updates,
+            updated_at: new Date().toISOString()
+          })
+          .select()
+          .single()
+      );
+
+      log.info('프로필 업데이트 응답', { data, error });
 
       if (error) throw error;
       setProfile(data);
@@ -204,10 +228,17 @@ export function AuthProvider({ children }) {
   const addFavoriteRegion = async (region) => {
     if (!user) return { success: false, error: '로그인이 필요합니다' };
 
+    log.info('즐겨찾기 추가 시도', { region, userId: user.id });
+
     try {
-      const { error } = await supabase
-        .from('user_favorite_regions')
-        .insert({ user_id: user.id, region });
+      const { data, error } = await withTimeout(
+        supabase
+          .from('user_favorite_regions')
+          .insert({ user_id: user.id, region })
+          .select()
+      );
+
+      log.info('즐겨찾기 추가 응답', { data, error });
 
       if (error) throw error;
       return { success: true };
@@ -221,12 +252,19 @@ export function AuthProvider({ children }) {
   const removeFavoriteRegion = async (region) => {
     if (!user) return { success: false, error: '로그인이 필요합니다' };
 
+    log.info('즐겨찾기 삭제 시도', { region, userId: user.id });
+
     try {
-      const { error } = await supabase
-        .from('user_favorite_regions')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('region', region);
+      const { data, error } = await withTimeout(
+        supabase
+          .from('user_favorite_regions')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('region', region)
+          .select()
+      );
+
+      log.info('즐겨찾기 삭제 응답', { data, error });
 
       if (error) throw error;
       return { success: true };
@@ -240,17 +278,73 @@ export function AuthProvider({ children }) {
   const getFavoriteRegions = async () => {
     if (!user) return [];
 
+    log.info('즐겨찾기 조회 시도', { userId: user.id });
+
     try {
-      const { data, error } = await supabase
-        .from('user_favorite_regions')
-        .select('region')
-        .eq('user_id', user.id);
+      const { data, error } = await withTimeout(
+        supabase
+          .from('user_favorite_regions')
+          .select('region')
+          .eq('user_id', user.id)
+      );
+
+      log.info('즐겨찾기 조회 응답', { data, error });
 
       if (error) throw error;
-      return data.map((r) => r.region);
+      return data?.map((r) => r.region) || [];
     } catch (error) {
       log.error('즐겨찾기 조회 오류', error);
       return [];
+    }
+  };
+
+  // 내 제보 목록 조회
+  const getMyReports = async () => {
+    if (!user) return [];
+
+    log.info('내 제보 조회 시도', { userId: user.id });
+
+    try {
+      const { data, error } = await withTimeout(
+        supabase
+          .from('user_reports')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(20)
+      );
+
+      log.info('내 제보 조회 응답', { count: data?.length, error });
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      log.error('내 제보 조회 오류', error);
+      return [];
+    }
+  };
+
+  // 제보 삭제
+  const deleteMyReport = async (reportId) => {
+    if (!user) return { success: false, error: '로그인이 필요합니다' };
+
+    log.info('제보 삭제 시도', { reportId, userId: user.id });
+
+    try {
+      const { error } = await withTimeout(
+        supabase
+          .from('user_reports')
+          .delete()
+          .eq('id', reportId)
+          .eq('user_id', user.id)
+      );
+
+      if (error) throw error;
+      log.info('제보 삭제 성공', { reportId });
+      return { success: true };
+    } catch (error) {
+      log.error('제보 삭제 오류', error);
+      return { success: false, error: error.message };
     }
   };
 
@@ -268,6 +362,8 @@ export function AuthProvider({ children }) {
     addFavoriteRegion,
     removeFavoriteRegion,
     getFavoriteRegions,
+    getMyReports,
+    deleteMyReport,
     isAuthenticated: !!user,
   };
 

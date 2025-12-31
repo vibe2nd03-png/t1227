@@ -16,7 +16,7 @@ const TARGET_OPTIONS = [
 ];
 
 function UserProfile({ isOpen, onClose }) {
-  const { user, profile, signOut, updateProfile, getFavoriteRegions, addFavoriteRegion, removeFavoriteRegion } = useAuth();
+  const { user, profile, signOut, updateProfile, getFavoriteRegions, addFavoriteRegion, removeFavoriteRegion, getMyReports, deleteMyReport } = useAuth();
   const [activeTab, setActiveTab] = useState('profile');
   const [favorites, setFavorites] = useState([]);
   const [editMode, setEditMode] = useState(false);
@@ -29,6 +29,10 @@ function UserProfile({ isOpen, onClose }) {
   });
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
+  const [togglingRegion, setTogglingRegion] = useState(null);
+  const [myReports, setMyReports] = useState([]);
+  const [loadingReports, setLoadingReports] = useState(false);
+  const [deletingReport, setDeletingReport] = useState(null);
 
   // 프로필 및 즐겨찾기 로드
   useEffect(() => {
@@ -49,6 +53,54 @@ function UserProfile({ isOpen, onClose }) {
     setFavorites(favs);
   };
 
+  const loadMyReports = async () => {
+    setLoadingReports(true);
+    const reports = await getMyReports();
+    setMyReports(reports);
+    setLoadingReports(false);
+  };
+
+  const handleDeleteReport = async (reportId) => {
+    if (deletingReport) return;
+
+    if (!window.confirm('이 제보를 삭제하시겠습니까?')) return;
+
+    setDeletingReport(reportId);
+    const result = await deleteMyReport(reportId);
+
+    if (result.success) {
+      setMyReports(myReports.filter(r => r.id !== reportId));
+      setMessage('제보가 삭제되었습니다');
+      setTimeout(() => setMessage(''), 2000);
+    } else {
+      setMessage(result.error || '삭제에 실패했습니다');
+      setTimeout(() => setMessage(''), 3000);
+    }
+    setDeletingReport(null);
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return '방금 전';
+    if (diffMins < 60) return `${diffMins}분 전`;
+    if (diffHours < 24) return `${diffHours}시간 전`;
+    if (diffDays < 7) return `${diffDays}일 전`;
+    return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
+  };
+
+  // 탭 변경 시 내 제보 로드
+  useEffect(() => {
+    if (activeTab === 'history' && myReports.length === 0) {
+      loadMyReports();
+    }
+  }, [activeTab]);
+
   const handleSaveProfile = async () => {
     setSaving(true);
     const result = await updateProfile(formData);
@@ -64,12 +116,31 @@ function UserProfile({ isOpen, onClose }) {
   };
 
   const handleToggleFavorite = async (region) => {
-    if (favorites.includes(region)) {
-      await removeFavoriteRegion(region);
-    } else {
-      await addFavoriteRegion(region);
+    if (togglingRegion) return; // 중복 클릭 방지
+
+    setTogglingRegion(region);
+    setMessage('');
+
+    try {
+      let result;
+      if (favorites.includes(region)) {
+        result = await removeFavoriteRegion(region);
+      } else {
+        result = await addFavoriteRegion(region);
+      }
+
+      if (!result.success) {
+        setMessage(result.error || '즐겨찾기 변경에 실패했습니다');
+        setTimeout(() => setMessage(''), 3000);
+      } else {
+        await loadFavorites();
+      }
+    } catch (error) {
+      setMessage('즐겨찾기 변경 중 오류가 발생했습니다');
+      setTimeout(() => setMessage(''), 3000);
+    } finally {
+      setTogglingRegion(null);
     }
-    loadFavorites();
   };
 
   const handleLogout = async () => {
@@ -250,14 +321,22 @@ function UserProfile({ isOpen, onClose }) {
           {activeTab === 'favorites' && (
             <div className="favorites-section">
               <p className="section-desc">자주 확인하는 지역을 즐겨찾기에 추가하세요</p>
+              {message && (
+                <div className={`setting-message ${message.includes('실패') || message.includes('오류') ? 'error' : 'success'}`}>
+                  {message}
+                </div>
+              )}
               <div className="favorites-grid">
                 {GYEONGGI_REGIONS.map((region) => (
                   <button
                     key={region}
-                    className={`favorite-item ${favorites.includes(region) ? 'active' : ''}`}
+                    className={`favorite-item ${favorites.includes(region) ? 'active' : ''} ${togglingRegion === region ? 'loading' : ''}`}
                     onClick={() => handleToggleFavorite(region)}
+                    disabled={togglingRegion !== null}
                   >
-                    <span className="star">{favorites.includes(region) ? '⭐' : '☆'}</span>
+                    <span className="star">
+                      {togglingRegion === region ? '...' : favorites.includes(region) ? '⭐' : '☆'}
+                    </span>
                     <span>{region}</span>
                   </button>
                 ))}
@@ -267,11 +346,54 @@ function UserProfile({ isOpen, onClose }) {
 
           {activeTab === 'history' && (
             <div className="history-section">
-              <p className="section-desc">최근 작성한 제보 목록</p>
-              <div className="coming-soon">
-                <span>🚧</span>
-                <p>제보 내역 기능 준비 중</p>
-              </div>
+              <p className="section-desc">최근 작성한 제보 목록 (최대 20개)</p>
+              {message && (
+                <div className={`setting-message ${message.includes('실패') || message.includes('오류') ? 'error' : 'success'}`}>
+                  {message}
+                </div>
+              )}
+              {loadingReports ? (
+                <div className="loading-reports">
+                  <span>⏳</span>
+                  <p>제보 목록을 불러오는 중...</p>
+                </div>
+              ) : myReports.length === 0 ? (
+                <div className="empty-reports">
+                  <span>📝</span>
+                  <p>작성한 제보가 없습니다</p>
+                  <p className="hint">지도에서 체감 날씨를 제보해보세요!</p>
+                </div>
+              ) : (
+                <div className="reports-list">
+                  {myReports.map((report) => (
+                    <div key={report.id} className="report-item">
+                      <div className="report-header">
+                        <span className="report-emoji">{report.emoji}</span>
+                        <span className="report-region">{report.region}</span>
+                        <span className="report-date">{formatDate(report.created_at)}</span>
+                      </div>
+                      <div className="report-content">
+                        {report.feeling_label && (
+                          <span className="report-feeling">{report.feeling_label}</span>
+                        )}
+                        {report.comment && (
+                          <p className="report-comment">{report.comment}</p>
+                        )}
+                      </div>
+                      <div className="report-footer">
+                        <span className="report-likes">❤️ {report.likes || 0}</span>
+                        <button
+                          className="delete-btn"
+                          onClick={() => handleDeleteReport(report.id)}
+                          disabled={deletingReport === report.id}
+                        >
+                          {deletingReport === report.id ? '삭제 중...' : '🗑️ 삭제'}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
