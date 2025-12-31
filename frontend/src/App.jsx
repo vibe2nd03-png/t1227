@@ -94,40 +94,40 @@ function App() {
     setLoading(false);
   };
 
-  // Mock 데이터 (백엔드 없이 테스트용)
+  // Mock 데이터 (겨울철 기준)
   const loadMockData = () => {
     const mockRegions = [
-      { region: '수원시', lat: 37.2636, lng: 127.0286, score: 65, risk_level: 'warning', risk_label: '경고', risk_color: '#FF9800', climate_data: { temperature: 32, apparent_temperature: 35, humidity: 70, pm10: 45, pm25: 22, uv_index: 8, surface_temperature: 42 }},
-      { region: '성남시', lat: 37.4449, lng: 127.1389, score: 45, risk_level: 'caution', risk_label: '주의', risk_color: '#FFEB3B', climate_data: { temperature: 30, apparent_temperature: 32, humidity: 65, pm10: 38, pm25: 18, uv_index: 7, surface_temperature: 38 }},
-      { region: '고양시', lat: 37.6584, lng: 126.8320, score: 78, risk_level: 'danger', risk_label: '위험', risk_color: '#F44336', climate_data: { temperature: 34, apparent_temperature: 38, humidity: 75, pm10: 55, pm25: 28, uv_index: 9, surface_temperature: 45 }},
-      { region: '용인시', lat: 37.2411, lng: 127.1776, score: 52, risk_level: 'warning', risk_label: '경고', risk_color: '#FF9800', climate_data: { temperature: 31, apparent_temperature: 33, humidity: 68, pm10: 42, pm25: 20, uv_index: 7, surface_temperature: 40 }},
-      { region: '부천시', lat: 37.5034, lng: 126.7660, score: 25, risk_level: 'safe', risk_label: '안전', risk_color: '#2196F3', climate_data: { temperature: 27, apparent_temperature: 28, humidity: 55, pm10: 28, pm25: 12, uv_index: 5, surface_temperature: 32 }},
-      { region: '안산시', lat: 37.3219, lng: 126.8309, score: 72, risk_level: 'warning', risk_label: '경고', risk_color: '#FF9800', climate_data: { temperature: 33, apparent_temperature: 36, humidity: 72, pm10: 48, pm25: 24, uv_index: 8, surface_temperature: 43 }},
-      { region: '안양시', lat: 37.3943, lng: 126.9568, score: 38, risk_level: 'caution', risk_label: '주의', risk_color: '#FFEB3B', climate_data: { temperature: 29, apparent_temperature: 31, humidity: 62, pm10: 35, pm25: 16, uv_index: 6, surface_temperature: 36 }},
-      { region: '남양주시', lat: 37.6360, lng: 127.2165, score: 55, risk_level: 'warning', risk_label: '경고', risk_color: '#FF9800', climate_data: { temperature: 31, apparent_temperature: 34, humidity: 70, pm10: 40, pm25: 19, uv_index: 7, surface_temperature: 39 }},
-      { region: '화성시', lat: 37.1996, lng: 126.8312, score: 82, risk_level: 'danger', risk_label: '위험', risk_color: '#F44336', climate_data: { temperature: 35, apparent_temperature: 39, humidity: 78, pm10: 60, pm25: 30, uv_index: 10, surface_temperature: 48 }},
-      { region: '평택시', lat: 36.9921, lng: 127.1127, score: 68, risk_level: 'warning', risk_label: '경고', risk_color: '#FF9800', climate_data: { temperature: 33, apparent_temperature: 35, humidity: 69, pm10: 50, pm25: 25, uv_index: 8, surface_temperature: 42 }},
-      { region: '의정부시', lat: 37.7381, lng: 127.0337, score: 42, risk_level: 'caution', risk_label: '주의', risk_color: '#FFEB3B', climate_data: { temperature: 29, apparent_temperature: 31, humidity: 60, pm10: 33, pm25: 15, uv_index: 6, surface_temperature: 35 }},
-      { region: '시흥시', lat: 37.3800, lng: 126.8029, score: 58, risk_level: 'warning', risk_label: '경고', risk_color: '#FF9800', climate_data: { temperature: 32, apparent_temperature: 34, humidity: 67, pm10: 44, pm25: 21, uv_index: 7, surface_temperature: 40 }},
-      { region: '파주시', lat: 37.7600, lng: 126.7800, score: 35, risk_level: 'caution', risk_label: '주의', risk_color: '#FFEB3B', climate_data: { temperature: 28, apparent_temperature: 30, humidity: 58, pm10: 30, pm25: 14, uv_index: 5, surface_temperature: 34 }},
-      { region: '김포시', lat: 37.6152, lng: 126.7156, score: 48, risk_level: 'caution', risk_label: '주의', risk_color: '#FFEB3B', climate_data: { temperature: 30, apparent_temperature: 32, humidity: 64, pm10: 38, pm25: 18, uv_index: 6, surface_temperature: 37 }},
-      { region: '광명시', lat: 37.4786, lng: 126.8644, score: 22, risk_level: 'safe', risk_label: '안전', risk_color: '#2196F3', climate_data: { temperature: 26, apparent_temperature: 27, humidity: 52, pm10: 25, pm25: 11, uv_index: 4, surface_temperature: 30 }},
-      { region: '광주시', lat: 37.4095, lng: 127.2550, score: 62, risk_level: 'warning', risk_label: '경고', risk_color: '#FF9800', climate_data: { temperature: 32, apparent_temperature: 35, humidity: 71, pm10: 46, pm25: 23, uv_index: 8, surface_temperature: 41 }},
-      { region: '군포시', lat: 37.3617, lng: 126.9352, score: 28, risk_level: 'safe', risk_label: '안전', risk_color: '#2196F3', climate_data: { temperature: 27, apparent_temperature: 28, humidity: 54, pm10: 27, pm25: 12, uv_index: 5, surface_temperature: 32 }},
-      { region: '하남시', lat: 37.5393, lng: 127.2148, score: 50, risk_level: 'warning', risk_label: '경고', risk_color: '#FF9800', climate_data: { temperature: 31, apparent_temperature: 33, humidity: 66, pm10: 41, pm25: 20, uv_index: 7, surface_temperature: 39 }},
-      { region: '오산시', lat: 37.1498, lng: 127.0775, score: 75, risk_level: 'danger', risk_label: '위험', risk_color: '#F44336', climate_data: { temperature: 34, apparent_temperature: 37, humidity: 74, pm10: 52, pm25: 26, uv_index: 9, surface_temperature: 44 }},
-      { region: '이천시', lat: 37.2720, lng: 127.4350, score: 32, risk_level: 'caution', risk_label: '주의', risk_color: '#FFEB3B', climate_data: { temperature: 28, apparent_temperature: 29, humidity: 56, pm10: 29, pm25: 13, uv_index: 5, surface_temperature: 33 }},
-      { region: '안성시', lat: 37.0080, lng: 127.2797, score: 44, risk_level: 'caution', risk_label: '주의', risk_color: '#FFEB3B', climate_data: { temperature: 29, apparent_temperature: 31, humidity: 61, pm10: 34, pm25: 16, uv_index: 6, surface_temperature: 36 }},
-      { region: '의왕시', lat: 37.3449, lng: 126.9683, score: 20, risk_level: 'safe', risk_label: '안전', risk_color: '#2196F3', climate_data: { temperature: 25, apparent_temperature: 26, humidity: 50, pm10: 22, pm25: 10, uv_index: 4, surface_temperature: 29 }},
-      { region: '양주시', lat: 37.7853, lng: 127.0458, score: 40, risk_level: 'caution', risk_label: '주의', risk_color: '#FFEB3B', climate_data: { temperature: 29, apparent_temperature: 30, humidity: 59, pm10: 32, pm25: 15, uv_index: 6, surface_temperature: 35 }},
-      { region: '포천시', lat: 37.8949, lng: 127.2002, score: 36, risk_level: 'caution', risk_label: '주의', risk_color: '#FFEB3B', climate_data: { temperature: 28, apparent_temperature: 29, humidity: 57, pm10: 30, pm25: 14, uv_index: 5, surface_temperature: 33 }},
-      { region: '여주시', lat: 37.2983, lng: 127.6374, score: 30, risk_level: 'caution', risk_label: '주의', risk_color: '#FFEB3B', climate_data: { temperature: 27, apparent_temperature: 28, humidity: 55, pm10: 28, pm25: 13, uv_index: 5, surface_temperature: 32 }},
-      { region: '동두천시', lat: 37.9035, lng: 127.0605, score: 18, risk_level: 'safe', risk_label: '안전', risk_color: '#2196F3', climate_data: { temperature: 24, apparent_temperature: 25, humidity: 48, pm10: 20, pm25: 9, uv_index: 4, surface_temperature: 28 }},
-      { region: '과천시', lat: 37.4292, lng: 126.9876, score: 24, risk_level: 'safe', risk_label: '안전', risk_color: '#2196F3', climate_data: { temperature: 26, apparent_temperature: 27, humidity: 53, pm10: 26, pm25: 11, uv_index: 5, surface_temperature: 31 }},
-      { region: '구리시', lat: 37.5943, lng: 127.1295, score: 46, risk_level: 'caution', risk_label: '주의', risk_color: '#FFEB3B', climate_data: { temperature: 30, apparent_temperature: 32, humidity: 63, pm10: 37, pm25: 17, uv_index: 6, surface_temperature: 37 }},
-      { region: '연천군', lat: 38.0966, lng: 127.0750, score: 15, risk_level: 'safe', risk_label: '안전', risk_color: '#2196F3', climate_data: { temperature: 23, apparent_temperature: 24, humidity: 45, pm10: 18, pm25: 8, uv_index: 3, surface_temperature: 27 }},
-      { region: '가평군', lat: 37.8315, lng: 127.5095, score: 12, risk_level: 'safe', risk_label: '안전', risk_color: '#2196F3', climate_data: { temperature: 22, apparent_temperature: 23, humidity: 42, pm10: 15, pm25: 7, uv_index: 3, surface_temperature: 25 }},
-      { region: '양평군', lat: 37.4917, lng: 127.4872, score: 26, risk_level: 'safe', risk_label: '안전', risk_color: '#2196F3', climate_data: { temperature: 27, apparent_temperature: 28, humidity: 54, pm10: 26, pm25: 12, uv_index: 5, surface_temperature: 31 }},
+      { region: '수원시', lat: 37.2636, lng: 127.0286, score: 45, risk_level: 'caution', risk_label: '주의', risk_color: '#FFEB3B', climate_data: { temperature: -2, apparent_temperature: -6, humidity: 45, pm10: 65, pm25: 35, uv_index: 2, surface_temperature: -1 }},
+      { region: '성남시', lat: 37.4449, lng: 127.1389, score: 35, risk_level: 'caution', risk_label: '주의', risk_color: '#FFEB3B', climate_data: { temperature: -1, apparent_temperature: -4, humidity: 48, pm10: 55, pm25: 28, uv_index: 2, surface_temperature: 0 }},
+      { region: '고양시', lat: 37.6584, lng: 126.8320, score: 55, risk_level: 'warning', risk_label: '경고', risk_color: '#FF9800', climate_data: { temperature: -4, apparent_temperature: -9, humidity: 40, pm10: 85, pm25: 45, uv_index: 2, surface_temperature: -3 }},
+      { region: '용인시', lat: 37.2411, lng: 127.1776, score: 40, risk_level: 'caution', risk_label: '주의', risk_color: '#FFEB3B', climate_data: { temperature: -1, apparent_temperature: -5, humidity: 50, pm10: 58, pm25: 30, uv_index: 2, surface_temperature: 0 }},
+      { region: '부천시', lat: 37.5034, lng: 126.7660, score: 25, risk_level: 'safe', risk_label: '안전', risk_color: '#2196F3', climate_data: { temperature: 1, apparent_temperature: -2, humidity: 52, pm10: 42, pm25: 20, uv_index: 2, surface_temperature: 2 }},
+      { region: '안산시', lat: 37.3219, lng: 126.8309, score: 48, risk_level: 'caution', risk_label: '주의', risk_color: '#FFEB3B', climate_data: { temperature: -2, apparent_temperature: -7, humidity: 55, pm10: 72, pm25: 38, uv_index: 2, surface_temperature: -1 }},
+      { region: '안양시', lat: 37.3943, lng: 126.9568, score: 32, risk_level: 'caution', risk_label: '주의', risk_color: '#FFEB3B', climate_data: { temperature: 0, apparent_temperature: -3, humidity: 48, pm10: 50, pm25: 25, uv_index: 2, surface_temperature: 1 }},
+      { region: '남양주시', lat: 37.6360, lng: 127.2165, score: 42, risk_level: 'caution', risk_label: '주의', risk_color: '#FFEB3B', climate_data: { temperature: -3, apparent_temperature: -8, humidity: 42, pm10: 60, pm25: 32, uv_index: 2, surface_temperature: -2 }},
+      { region: '화성시', lat: 37.1996, lng: 126.8312, score: 52, risk_level: 'warning', risk_label: '경고', risk_color: '#FF9800', climate_data: { temperature: -3, apparent_temperature: -8, humidity: 58, pm10: 78, pm25: 42, uv_index: 2, surface_temperature: -2 }},
+      { region: '평택시', lat: 36.9921, lng: 127.1127, score: 38, risk_level: 'caution', risk_label: '주의', risk_color: '#FFEB3B', climate_data: { temperature: 0, apparent_temperature: -4, humidity: 50, pm10: 55, pm25: 28, uv_index: 2, surface_temperature: 1 }},
+      { region: '의정부시', lat: 37.7381, lng: 127.0337, score: 50, risk_level: 'warning', risk_label: '경고', risk_color: '#FF9800', climate_data: { temperature: -5, apparent_temperature: -11, humidity: 38, pm10: 70, pm25: 38, uv_index: 2, surface_temperature: -4 }},
+      { region: '시흥시', lat: 37.3800, lng: 126.8029, score: 44, risk_level: 'caution', risk_label: '주의', risk_color: '#FFEB3B', climate_data: { temperature: -1, apparent_temperature: -5, humidity: 52, pm10: 62, pm25: 33, uv_index: 2, surface_temperature: 0 }},
+      { region: '파주시', lat: 37.7600, lng: 126.7800, score: 58, risk_level: 'warning', risk_label: '경고', risk_color: '#FF9800', climate_data: { temperature: -6, apparent_temperature: -12, humidity: 35, pm10: 75, pm25: 40, uv_index: 2, surface_temperature: -5 }},
+      { region: '김포시', lat: 37.6152, lng: 126.7156, score: 35, risk_level: 'caution', risk_label: '주의', risk_color: '#FFEB3B', climate_data: { temperature: -2, apparent_temperature: -6, humidity: 48, pm10: 52, pm25: 26, uv_index: 2, surface_temperature: -1 }},
+      { region: '광명시', lat: 37.4786, lng: 126.8644, score: 22, risk_level: 'safe', risk_label: '안전', risk_color: '#2196F3', climate_data: { temperature: 1, apparent_temperature: -1, humidity: 50, pm10: 38, pm25: 18, uv_index: 2, surface_temperature: 2 }},
+      { region: '광주시', lat: 37.4095, lng: 127.2550, score: 40, risk_level: 'caution', risk_label: '주의', risk_color: '#FFEB3B', climate_data: { temperature: -2, apparent_temperature: -6, humidity: 45, pm10: 58, pm25: 30, uv_index: 2, surface_temperature: -1 }},
+      { region: '군포시', lat: 37.3617, lng: 126.9352, score: 28, risk_level: 'safe', risk_label: '안전', risk_color: '#2196F3', climate_data: { temperature: 0, apparent_temperature: -2, humidity: 48, pm10: 45, pm25: 22, uv_index: 2, surface_temperature: 1 }},
+      { region: '하남시', lat: 37.5393, lng: 127.2148, score: 38, risk_level: 'caution', risk_label: '주의', risk_color: '#FFEB3B', climate_data: { temperature: -1, apparent_temperature: -5, humidity: 46, pm10: 55, pm25: 28, uv_index: 2, surface_temperature: 0 }},
+      { region: '오산시', lat: 37.1498, lng: 127.0775, score: 42, risk_level: 'caution', risk_label: '주의', risk_color: '#FFEB3B', climate_data: { temperature: -1, apparent_temperature: -5, humidity: 52, pm10: 60, pm25: 32, uv_index: 2, surface_temperature: 0 }},
+      { region: '이천시', lat: 37.2720, lng: 127.4350, score: 45, risk_level: 'caution', risk_label: '주의', risk_color: '#FFEB3B', climate_data: { temperature: -4, apparent_temperature: -9, humidity: 40, pm10: 62, pm25: 33, uv_index: 2, surface_temperature: -3 }},
+      { region: '안성시', lat: 37.0080, lng: 127.2797, score: 35, risk_level: 'caution', risk_label: '주의', risk_color: '#FFEB3B', climate_data: { temperature: -1, apparent_temperature: -4, humidity: 48, pm10: 50, pm25: 25, uv_index: 2, surface_temperature: 0 }},
+      { region: '의왕시', lat: 37.3449, lng: 126.9683, score: 20, risk_level: 'safe', risk_label: '안전', risk_color: '#2196F3', climate_data: { temperature: 1, apparent_temperature: 0, humidity: 45, pm10: 35, pm25: 16, uv_index: 2, surface_temperature: 2 }},
+      { region: '양주시', lat: 37.7853, lng: 127.0458, score: 55, risk_level: 'warning', risk_label: '경고', risk_color: '#FF9800', climate_data: { temperature: -6, apparent_temperature: -12, humidity: 36, pm10: 72, pm25: 38, uv_index: 2, surface_temperature: -5 }},
+      { region: '포천시', lat: 37.8949, lng: 127.2002, score: 60, risk_level: 'warning', risk_label: '경고', risk_color: '#FF9800', climate_data: { temperature: -8, apparent_temperature: -15, humidity: 32, pm10: 68, pm25: 35, uv_index: 2, surface_temperature: -7 }},
+      { region: '여주시', lat: 37.2983, lng: 127.6374, score: 48, risk_level: 'caution', risk_label: '주의', risk_color: '#FFEB3B', climate_data: { temperature: -5, apparent_temperature: -10, humidity: 38, pm10: 58, pm25: 30, uv_index: 2, surface_temperature: -4 }},
+      { region: '동두천시', lat: 37.9035, lng: 127.0605, score: 62, risk_level: 'warning', risk_label: '경고', risk_color: '#FF9800', climate_data: { temperature: -9, apparent_temperature: -16, humidity: 30, pm10: 65, pm25: 34, uv_index: 2, surface_temperature: -8 }},
+      { region: '과천시', lat: 37.4292, lng: 126.9876, score: 24, risk_level: 'safe', risk_label: '안전', risk_color: '#2196F3', climate_data: { temperature: 0, apparent_temperature: -2, humidity: 48, pm10: 40, pm25: 19, uv_index: 2, surface_temperature: 1 }},
+      { region: '구리시', lat: 37.5943, lng: 127.1295, score: 36, risk_level: 'caution', risk_label: '주의', risk_color: '#FFEB3B', climate_data: { temperature: -2, apparent_temperature: -6, humidity: 44, pm10: 52, pm25: 26, uv_index: 2, surface_temperature: -1 }},
+      { region: '연천군', lat: 38.0966, lng: 127.0750, score: 68, risk_level: 'warning', risk_label: '경고', risk_color: '#FF9800', climate_data: { temperature: -12, apparent_temperature: -20, humidity: 28, pm10: 55, pm25: 28, uv_index: 2, surface_temperature: -11 }},
+      { region: '가평군', lat: 37.8315, lng: 127.5095, score: 15, risk_level: 'safe', risk_label: '안전', risk_color: '#2196F3', climate_data: { temperature: -7, apparent_temperature: -12, humidity: 35, pm10: 25, pm25: 12, uv_index: 2, surface_temperature: -6 }},
+      { region: '양평군', lat: 37.4917, lng: 127.4872, score: 18, risk_level: 'safe', risk_label: '안전', risk_color: '#2196F3', climate_data: { temperature: -4, apparent_temperature: -8, humidity: 40, pm10: 30, pm25: 14, uv_index: 2, surface_temperature: -3 }},
     ];
     setRegions(mockRegions);
   };
@@ -138,25 +138,27 @@ function App() {
     setExplanation(generateMockExplanation(region, target));
   };
 
-  // Mock 설명 생성
+  // Mock 설명 생성 (겨울철 기준)
   const generateMockExplanation = (region, targetType) => {
-
-    const temp = region.climate_data.apparent_temperature;
+    const temp = region.climate_data?.apparent_temperature ?? region.climate_data?.temperature ?? 0;
     let explanation = '';
     let guides = [];
 
-    if (temp >= 35) {
-      explanation = `오늘 ${region.region}은 체감온도 ${temp}도로 매우 무더운 날씨입니다. 실외 활동을 자제하고 시원한 실내에서 휴식하세요.`;
-      guides = ['외출을 삼가세요', '냉방 시설을 이용하세요', '수분을 충분히 섭취하세요'];
-    } else if (temp >= 31) {
-      explanation = `오늘 ${region.region}은 체감온도 ${temp}도로 무더운 날씨입니다. 장시간 야외 활동은 피하고 충분한 수분을 섭취하세요.`;
-      guides = ['장시간 야외 활동 자제', '그늘에서 휴식', '물을 자주 마시세요'];
-    } else if (temp >= 27) {
-      explanation = `오늘 ${region.region}은 체감온도 ${temp}도로 다소 더운 날씨입니다. 야외 활동 시 그늘에서 휴식을 취하세요.`;
-      guides = ['모자나 양산 사용', '수분 섭취 늘리기', '무리한 운동 자제'];
+    if (temp <= -15) {
+      explanation = `오늘 ${region.region}은 체감온도 ${temp}도로 매우 추운 날씨입니다. 외출을 자제하고 따뜻한 실내에서 생활하세요.`;
+      guides = ['외출을 삼가세요', '난방 시설을 이용하세요', '따뜻한 음료를 드세요'];
+    } else if (temp <= -10) {
+      explanation = `오늘 ${region.region}은 체감온도 ${temp}도로 매우 추운 날씨입니다. 외출 시 방한용품을 꼭 착용하세요.`;
+      guides = ['두꺼운 외투 필수', '장갑, 목도리 착용', '노출 부위 최소화'];
+    } else if (temp <= -5) {
+      explanation = `오늘 ${region.region}은 체감온도 ${temp}도로 추운 날씨입니다. 따뜻하게 입고 외출하세요.`;
+      guides = ['방한복 착용', '핫팩 사용 권장', '동상 주의'];
+    } else if (temp <= 0) {
+      explanation = `오늘 ${region.region}은 체감온도 ${temp}도로 쌀쌀한 날씨입니다. 겉옷을 챙기세요.`;
+      guides = ['여분의 겉옷 준비', '따뜻한 음료 섭취', '빙판길 조심'];
     } else {
-      explanation = `오늘 ${region.region}은 체감온도 ${temp}도로 쾌적한 날씨입니다. 야외 활동하기 좋은 날씨입니다.`;
-      guides = ['야외 활동에 적합', '평소처럼 생활하세요', '수분 섭취 잊지 마세요'];
+      explanation = `오늘 ${region.region}은 체감온도 ${temp}도로 비교적 따뜻한 날씨입니다.`;
+      guides = ['야외 활동 가능', '적당한 옷차림', '일교차 주의'];
     }
 
     return {

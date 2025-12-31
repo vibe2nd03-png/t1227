@@ -154,6 +154,26 @@ function MapAnimationController({ selectedRegion, previousRegion }) {
   return null;
 }
 
+// 온도 표시 헬퍼 함수
+const formatTemperature = (climateData) => {
+  if (!climateData) return '데이터 없음';
+
+  const apparent = climateData.apparent_temperature;
+  const temp = climateData.temperature;
+
+  // apparent_temperature 체크
+  if (apparent !== null && apparent !== undefined && !isNaN(apparent) && apparent !== 'null') {
+    return `${apparent}°C`;
+  }
+
+  // temperature 체크
+  if (temp !== null && temp !== undefined && !isNaN(temp) && temp !== 'null') {
+    return `${temp}°C`;
+  }
+
+  return '데이터 없음';
+};
+
 // 펄스 애니메이션 마커 컴포넌트
 function AnimatedMarker({ region, isSelected, onSelect, getMarkerRadius, isGyeonggi = true }) {
   const [isHovered, setIsHovered] = useState(false);
@@ -265,13 +285,7 @@ function AnimatedMarker({ region, isSelected, onSelect, getMarkerRadius, isGyeon
             gap: '6px'
           }}>
             <span style={{ fontSize: '1.3em' }}>🌡️</span>
-            <span>체감 <strong>{
-              region.climate_data?.apparent_temperature !== null && region.climate_data?.apparent_temperature !== undefined
-                ? `${region.climate_data.apparent_temperature}°C`
-                : region.climate_data?.temperature !== null && region.climate_data?.temperature !== undefined
-                  ? `${region.climate_data.temperature}°C`
-                  : '-'
-            }</strong></span>
+            <span>체감 <strong>{formatTemperature(region.climate_data)}</strong></span>
           </div>
         </div>
       </Popup>
