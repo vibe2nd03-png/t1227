@@ -17,6 +17,7 @@ from climate_index import (
     TargetGroup
 )
 from ai_service import AIClimateExplainer, get_action_guide
+from kma_proxy import fetch_kma_single, fetch_kma_period
 
 app = FastAPI(
     title="경기 기후 체감 맵 API",
@@ -91,7 +92,9 @@ async def root():
         "endpoints": {
             "all_regions": "/api/climate/all",
             "single_region": "/api/climate/{region}",
-            "explanation": "/api/climate/{region}/explain"
+            "explanation": "/api/climate/{region}/explain",
+            "kma": "/api/kma",
+            "kma_period": "/api/kma-period"
         }
     }
 
@@ -100,6 +103,30 @@ async def root():
 async def get_regions():
     """사용 가능한 경기도 시군 목록 조회"""
     return list(GYEONGGI_REGIONS.keys())
+
+@app.get("/api/kma")
+async def get_kma_data(
+    tm: str = Query(..., description="조회 시간 (YYYYMMDDHH00 형식)"),
+    stn: str = Query("0", description="관측소 번호 (0: 전체)")
+):
+    """기상청 API 프록시 - 단일 시간 조회"""
+    try:
+        return await fetch_kma_single(tm, stn)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"기상청 API 호출 실패: {str(e)}")
+
+
+@app.get("/api/kma-period")
+async def get_kma_period_data(
+    tm1: str = Query(..., description="시작 시간 (YYYYMMDDHH00 형식)"),
+    tm2: str = Query(..., description="종료 시간 (YYYYMMDDHH00 형식)"),
+    stn: str = Query("0", description="관측소 번호 (0: 전체)")
+):
+    """기상청 API 프록시 - 기간 조회"""
+    try:
+        return await fetch_kma_period(tm1, tm2, stn)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"기상청 API 호출 실패: {str(e)}")
 
 
 @app.get("/api/climate/all", response_model=AllRegionsResponse)
