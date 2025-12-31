@@ -1292,23 +1292,50 @@ body {
     display: none;
   }
 
-  /* 지역 랭킹 모바일 */
+  /* 지역 랭킹 모바일 - 작게 표시 */
   .region-ranking {
     left: 8px;
-    right: 8px;
-    top: 8px;
-    max-width: none;
-    padding: 8px;
+    right: auto;
+    top: 60px;
+    bottom: auto;
+    max-width: 130px;
+    padding: 0;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+
+  .region-ranking .ranking-toggle {
+    padding: 6px 10px;
+    font-size: 0.7rem;
+  }
+
+  .region-ranking .ranking-content {
+    max-height: 120px;
+    overflow-y: auto;
   }
 
   .ranking-header {
-    padding: 8px;
-    font-size: 0.85rem;
+    padding: 4px;
+    font-size: 0.7rem;
   }
 
   .ranking-item {
-    padding: 8px;
-    min-height: 44px;
+    padding: 4px 6px;
+    min-height: 28px;
+    font-size: 0.7rem;
+  }
+
+  .rank-number {
+    font-size: 0.8rem;
+    width: 18px;
+  }
+
+  .rank-region {
+    font-size: 0.65rem;
+  }
+
+  .rank-score {
+    font-size: 0.7rem;
   }
 
   /* 체감 제보 그리드 모바일 */
