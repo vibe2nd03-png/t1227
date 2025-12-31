@@ -13,6 +13,15 @@ import { createLogger } from './utils/logger';
 
 const log = createLogger('App');
 
+// 위험도에 따른 테마 결정
+const getThemeFromRisk = (riskLevel, score) => {
+  if (score <= 25) return 'safe';      // 안전 - 하얀색/파란색
+  if (score <= 40) return 'good';      // 좋음 - 초록색
+  if (score <= 60) return 'caution';   // 주의 - 주황색
+  if (score <= 75) return 'warning';   // 경고 - 주황-빨간색
+  return 'danger';                      // 위험 - 갈색/빨간색
+};
+
 function App() {
   const [regions, setRegions] = useState([]);
   const [selectedRegion, setSelectedRegion] = useState(null);
@@ -21,6 +30,24 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [dataSource, setDataSource] = useState('loading');
   const [lastUpdated, setLastUpdated] = useState(null);
+
+  // 테마 변경 효과 (선택된 지역 또는 평균 점수 기반)
+  useEffect(() => {
+    let theme = 'safe'; // 기본 테마
+
+    if (selectedRegion) {
+      // 선택된 지역의 점수 기반
+      const score = selectedRegion.adjusted_score || selectedRegion.score || 0;
+      theme = getThemeFromRisk(selectedRegion.risk_level, score);
+    } else if (regions.length > 0) {
+      // 전체 지역 평균 점수 기반
+      const avgScore = regions.reduce((sum, r) => sum + (r.adjusted_score || r.score || 0), 0) / regions.length;
+      theme = getThemeFromRisk(null, avgScore);
+    }
+
+    document.documentElement.setAttribute('data-theme', theme);
+    log.debug('테마 변경', { theme, selectedRegion: selectedRegion?.region });
+  }, [selectedRegion, regions]);
 
   // 초기 데이터 로드
   useEffect(() => {
