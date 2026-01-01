@@ -3,7 +3,6 @@ import AirQualityNav from './AirQualityNav';
 import { useAuth } from '../contexts/AuthContext';
 
 // Lazy load heavy components (탭/모달별 분리)
-const AuthModal = lazy(() => import('./AuthModal'));
 const UserProfile = lazy(() => import('./UserProfile'));
 const NotificationManager = lazy(() => import('./NotificationManager'));
 const WeatherComparisonChart = lazy(() => import('./WeatherComparisonChart'));
@@ -28,9 +27,8 @@ const MAIN_TABS = [
   { id: 'report', label: '체감제보', icon: '📢' },
 ];
 
-function Sidebar({ selectedRegion, explanation, target, onTargetChange, loading, onReportSubmit, allRegions, onRegionSelect }) {
+function Sidebar({ selectedRegion, explanation, target, onTargetChange, loading, onReportSubmit, allRegions, onRegionSelect, onOpenAuthModal }) {
   const { user, profile, isAuthenticated } = useAuth();
-  const [showAuthModal, setShowAuthModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [isNotificationSubscribed, setIsNotificationSubscribed] = useState(false);
@@ -72,7 +70,10 @@ function Sidebar({ selectedRegion, explanation, target, onTargetChange, loading,
             {isAuthenticated ? (
               <button
                 className="user-avatar-btn"
-                onClick={() => setShowProfileModal(true)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowProfileModal(true);
+                }}
               >
                 {profile?.avatar_url ? (
                   <img src={profile.avatar_url} alt="프로필" />
@@ -82,10 +83,14 @@ function Sidebar({ selectedRegion, explanation, target, onTargetChange, loading,
               </button>
             ) : (
               <button
-                className="login-btn"
-                onClick={() => setShowAuthModal(true)}
+                className="login-floating-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpenAuthModal && onOpenAuthModal();
+                }}
               >
-                로그인
+                <span className="login-icon">✨</span>
+                <span className="login-text">로그인</span>
               </button>
             )}
           </div>
@@ -106,16 +111,6 @@ function Sidebar({ selectedRegion, explanation, target, onTargetChange, loading,
           ))}
         </div>
       </div>
-
-      {/* 로그인 모달 */}
-      {showAuthModal && (
-        <Suspense fallback={<LoadingFallback />}>
-          <AuthModal
-            isOpen={showAuthModal}
-            onClose={() => setShowAuthModal(false)}
-          />
-        </Suspense>
-      )}
 
       {/* 프로필 모달 */}
       {showProfileModal && (

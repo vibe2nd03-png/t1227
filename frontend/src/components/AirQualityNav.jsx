@@ -200,19 +200,28 @@ function AirQualityNav({ climateData, onRegionSelect }) {
         <div className="nav-panel-content">
           {/* 헤더: 오늘의 청정 지역 */}
           <div className="nav-header">
-            <div className="clean-zone-highlight">
-              <span className="highlight-emoji">🏆</span>
-              <div className="highlight-text">
-                <p className="highlight-label">지금 경기도에서 폐가 가장 깨끗해지는 곳</p>
-                <h3 className="highlight-region" onClick={() => onRegionSelect?.(cleanestZone)}>
-                  {cleanestZone?.region}
-                  <span className="region-score">
-                    PM10: {cleanestZone?.climate_data?.pm10}㎍/㎥ |
-                    PM2.5: {cleanestZone?.climate_data?.pm25}㎍/㎥
-                  </span>
-                </h3>
+            {cleanestZone ? (
+              <div className="clean-zone-highlight">
+                <span className="highlight-emoji">🏆</span>
+                <div className="highlight-text">
+                  <p className="highlight-label">지금 경기도에서 폐가 가장 깨끗해지는 곳</p>
+                  <h3 className="highlight-region" onClick={() => onRegionSelect?.(cleanestZone)}>
+                    {cleanestZone.region}
+                    <span className="region-score">
+                      PM10: {cleanestZone.climate_data?.pm10 ?? '-'}㎍/㎥ |
+                      PM2.5: {cleanestZone.climate_data?.pm25 ?? '-'}㎍/㎥
+                    </span>
+                  </h3>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="clean-zone-highlight">
+                <span className="highlight-emoji">⏳</span>
+                <div className="highlight-text">
+                  <p className="highlight-label">청정 지역 정보를 불러오는 중...</p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* 탭 메뉴 */}
@@ -245,18 +254,18 @@ function AirQualityNav({ climateData, onRegionSelect }) {
                 {cleanZoneRanking.slice(0, 5).map((zone, idx) => (
                   <div
                     key={zone.region}
-                    className={`zone-item ${zone.grade}`}
+                    className={`zone-item ${zone.grade || 'normal'}`}
                     onClick={() => onRegionSelect?.(zone)}
                   >
                     <span className="zone-rank">#{idx + 1}</span>
                     <div className="zone-info">
                       <span className="zone-name">{zone.region}</span>
                       <span className="zone-data">
-                        PM10: {zone.climate_data?.pm10} | PM2.5: {zone.climate_data?.pm25}
+                        PM10: {zone.climate_data?.pm10 ?? '-'} | PM2.5: {zone.climate_data?.pm25 ?? '-'}
                       </span>
                     </div>
-                    <span className={`zone-badge ${zone.grade}`}>
-                      {gradeLabels[zone.grade]?.emoji} {gradeLabels[zone.grade]?.label}
+                    <span className={`zone-badge ${zone.grade || 'normal'}`}>
+                      {gradeLabels[zone.grade]?.emoji || '😐'} {gradeLabels[zone.grade]?.label || '보통'}
                     </span>
                   </div>
                 ))}
@@ -269,10 +278,10 @@ function AirQualityNav({ climateData, onRegionSelect }) {
                   .filter((z) => z.grade === 'bad' || z.grade === 'veryBad')
                   .slice(0, 3)
                   .map((zone) => (
-                    <div key={zone.region} className={`zone-item ${zone.grade}`}>
+                    <div key={zone.region} className={`zone-item ${zone.grade || 'bad'}`}>
                       <span className="zone-name">{zone.region}</span>
-                      <span className={`zone-badge ${zone.grade}`}>
-                        {gradeLabels[zone.grade]?.emoji} {gradeLabels[zone.grade]?.label}
+                      <span className={`zone-badge ${zone.grade || 'bad'}`}>
+                        {gradeLabels[zone.grade]?.emoji || '😷'} {gradeLabels[zone.grade]?.label || '나쁨'}
                       </span>
                     </div>
                   ))}

@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 
+// 첫 인사 메시지
+const GREETING_MESSAGE = { type: 'greeting', message: '안녕하세요! 저는 AI반디예요 🐝' };
+
 // 봉공이 안내 메시지 (겨울철)
 const GUIDE_MESSAGES = [
-  { type: 'greeting', message: '안녕하세요! 저는 기후 안내 도우미 봉공이예요~ 🐝' },
   { type: 'cold', message: '오늘 많이 춥네요! 따뜻하게 입고 외출하세요~ ❄️' },
   { type: 'wind', message: '바람이 불면 체감온도가 더 낮아져요! 방한용품 챙기세요~ 🌬️' },
   { type: 'pm', message: '미세먼지가 높은 지역이 있어요. 마스크 잊지 마세요! 😷' },
@@ -33,7 +35,7 @@ const createBonggongiIcon = () => {
   const svgIcon = `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
       <!-- 몸통 (노란색 타원) -->
-      <ellipse cx="50" cy="55" rx="28" fy="32" fill="#FFD93D" stroke="#E8A317" stroke-width="2"/>
+      <ellipse cx="50" cy="55" rx="28" ry="32" fill="#FFD93D" stroke="#E8A317" stroke-width="2"/>
       <!-- 줄무늬 -->
       <ellipse cx="50" cy="48" rx="24" ry="6" fill="#1A1A2E" opacity="0.8"/>
       <ellipse cx="50" cy="62" rx="22" ry="5" fill="#1A1A2E" opacity="0.8"/>
@@ -78,10 +80,21 @@ const createBonggongiIcon = () => {
 
 function BonggongiGuide({ regions, selectedRegion }) {
   const map = useMap();
+  const markerRef = useRef(null);
   const [position, setPosition] = useState(PATROL_POINTS[0]);
-  const [currentMessage, setCurrentMessage] = useState(GUIDE_MESSAGES[0]);
+  const [currentMessage, setCurrentMessage] = useState(GREETING_MESSAGE);
   const [isVisible, setIsVisible] = useState(true);
   const [patrolIndex, setPatrolIndex] = useState(0);
+  const [hasGreeted, setHasGreeted] = useState(false);
+
+  // 말풍선 자동 열기
+  useEffect(() => {
+    if (markerRef.current && isVisible) {
+      setTimeout(() => {
+        markerRef.current.openPopup();
+      }, 500);
+    }
+  }, [position, currentMessage, isVisible]);
 
   // 지역 상태에 따른 메시지 선택
   const getContextualMessage = useCallback((pos) => {
@@ -112,8 +125,23 @@ function BonggongiGuide({ regions, selectedRegion }) {
     return tips[Math.floor(Math.random() * tips.length)];
   }, [regions]);
 
-  // 순찰 이동
+  // 첫 인사 후 날씨 정보로 전환
   useEffect(() => {
+    if (!hasGreeted) {
+      const greetingTimer = setTimeout(() => {
+        setHasGreeted(true);
+        // 현재 위치의 날씨 정보로 전환
+        setCurrentMessage(getContextualMessage(position));
+      }, 4000); // 4초 후 날씨 정보로 전환
+
+      return () => clearTimeout(greetingTimer);
+    }
+  }, [hasGreeted, getContextualMessage, position]);
+
+  // 순찰 이동 (인사 후에만 시작)
+  useEffect(() => {
+    if (!hasGreeted) return; // 인사 전에는 순찰 안함
+
     const moveInterval = setInterval(() => {
       setPatrolIndex(prev => {
         const nextIndex = (prev + 1) % PATROL_POINTS.length;
@@ -125,7 +153,7 @@ function BonggongiGuide({ regions, selectedRegion }) {
     }, 8000); // 8초마다 이동
 
     return () => clearInterval(moveInterval);
-  }, [getContextualMessage]);
+  }, [hasGreeted, getContextualMessage]);
 
   // 선택된 지역으로 이동
   useEffect(() => {
@@ -157,6 +185,7 @@ function BonggongiGuide({ regions, selectedRegion }) {
   return (
     <>
       <Marker
+        ref={markerRef}
         position={[position.lat, position.lng]}
         icon={createBonggongiIcon()}
         eventHandlers={{
@@ -170,7 +199,7 @@ function BonggongiGuide({ regions, selectedRegion }) {
         <Popup className="bonggongi-popup" autoPan={false}>
           <div className="bonggongi-speech">
             <div className="speech-header">
-              <span className="bonggongi-name">🐝 봉공이</span>
+              <span className="bonggongi-name">🐝 AI반디</span>
               <button
                 className="close-guide-btn"
                 onClick={(e) => {
@@ -192,7 +221,7 @@ function BonggongiGuide({ regions, selectedRegion }) {
           className="bonggongi-toggle"
           onClick={() => setIsVisible(true)}
         >
-          🐝 봉공이 부르기
+          🐝 AI반디 부르기
         </div>
       )}
     </>

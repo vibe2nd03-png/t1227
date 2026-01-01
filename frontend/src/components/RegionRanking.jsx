@@ -94,6 +94,22 @@ function RegionRanking({ regions, onRegionClick }) {
     .sort((a, b) => b.reportCount - a.reportCount)
     .slice(0, 5);
 
+  // 위험 등급별 지역 분류
+  const riskLevelOrder = { danger: 0, warning: 1, caution: 2, safe: 3 };
+  const riskLevelLabels = {
+    danger: { label: '위험', icon: '🔴', color: '#ef4444' },
+    warning: { label: '경고', icon: '🟠', color: '#f97316' },
+    caution: { label: '주의', icon: '🟡', color: '#eab308' },
+    safe: { label: '안전', icon: '🟢', color: '#22c55e' },
+  };
+
+  const regionsByRisk = regions.reduce((acc, r) => {
+    const level = r.risk_level || 'safe';
+    if (!acc[level]) acc[level] = [];
+    acc[level].push(r);
+    return acc;
+  }, {});
+
   const renderRankList = (list, type) => {
     if (list.length === 0) {
       return <p className="no-data">아직 데이터가 없습니다</p>;
@@ -192,6 +208,38 @@ function RegionRanking({ regions, onRegionClick }) {
             {activeTab === 'hot' && renderRankList(hottestRegions, 'hot')}
             {activeTab === 'cool' && renderRankList(coolestRegions, 'cool')}
             {activeTab === 'reports' && renderRankList(mostReportedRegions, 'reports')}
+          </div>
+
+          {/* 위험 등급 현황 */}
+          <div className="risk-level-section">
+            <div className="risk-level-header">
+              <span>⚠️ 위험 등급 현황</span>
+            </div>
+            <div className="risk-level-grid">
+              {['danger', 'warning', 'caution', 'safe'].map((level) => {
+                const info = riskLevelLabels[level];
+                const count = regionsByRisk[level]?.length || 0;
+                return (
+                  <div
+                    key={level}
+                    className={`risk-level-item ${level}`}
+                    style={{ borderColor: info.color }}
+                  >
+                    <span className="risk-icon">{info.icon}</span>
+                    <span className="risk-label">{info.label}</span>
+                    <span className="risk-count" style={{ color: info.color }}>{count}개</span>
+                  </div>
+                );
+              })}
+            </div>
+            {regionsByRisk.danger?.length > 0 && (
+              <div className="danger-regions">
+                <span className="danger-title">🔴 위험 지역:</span>
+                <span className="danger-list">
+                  {regionsByRisk.danger.map(r => r.region).join(', ')}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* 보정 체감 온도 설명 */}

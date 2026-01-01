@@ -5,7 +5,22 @@ const log = createLogger('Supabase');
 const supabaseUrl = 'https://pcdmrofcfqtyywtzyrfo.supabase.co';
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q';
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+  },
+  global: {
+    headers: {
+      'x-client-info': 'gyeonggi-climate-map',
+    },
+  },
+  // 재시도 설정
+  db: {
+    schema: 'public',
+  },
+});
 
 // 경기도 31개 시군 기후 데이터 조회
 export const climateService = {

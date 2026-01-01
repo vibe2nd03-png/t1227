@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import ClimateMap from './components/ClimateMap';
 import Sidebar from './components/Sidebar';
 import WeatherAlertBanner from './components/WeatherAlertBanner';
 import { getGyeonggiRealtimeWeather } from './services/kmaApi';
+
+// Lazy load AuthModal
+const AuthModal = lazy(() => import('./components/AuthModal'));
 import {
   TARGET_MULTIPLIERS,
   TARGET_LABELS,
@@ -30,6 +33,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [dataSource, setDataSource] = useState('loading');
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   // 테마 변경 효과 (선택된 지역 또는 평균 점수 기반)
   useEffect(() => {
@@ -214,6 +218,7 @@ function App() {
           loading={false}
           allRegions={regions}
           onRegionSelect={handleRegionSelect}
+          onOpenAuthModal={() => setShowAuthModal(true)}
         />
         <ClimateMap
           regions={regions}
@@ -221,6 +226,16 @@ function App() {
           onRegionSelect={handleRegionSelect}
         />
       </div>
+
+      {/* 로그인 모달 - 루트 레벨에서 렌더링 (모바일 transform 이슈 해결) */}
+      {showAuthModal && (
+        <Suspense fallback={null}>
+          <AuthModal
+            isOpen={showAuthModal}
+            onClose={() => setShowAuthModal(false)}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }

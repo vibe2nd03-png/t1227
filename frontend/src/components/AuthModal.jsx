@@ -74,9 +74,13 @@ function AuthModal({ isOpen, onClose }) {
         resetForm();
       }, 1000);
     } else {
-      // 계정이 없으면 회원가입 모드로 전환 안내
+      // 에러 메시지 분류
       if (result.error?.includes('Invalid login')) {
         setMessage('이메일 또는 비밀번호가 잘못되었습니다');
+      } else if (result.error?.includes('시간 초과') || result.error?.includes('timeout')) {
+        setMessage('네트워크 연결이 느립니다. 다시 시도해주세요.');
+      } else if (result.error?.includes('fetch') || result.error?.includes('network')) {
+        setMessage('인터넷 연결을 확인해주세요.');
       } else {
         setMessage(result.error || '로그인에 실패했습니다');
       }
@@ -108,7 +112,14 @@ function AuthModal({ isOpen, onClose }) {
         resetForm();
       }, 1000);
     } else {
-      setMessage(result.error || '회원가입에 실패했습니다');
+      // 에러 메시지 분류
+      if (result.error?.includes('시간 초과') || result.error?.includes('timeout')) {
+        setMessage('네트워크 연결이 느립니다. 다시 시도해주세요.');
+      } else if (result.error?.includes('fetch') || result.error?.includes('network')) {
+        setMessage('인터넷 연결을 확인해주세요.');
+      } else {
+        setMessage(result.error || '회원가입에 실패했습니다');
+      }
     }
   };
 
@@ -128,208 +139,258 @@ function AuthModal({ isOpen, onClose }) {
 
   return (
     <div className="auth-modal-overlay" onClick={onClose}>
-      <div className="auth-modal" onClick={(e) => e.stopPropagation()}>
-        {/* 헤더 */}
-        <div className="auth-modal-header">
-          <h2>
-            {authMode === 'select' && '로그인 / 회원가입'}
-            {authMode === 'phone' && '📱 전화번호 로그인'}
-            {authMode === 'email' && (emailMode === 'login' ? '✉️ 이메일 로그인' : '✉️ 이메일 회원가입')}
+      <div className="auth-modal-container" onClick={(e) => e.stopPropagation()}>
+        {/* 닫기 버튼 */}
+        <button className="auth-close-btn" onClick={onClose}>
+          <span>✕</span>
+        </button>
+
+        {/* 헤더 영역 */}
+        <div className="auth-hero">
+          <div className="auth-hero-icon">
+            {authMode === 'select' && '🌤️'}
+            {authMode === 'phone' && '📱'}
+            {authMode === 'email' && '✉️'}
+          </div>
+          <h2 className="auth-title">
+            {authMode === 'select' && '환영합니다!'}
+            {authMode === 'phone' && '전화번호 인증'}
+            {authMode === 'email' && (emailMode === 'login' ? '로그인' : '회원가입')}
           </h2>
-          <button className="close-btn" onClick={onClose}>×</button>
+          <p className="auth-subtitle">
+            {authMode === 'select' && '경기 기후 체감 맵과 함께하세요'}
+            {authMode === 'phone' && '빠르고 간편한 인증'}
+            {authMode === 'email' && (emailMode === 'login' ? '다시 만나서 반가워요' : '1분이면 완료!')}
+          </p>
         </div>
 
         {/* 내용 */}
         <div className="auth-modal-content">
           {authMode === 'select' && (
-            <>
-              <p className="auth-description">
-                로그인하시면 제보 기록이 저장되고<br />
-                관심 지역 알림을 받을 수 있습니다.
-              </p>
+            <div className="auth-select-area">
+              <div className="auth-benefits">
+                <div className="benefit-item">
+                  <span className="benefit-icon">📊</span>
+                  <span>제보 기록 저장</span>
+                </div>
+                <div className="benefit-item">
+                  <span className="benefit-icon">🔔</span>
+                  <span>관심 지역 알림</span>
+                </div>
+                <div className="benefit-item">
+                  <span className="benefit-icon">⭐</span>
+                  <span>맞춤 날씨 정보</span>
+                </div>
+              </div>
 
               {/* 이메일 로그인 */}
               <button
-                className="auth-btn email-btn"
+                className="auth-method-btn email"
                 onClick={() => setAuthMode('email')}
               >
-                ✉️ 이메일로 로그인
+                <span className="method-icon">✉️</span>
+                <span className="method-text">이메일로 시작하기</span>
+                <span className="method-arrow">→</span>
               </button>
-
-              {/* 구분선 */}
-              <div className="auth-divider">
-                <span>또는</span>
-              </div>
-
-              {/* 전화번호 로그인 */}
-              <button
-                className="auth-btn phone-btn"
-                onClick={() => setAuthMode('phone')}
-              >
-                📱 전화번호로 로그인
-              </button>
-            </>
+            </div>
           )}
 
           {authMode === 'phone' && (
-            <>
+            <div className="auth-form-area">
               {!otpSent ? (
                 <>
-                  <div className="input-group">
+                  <div className="auth-input-group">
                     <label htmlFor="auth-phone">전화번호</label>
-                    <input
-                      type="tel"
-                      id="auth-phone"
-                      name="phone"
-                      placeholder="010-1234-5678"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, ''))}
-                      maxLength={11}
-                    />
-                    <span className="input-hint">숫자만 입력해주세요</span>
+                    <div className="input-with-icon">
+                      <span className="input-icon">📱</span>
+                      <input
+                        type="tel"
+                        id="auth-phone"
+                        name="phone"
+                        placeholder="01012345678"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, ''))}
+                        maxLength={11}
+                      />
+                    </div>
+                    <span className="input-hint">'-' 없이 숫자만 입력</span>
                   </div>
 
                   <button
-                    className="auth-btn primary-btn"
+                    className="auth-submit-btn"
                     onClick={handleSendPhoneOtp}
                     disabled={loading || phone.length < 10}
                   >
-                    {loading ? '발송 중...' : '인증번호 받기'}
+                    {loading ? (
+                      <><span className="btn-spinner"></span> 발송 중...</>
+                    ) : (
+                      '인증번호 받기'
+                    )}
                   </button>
                 </>
               ) : (
                 <>
-                  <div className="otp-info">
-                    <span className="phone-display">📱 {phone}</span>
-                    <button className="change-btn" onClick={() => setOtpSent(false)}>
-                      변경
-                    </button>
+                  <div className="otp-sent-info">
+                    <div className="sent-badge">
+                      <span className="check-icon">✓</span>
+                      <span>인증번호 발송 완료</span>
+                    </div>
+                    <div className="phone-number">
+                      {phone.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3')}
+                      <button className="change-link" onClick={() => setOtpSent(false)}>
+                        변경
+                      </button>
+                    </div>
                   </div>
 
-                  <div className="input-group">
-                    <label htmlFor="auth-otp">인증번호</label>
-                    <input
-                      type="text"
-                      id="auth-otp"
-                      name="otp"
-                      placeholder="6자리 인증번호"
-                      value={otpCode}
-                      onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, ''))}
-                      maxLength={6}
-                    />
+                  <div className="auth-input-group">
+                    <label htmlFor="auth-otp">인증번호 6자리</label>
+                    <div className="otp-input-container">
+                      <input
+                        type="text"
+                        id="auth-otp"
+                        name="otp"
+                        className="otp-input"
+                        placeholder="● ● ● ● ● ●"
+                        value={otpCode}
+                        onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, ''))}
+                        maxLength={6}
+                      />
+                    </div>
                   </div>
 
                   <button
-                    className="auth-btn primary-btn"
+                    className="auth-submit-btn"
                     onClick={handleVerifyOtp}
                     disabled={loading || otpCode.length < 6}
                   >
-                    {loading ? '확인 중...' : '인증하기'}
+                    {loading ? (
+                      <><span className="btn-spinner"></span> 확인 중...</>
+                    ) : (
+                      '인증 완료하기'
+                    )}
                   </button>
 
                   <button
-                    className="resend-btn"
+                    className="resend-link"
                     onClick={handleSendPhoneOtp}
                     disabled={loading}
                   >
-                    인증번호 재발송
+                    인증번호가 안 왔나요? <span>재발송</span>
                   </button>
                 </>
               )}
 
-              <button className="back-btn" onClick={resetForm}>
-                ← 다른 방법으로 로그인
+              <button className="auth-back-btn" onClick={resetForm}>
+                <span>←</span> 다른 방법으로
               </button>
-            </>
+            </div>
           )}
 
           {authMode === 'email' && (
-            <>
+            <div className="auth-form-area">
               {/* 로그인/회원가입 탭 */}
-              <div className="email-tabs">
+              <div className="auth-toggle-tabs">
                 <button
-                  className={`email-tab ${emailMode === 'login' ? 'active' : ''}`}
+                  className={`toggle-tab ${emailMode === 'login' ? 'active' : ''}`}
                   onClick={() => { setEmailMode('login'); setMessage(''); }}
                 >
                   로그인
                 </button>
                 <button
-                  className={`email-tab ${emailMode === 'signup' ? 'active' : ''}`}
+                  className={`toggle-tab ${emailMode === 'signup' ? 'active' : ''}`}
                   onClick={() => { setEmailMode('signup'); setMessage(''); }}
                 >
                   회원가입
                 </button>
+                <div className={`tab-indicator ${emailMode}`}></div>
               </div>
 
-              <div className="input-group">
+              <div className="auth-input-group">
                 <label htmlFor="auth-email">이메일</label>
-                <input
-                  type="email"
-                  id="auth-email"
-                  name="email"
-                  placeholder="example@gmail.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
+                <div className="input-with-icon">
+                  <span className="input-icon">✉️</span>
+                  <input
+                    type="email"
+                    id="auth-email"
+                    name="email"
+                    placeholder="example@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
               </div>
 
-              <div className="input-group">
+              <div className="auth-input-group">
                 <label htmlFor="auth-password">비밀번호</label>
-                <input
-                  type="password"
-                  id="auth-password"
-                  name="password"
-                  placeholder="6자 이상 입력"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
+                <div className="input-with-icon">
+                  <span className="input-icon">🔒</span>
+                  <input
+                    type="password"
+                    id="auth-password"
+                    name="password"
+                    placeholder="6자 이상"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                </div>
               </div>
 
               {emailMode === 'signup' && (
-                <div className="input-group">
+                <div className="auth-input-group">
                   <label htmlFor="auth-confirm-password">비밀번호 확인</label>
-                  <input
-                    type="password"
-                    id="auth-confirm-password"
-                    name="confirmPassword"
-                    placeholder="비밀번호 다시 입력"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                  />
+                  <div className="input-with-icon">
+                    <span className="input-icon">🔒</span>
+                    <input
+                      type="password"
+                      id="auth-confirm-password"
+                      name="confirmPassword"
+                      placeholder="비밀번호 다시 입력"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                    />
+                  </div>
                 </div>
               )}
 
               <button
-                className="auth-btn primary-btn"
+                className="auth-submit-btn"
                 onClick={emailMode === 'login' ? handleEmailLogin : handleEmailSignUp}
                 disabled={loading || !email.includes('@') || password.length < 6}
               >
-                {loading ? '처리 중...' : (emailMode === 'login' ? '로그인' : '회원가입')}
+                {loading ? (
+                  <><span className="btn-spinner"></span> {emailMode === 'login' ? '로그인 중...' : '가입 중...'}</>
+                ) : (
+                  emailMode === 'login' ? '로그인하기' : '가입하기'
+                )}
               </button>
 
               {emailMode === 'signup' && (
                 <p className="signup-notice">
-                  * 회원가입 즉시 사용 가능합니다
+                  ✓ 가입 즉시 모든 기능 사용 가능
                 </p>
               )}
 
-              <button className="back-btn" onClick={resetForm}>
-                ← 다른 방법으로 로그인
+              <button className="auth-back-btn" onClick={resetForm}>
+                <span>←</span> 다른 방법으로
               </button>
-            </>
+            </div>
           )}
 
           {/* 메시지 표시 */}
           {(message || authError) && (
-            <div className={`auth-message ${message.includes('성공') || message.includes('발송') ? 'success' : 'error'}`}>
-              {message || authError}
+            <div className={`auth-toast ${message.includes('성공') || message.includes('발송') ? 'success' : 'error'}`}>
+              <span className="toast-icon">
+                {message.includes('성공') || message.includes('발송') ? '✓' : '!'}
+              </span>
+              <span className="toast-text">{message || authError}</span>
             </div>
           )}
         </div>
 
         {/* 푸터 */}
-        <div className="auth-modal-footer">
-          <p>로그인 시 서비스 이용약관에 동의하게 됩니다.</p>
+        <div className="auth-footer">
+          <p>로그인 시 <span className="link">이용약관</span>에 동의합니다</p>
         </div>
       </div>
     </div>

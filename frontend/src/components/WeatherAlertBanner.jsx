@@ -26,36 +26,43 @@ const ALERT_STYLES = {
   },
 };
 
-// 기본 경보 데이터 (Supabase 연결 실패 시 사용)
-const DEFAULT_ALERTS = [
-  {
-    id: 1,
-    type: 'warning',
-    title: '폭염주의보',
-    message: '경기 남부지역(화성시, 오산시, 평택시)에 폭염주의보가 발효 중입니다. 야외활동을 자제해 주세요.',
-    region: '경기 남부',
-    issued_at: new Date().toISOString(),
-    expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: 2,
-    type: 'info',
-    title: '미세먼지 정보',
-    message: '오늘 경기 북부지역 미세먼지 농도가 \'보통\' 수준입니다.',
-    region: '경기 북부',
-    issued_at: new Date().toISOString(),
-    expires_at: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: 3,
-    type: 'watch',
-    title: '자외선 지수 높음',
-    message: '오후 12시~15시 자외선 지수가 \'매우 높음\'으로 예상됩니다. 외출 시 자외선 차단제를 사용하세요.',
-    region: '경기도 전역',
-    issued_at: new Date().toISOString(),
-    expires_at: new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString(),
-  },
-];
+// 기본 경보 데이터 (API 연결 실패 시 사용)
+const getDefaultAlerts = () => {
+  const now = new Date();
+  const hour = now.getHours();
+
+  if (hour >= 6 && hour < 12) {
+    return [{
+      id: 'default-morning',
+      type: 'info',
+      title: '오늘의 날씨',
+      message: '경기도 오늘 날씨 정보를 확인하세요. 지역을 클릭하면 상세 정보를 볼 수 있습니다.',
+      region: '경기도',
+      issued_at: now.toISOString(),
+      expires_at: new Date(now.getTime() + 6 * 60 * 60 * 1000).toISOString(),
+    }];
+  } else if (hour >= 12 && hour < 18) {
+    return [{
+      id: 'default-afternoon',
+      type: 'info',
+      title: '오후 날씨',
+      message: '경기도 오후 날씨 현황입니다. 외출 시 날씨 변화에 유의하세요.',
+      region: '경기도',
+      issued_at: now.toISOString(),
+      expires_at: new Date(now.getTime() + 6 * 60 * 60 * 1000).toISOString(),
+    }];
+  } else {
+    return [{
+      id: 'default-night',
+      type: 'info',
+      title: '야간 날씨',
+      message: '경기도 야간 기온 변화에 유의하세요. 내일 날씨도 미리 확인하세요.',
+      region: '경기도',
+      issued_at: now.toISOString(),
+      expires_at: new Date(now.getTime() + 12 * 60 * 60 * 1000).toISOString(),
+    }];
+  }
+};
 
 function WeatherAlertBanner() {
   const [alerts, setAlerts] = useState([]);
@@ -87,7 +94,25 @@ function WeatherAlertBanner() {
 
   const loadAlerts = async () => {
     try {
-      // Supabase에서 활성 경보 조회
+      // 기상청 실시간 특보 API 호출
+      const response = await fetch('/api/kma-alerts');
+
+      if (response.ok) {
+        const result = await response.json();
+
+        if (result.success && result.alerts && result.alerts.length > 0) {
+          // 우선순위로 정렬
+          const sortedAlerts = result.alerts.sort((a, b) => {
+            const priorityA = ALERT_STYLES[a.type]?.priority || 99;
+            const priorityB = ALERT_STYLES[b.type]?.priority || 99;
+            return priorityA - priorityB;
+          });
+          setAlerts(sortedAlerts);
+          return;
+        }
+      }
+
+      // API 실패 시 Supabase 백업
       const { data, error } = await supabase
         .from('weather_alerts')
         .select('*')
@@ -95,10 +120,7 @@ function WeatherAlertBanner() {
         .order('type', { ascending: true })
         .order('issued_at', { ascending: false });
 
-      if (error) throw error;
-
-      if (data && data.length > 0) {
-        // 우선순위로 정렬
+      if (!error && data && data.length > 0) {
         const sortedAlerts = data.sort((a, b) => {
           const priorityA = ALERT_STYLES[a.type]?.priority || 99;
           const priorityB = ALERT_STYLES[b.type]?.priority || 99;
@@ -106,12 +128,11 @@ function WeatherAlertBanner() {
         });
         setAlerts(sortedAlerts);
       } else {
-        // 데이터 없으면 기본 경보 사용
-        setAlerts(DEFAULT_ALERTS);
+        setAlerts(getDefaultAlerts());
       }
     } catch (error) {
       console.error('경보 데이터 로드 실패:', error);
-      setAlerts(DEFAULT_ALERTS);
+      setAlerts(getDefaultAlerts());
     }
   };
 

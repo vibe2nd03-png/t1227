@@ -13,12 +13,12 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState(null);
 
-  // 타임아웃 헬퍼 함수
-  const withTimeout = (promise, ms = 10000) => {
+  // 타임아웃 헬퍼 함수 (모바일 네트워크 고려하여 30초로 증가)
+  const withTimeout = (promise, ms = 30000) => {
     return Promise.race([
       promise,
       new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('요청 시간 초과')), ms)
+        setTimeout(() => reject(new Error('요청 시간 초과 - 네트워크 연결을 확인해주세요')), ms)
       )
     ]);
   };
