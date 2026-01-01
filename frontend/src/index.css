@@ -1277,11 +1277,59 @@ body::after {
   background: rgba(0, 0, 0, 0.02);
 }
 
+.risk-level-section.always-visible {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(8px);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  margin-top: 4px;
+}
+
 .risk-level-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--text-secondary);
   margin-bottom: var(--space-sm);
+}
+
+.risk-level-close-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--text-tertiary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.risk-level-close-btn:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: var(--text-primary);
+}
+
+.risk-level-show-btn {
+  position: fixed;
+  bottom: 100px;
+  right: var(--space-md);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-full);
+  padding: 8px 14px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  z-index: 999;
+  transition: all 0.2s ease;
+}
+
+.risk-level-show-btn:hover {
+  transform: scale(1.05);
+  box-shadow: var(--shadow-lg);
 }
 
 .risk-level-grid {
@@ -3525,6 +3573,52 @@ body::after {
 
   .rank-region {
     font-size: 0.8rem;
+  }
+
+  /* 위험 등급 현황 - 모바일에서 항상 표시 */
+  .region-ranking {
+    overflow: visible;
+  }
+
+  .region-ranking .risk-level-section.always-visible {
+    position: fixed;
+    bottom: 100px;
+    right: var(--space-md);
+    left: auto;
+    width: 200px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(12px);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--glass-border);
+    padding: var(--space-sm);
+    z-index: 999;
+  }
+
+  .region-ranking .risk-level-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4px;
+  }
+
+  .region-ranking .risk-level-item {
+    padding: 4px 2px;
+  }
+
+  .region-ranking .risk-level-item .risk-icon {
+    font-size: 0.8rem;
+  }
+
+  .region-ranking .risk-level-item .risk-label {
+    font-size: 0.6rem;
+  }
+
+  .region-ranking .risk-level-item .risk-count {
+    font-size: 0.7rem;
+  }
+
+  .region-ranking .danger-regions {
+    font-size: 0.65rem;
+    padding: 4px 6px;
   }
 
   /* Data source badge */

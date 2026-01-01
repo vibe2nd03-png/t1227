@@ -5,6 +5,7 @@ function RegionRanking({ regions, onRegionClick }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [reportStats, setReportStats] = useState({});
   const [activeTab, setActiveTab] = useState('hot'); // hot, cool, reports
+  const [isRiskLevelVisible, setIsRiskLevelVisible] = useState(true);
 
   // 제보 통계 로드
   useEffect(() => {
@@ -210,38 +211,6 @@ function RegionRanking({ regions, onRegionClick }) {
             {activeTab === 'reports' && renderRankList(mostReportedRegions, 'reports')}
           </div>
 
-          {/* 위험 등급 현황 */}
-          <div className="risk-level-section">
-            <div className="risk-level-header">
-              <span>⚠️ 위험 등급 현황</span>
-            </div>
-            <div className="risk-level-grid">
-              {['danger', 'warning', 'caution', 'safe'].map((level) => {
-                const info = riskLevelLabels[level];
-                const count = regionsByRisk[level]?.length || 0;
-                return (
-                  <div
-                    key={level}
-                    className={`risk-level-item ${level}`}
-                    style={{ borderColor: info.color }}
-                  >
-                    <span className="risk-icon">{info.icon}</span>
-                    <span className="risk-label">{info.label}</span>
-                    <span className="risk-count" style={{ color: info.color }}>{count}개</span>
-                  </div>
-                );
-              })}
-            </div>
-            {regionsByRisk.danger?.length > 0 && (
-              <div className="danger-regions">
-                <span className="danger-title">🔴 위험 지역:</span>
-                <span className="danger-list">
-                  {regionsByRisk.danger.map(r => r.region).join(', ')}
-                </span>
-              </div>
-            )}
-          </div>
-
           {/* 보정 체감 온도 설명 */}
           <div className="ranking-footer">
             <p className="adjust-note">
@@ -249,6 +218,57 @@ function RegionRanking({ regions, onRegionClick }) {
             </p>
           </div>
         </div>
+      )}
+
+      {/* 위험 등급 현황 - 항상 표시 */}
+      {isRiskLevelVisible && (
+        <div className="risk-level-section always-visible">
+          <div className="risk-level-header">
+            <span>⚠️ 위험 등급 현황</span>
+            <button
+              className="risk-level-close-btn"
+              onClick={() => setIsRiskLevelVisible(false)}
+              title="닫기"
+            >
+              ✕
+            </button>
+          </div>
+          <div className="risk-level-grid">
+            {['danger', 'warning', 'caution', 'safe'].map((level) => {
+              const info = riskLevelLabels[level];
+              const count = regionsByRisk[level]?.length || 0;
+              return (
+                <div
+                  key={level}
+                  className={`risk-level-item ${level}`}
+                  style={{ borderColor: info.color }}
+                >
+                  <span className="risk-icon">{info.icon}</span>
+                  <span className="risk-label">{info.label}</span>
+                  <span className="risk-count" style={{ color: info.color }}>{count}개</span>
+                </div>
+              );
+            })}
+          </div>
+          {regionsByRisk.danger?.length > 0 && (
+            <div className="danger-regions">
+              <span className="danger-title">🔴 위험 지역:</span>
+              <span className="danger-list">
+                {regionsByRisk.danger.map(r => r.region).join(', ')}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 위험 등급 다시 표시 버튼 */}
+      {!isRiskLevelVisible && (
+        <button
+          className="risk-level-show-btn"
+          onClick={() => setIsRiskLevelVisible(true)}
+        >
+          ⚠️ 위험등급
+        </button>
       )}
     </div>
   );
