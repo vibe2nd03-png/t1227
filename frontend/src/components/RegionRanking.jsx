@@ -5,7 +5,7 @@ function RegionRanking({ regions, onRegionClick }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [reportStats, setReportStats] = useState({});
   const [activeTab, setActiveTab] = useState('hot'); // hot, cool, reports
-  const [isRiskLevelVisible, setIsRiskLevelVisible] = useState(true);
+  const [isRiskLevelVisible, setIsRiskLevelVisible] = useState(false);
 
   // 제보 통계 로드
   useEffect(() => {
