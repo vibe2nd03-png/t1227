@@ -423,6 +423,68 @@ body::after {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   FAVORITE REGIONS THEME STYLES
+   ═══════════════════════════════════════════════════════════════════════════ */
+.favorite-regions {
+  background: var(--theme-bg-tertiary) !important;
+  border-bottom-color: var(--theme-border) !important;
+}
+
+.favorite-header {
+  color: var(--theme-text-primary) !important;
+}
+
+.favorite-title {
+  color: var(--theme-text-primary) !important;
+}
+
+.favorite-count {
+  background: var(--theme-bg-elevated) !important;
+  color: var(--theme-text-tertiary) !important;
+}
+
+.favorite-item {
+  background: var(--theme-bg-elevated) !important;
+  border-color: var(--theme-border) !important;
+}
+
+.favorite-item:hover {
+  background: var(--theme-accent-light) !important;
+  border-color: var(--theme-accent) !important;
+}
+
+.favorite-item.selected {
+  background: var(--theme-accent-light) !important;
+  border-color: var(--theme-accent) !important;
+}
+
+.favorite-name {
+  color: var(--theme-text-primary) !important;
+}
+
+.favorite-temp {
+  color: var(--theme-accent) !important;
+}
+
+.favorite-remove-btn {
+  background: var(--theme-bg-tertiary) !important;
+  color: var(--theme-text-tertiary) !important;
+}
+
+.favorite-remove-btn:hover {
+  background: rgba(239, 68, 68, 0.2) !important;
+  color: #ef4444 !important;
+}
+
+.favorite-regions.empty .empty-text {
+  color: var(--theme-text-secondary) !important;
+}
+
+.favorite-regions.empty .empty-hint {
+  color: var(--theme-text-tertiary) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    DESKTOP FONT SIZE INCREASE
    ═══════════════════════════════════════════════════════════════════════════ */
 @media (min-width: 769px) {

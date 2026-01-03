@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 const GYEONGGI_REGIONS = [
@@ -150,7 +151,7 @@ function UserProfile({ isOpen, onClose }) {
 
   if (!isOpen || !user) return null;
 
-  return (
+  const modalContent = (
     <div className="profile-modal-overlay" onClick={onClose}>
       <div className="profile-modal" onClick={(e) => e.stopPropagation()}>
         {/* 헤더 */}
@@ -415,6 +416,8 @@ function UserProfile({ isOpen, onClose }) {
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }
 
 export default UserProfile;

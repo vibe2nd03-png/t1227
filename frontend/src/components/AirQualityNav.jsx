@@ -96,10 +96,10 @@ const gradeLabels = {
   veryBad: { label: '매우나쁨', color: '#F44336', emoji: '🤢' },
 };
 
-function AirQualityNav({ climateData, onRegionSelect }) {
-  const [isOpen, setIsOpen] = useState(false);
+function AirQualityNav({ climateData, onRegionSelect, isModal = false }) {
   const [activeTab, setActiveTab] = useState('clean'); // clean, drive, alternative
   const [selectedCourse, setSelectedCourse] = useState(null);
+  const [isExpanded, setIsExpanded] = useState(false); // 토글 버튼용 (모달 아닐 때만 사용)
 
   // 청정 구역 랭킹 계산
   const cleanZoneRanking = useMemo(() => {
@@ -177,26 +177,40 @@ function AirQualityNav({ climateData, onRegionSelect }) {
     }
   };
 
-  if (!climateData || climateData.length === 0) return null;
+  // 데이터 없으면 숨김 (모달이 아닐 때만)
+  if (!isModal && (!climateData || climateData.length === 0)) return null;
+
+  // 패널을 보여줄지 결정: 모달이면 항상 보여줌, 아니면 isExpanded 체크
+  const showPanel = isModal || isExpanded;
 
   return (
-    <div className="air-quality-nav">
-      {/* 토글 버튼 */}
-      <button
-        className={`nav-toggle-btn ${isOpen ? 'active' : ''}`}
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        <span className="toggle-icon">🌬️</span>
-        <span>호흡기 안전 네비</span>
-        {cleanestZone && (
-          <span className="clean-badge">
-            {gradeLabels[cleanestZone.grade]?.emoji}
-          </span>
-        )}
-      </button>
+    <div className={`air-quality-nav ${isModal ? 'modal-mode' : ''}`}>
+      {/* 토글 버튼 - 모달이 아닐 때만 표시 */}
+      {!isModal && (
+        <button
+          className={`nav-toggle-btn ${isExpanded ? 'active' : ''}`}
+          onClick={() => setIsExpanded(!isExpanded)}
+        >
+          <span className="toggle-icon">🌬️</span>
+          <span>호흡기 안전 네비</span>
+          {cleanestZone && (
+            <span className="clean-badge">
+              {gradeLabels[cleanestZone.grade]?.emoji}
+            </span>
+          )}
+        </button>
+      )}
 
-      {/* 패널 내용 */}
-      {isOpen && (
+      {/* 데이터 로딩 중 또는 없음 - 모달일 때만 표시 */}
+      {isModal && (!climateData || climateData.length === 0) && (
+        <div className="nav-loading">
+          <span className="loading-emoji">🌬️</span>
+          <p>기후 데이터를 불러오는 중...</p>
+        </div>
+      )}
+
+      {/* 패널 내용 - 모달이면 항상, 아니면 확장됐을 때 */}
+      {showPanel && climateData && climateData.length > 0 && (
         <div className="nav-panel-content">
           {/* 헤더: 오늘의 청정 지역 */}
           <div className="nav-header">

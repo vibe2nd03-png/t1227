@@ -1,6 +1,9 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
-import AirQualityNav from './AirQualityNav';
+import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
+import { createPortal } from 'react-dom';
+import HourlyForecast from './HourlyForecast';
+import FavoriteRegions from './FavoriteRegions';
 import { useAuth } from '../contexts/AuthContext';
+import { useFavorites } from '../hooks/useFavorites';
 
 // Lazy load heavy components (탭/모달별 분리)
 const UserProfile = lazy(() => import('./UserProfile'));
@@ -29,6 +32,7 @@ const MAIN_TABS = [
 
 function Sidebar({ selectedRegion, explanation, target, onTargetChange, loading, onReportSubmit, allRegions, onRegionSelect, onOpenAuthModal }) {
   const { user, profile, isAuthenticated } = useAuth();
+  const { toggleFavorite, isFavorite } = useFavorites();
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [isNotificationSubscribed, setIsNotificationSubscribed] = useState(false);
@@ -122,6 +126,13 @@ function Sidebar({ selectedRegion, explanation, target, onTargetChange, loading,
         </Suspense>
       )}
 
+      {/* 즐겨찾기 지역 */}
+      <FavoriteRegions
+        allRegions={allRegions}
+        onRegionSelect={onRegionSelect}
+        selectedRegion={selectedRegion}
+      />
+
       {/* 퀵 액션 바 */}
       <div className="quick-actions">
         <button
@@ -177,7 +188,12 @@ function Sidebar({ selectedRegion, explanation, target, onTargetChange, loading,
             {/* 기후정보 탭 */}
             {activeTab === 'info' && (
               <div className="tab-panel">
-                <RegionCard region={selectedRegion} explanation={explanation} />
+                <RegionCard
+                  region={selectedRegion}
+                  explanation={explanation}
+                  isFavorite={isFavorite(selectedRegion.region)}
+                  onToggleFavorite={() => toggleFavorite(selectedRegion.region)}
+                />
               </div>
             )}
 
@@ -220,44 +236,208 @@ function Sidebar({ selectedRegion, explanation, target, onTargetChange, loading,
 function AirQualityNavButton({ climateData, onRegionSelect }) {
   const [isOpen, setIsOpen] = useState(false);
 
-  // 가장 깨끗한 지역 찾기
-  const cleanestRegion = climateData && climateData.length > 0
-    ? [...climateData].sort((a, b) => {
-        const aScore = (a.climate_data?.pm10 || 0) + (a.climate_data?.pm25 || 0) * 2;
-        const bScore = (b.climate_data?.pm10 || 0) + (b.climate_data?.pm25 || 0) * 2;
-        return aScore - bScore;
-      })[0]
-    : null;
+  const handleOpen = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsOpen(true);
+  };
+
+  // 미세먼지 등급 판정
+  const getAirGrade = (pm10, pm25) => {
+    const p10 = pm10 || 50;
+    const p25 = pm25 || 25;
+    if (p10 <= 30 && p25 <= 15) return 'good';
+    if (p10 <= 50 && p25 <= 25) return 'normal';
+    if (p10 <= 100 && p25 <= 50) return 'bad';
+    return 'veryBad';
+  };
+
+  const gradeInfo = {
+    good: { label: '좋음', emoji: '😊', color: '#22c55e' },
+    normal: { label: '보통', emoji: '😐', color: '#fbbf24' },
+    bad: { label: '나쁨', emoji: '😷', color: '#f97316' },
+    veryBad: { label: '매우나쁨', emoji: '🤢', color: '#ef4444' },
+  };
+
+  // 청정 구역 랭킹 계산
+  const cleanZoneRanking = useMemo(() => {
+    if (!climateData || !Array.isArray(climateData) || climateData.length === 0) {
+      return [];
+    }
+
+    try {
+      return climateData
+        .map((region) => {
+          const pm10 = region.climate_data?.pm10 || 50;
+          const pm25 = region.climate_data?.pm25 || 25;
+          return {
+            ...region,
+            airScore: pm10 + pm25 * 2,
+            grade: getAirGrade(pm10, pm25),
+          };
+        })
+        .sort((a, b) => a.airScore - b.airScore);
+    } catch (e) {
+      return [];
+    }
+  }, [climateData]);
+
+  const hasData = cleanZoneRanking.length > 0;
+
+  // 모달 컨텐츠
+  const modalContent = isOpen ? (
+    <div
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0,0,0,0.85)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 999999,
+      }}
+      onClick={() => setIsOpen(false)}
+    >
+      <div
+        style={{
+          backgroundColor: '#1e293b',
+          borderRadius: '16px',
+          width: '90%',
+          maxWidth: '400px',
+          maxHeight: '80vh',
+          overflow: 'hidden',
+          boxShadow: '0 25px 50px rgba(0,0,0,0.5)',
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* 헤더 */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '16px 20px',
+          borderBottom: '1px solid rgba(255,255,255,0.1)',
+          background: 'linear-gradient(135deg, #22c55e20, #10b98110)',
+        }}>
+          <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#fff', fontWeight: 600 }}>🌿 청정 지역 TOP 5</h3>
+          <button
+            onClick={() => setIsOpen(false)}
+            style={{
+              background: 'rgba(255,255,255,0.1)',
+              border: 'none',
+              color: '#fff',
+              fontSize: '1.2rem',
+              cursor: 'pointer',
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >×</button>
+        </div>
+
+        {/* 본문 */}
+        <div style={{ padding: '16px', overflowY: 'auto', maxHeight: '60vh' }}>
+          {!hasData ? (
+            <div style={{ textAlign: 'center', padding: '32px', color: '#94a3b8' }}>
+              <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🌬️</div>
+              <p>데이터를 불러오는 중...</p>
+            </div>
+          ) : (
+            <>
+              {/* 1위 하이라이트 */}
+              <div style={{
+                background: 'linear-gradient(135deg, rgba(34,197,94,0.25), rgba(16,185,129,0.15))',
+                border: '2px solid rgba(34,197,94,0.4)',
+                borderRadius: '12px',
+                padding: '16px',
+                marginBottom: '16px',
+                cursor: 'pointer',
+              }}
+              onClick={() => {
+                onRegionSelect(cleanZoneRanking[0]);
+                setIsOpen(false);
+              }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <span style={{ fontSize: '2.5rem' }}>🏆</span>
+                  <div>
+                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>가장 깨끗한 곳</p>
+                    <h3 style={{ margin: '4px 0', fontSize: '1.3rem', color: '#22c55e', fontWeight: 700 }}>
+                      {cleanZoneRanking[0].region}
+                    </h3>
+                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#cbd5e1' }}>
+                      PM10: {cleanZoneRanking[0].climate_data?.pm10 || '-'} · PM2.5: {cleanZoneRanking[0].climate_data?.pm25 || '-'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* TOP 5 목록 */}
+              <h4 style={{ margin: '0 0 12px 0', fontSize: '0.9rem', color: '#e2e8f0', fontWeight: 600 }}>🌳 청정 구역 순위</h4>
+              {cleanZoneRanking.slice(0, 5).map((zone, idx) => (
+                <div
+                  key={zone.region}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '14px',
+                    background: 'rgba(255,255,255,0.05)',
+                    borderRadius: '10px',
+                    marginBottom: '8px',
+                    borderLeft: `4px solid ${gradeInfo[zone.grade]?.color || '#888'}`,
+                    cursor: 'pointer',
+                    transition: 'background 0.2s',
+                  }}
+                  onClick={() => {
+                    onRegionSelect(zone);
+                    setIsOpen(false);
+                  }}
+                >
+                  <span style={{ fontWeight: 'bold', color: '#3b82f6', minWidth: '32px', fontSize: '1.1rem' }}>#{idx + 1}</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: '600', color: '#f1f5f9', fontSize: '0.95rem' }}>{zone.region}</div>
+                    <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '2px' }}>
+                      PM10: {zone.climate_data?.pm10 || '-'} · PM2.5: {zone.climate_data?.pm25 || '-'}
+                    </div>
+                  </div>
+                  <span style={{
+                    fontSize: '0.7rem',
+                    padding: '5px 10px',
+                    borderRadius: '12px',
+                    background: `${gradeInfo[zone.grade]?.color}25`,
+                    color: gradeInfo[zone.grade]?.color,
+                    fontWeight: 600,
+                  }}>
+                    {gradeInfo[zone.grade]?.emoji} {gradeInfo[zone.grade]?.label}
+                  </span>
+                </div>
+              ))}
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  ) : null;
 
   return (
     <>
       <button
         className="quick-action-btn"
-        onClick={() => setIsOpen(true)}
+        onClick={handleOpen}
       >
         <span>🌿</span>
         <span>청정지역</span>
       </button>
 
-      {isOpen && (
-        <div className="modal-overlay" onClick={() => setIsOpen(false)}>
-          <div className="air-quality-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>🌿 호흡기 안전 네비게이션</h3>
-              <button className="close-btn" onClick={() => setIsOpen(false)}>×</button>
-            </div>
-            <div className="modal-body">
-              <AirQualityNav
-                climateData={climateData}
-                onRegionSelect={(region) => {
-                  onRegionSelect(region);
-                  setIsOpen(false);
-                }}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Portal을 사용하여 body에 직접 렌더링 */}
+      {modalContent && createPortal(modalContent, document.body)}
     </>
   );
 }
@@ -688,7 +868,7 @@ function UserReportPanelInline({ selectedRegion, onReportSubmit }) {
   );
 }
 
-function RegionCard({ region, explanation }) {
+function RegionCard({ region, explanation, isFavorite, onToggleFavorite }) {
   const score = region.adjusted_score || region.score;
 
   return (
@@ -702,9 +882,18 @@ function RegionCard({ region, explanation }) {
           <h2>{region.region}</h2>
           <span className="risk-badge">{region.risk_label}</span>
         </div>
-        <div className="score-badge">
-          <span className="score">{score}</span>
-          <span className="label">점</span>
+        <div className="header-actions">
+          <button
+            className={`favorite-toggle-btn ${isFavorite ? 'active' : ''}`}
+            onClick={onToggleFavorite}
+            title={isFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가'}
+          >
+            {isFavorite ? '★' : '☆'}
+          </button>
+          <div className="score-badge">
+            <span className="score">{score}</span>
+            <span className="label">점</span>
+          </div>
         </div>
       </div>
 
@@ -731,6 +920,9 @@ function RegionCard({ region, explanation }) {
           <span className="label">UV</span>
         </div>
       </div>
+
+      {/* 시간대별 예보 */}
+      <HourlyForecast region={region.region} />
 
       {/* AI 설명 */}
       {explanation && (
