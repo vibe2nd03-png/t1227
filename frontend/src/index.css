@@ -1312,24 +1312,26 @@ body::after {
 
 .risk-level-show-btn {
   position: fixed;
-  bottom: 100px;
-  right: var(--space-md);
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-full);
-  padding: 8px 14px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  bottom: 80px;
+  right: var(--space-sm);
+  background: rgba(100, 100, 100, 0.6);
+  backdrop-filter: blur(8px);
+  border: none;
+  border-radius: 12px;
+  padding: 4px 8px;
+  font-size: 0.6rem;
+  font-weight: 500;
   cursor: pointer;
-  box-shadow: var(--shadow-md);
+  box-shadow: none;
   z-index: 999;
   transition: all 0.2s ease;
+  opacity: 0.6;
+  color: #fff;
 }
 
 .risk-level-show-btn:hover {
-  transform: scale(1.05);
-  box-shadow: var(--shadow-lg);
+  opacity: 1;
+  background: rgba(100, 100, 100, 0.8);
 }
 
 .risk-level-grid {
