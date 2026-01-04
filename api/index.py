@@ -115,6 +115,67 @@ RISK_COLORS = {"safe": "#2196F3", "caution": "#FFEB3B", "warning": "#FF9800", "d
 RISK_LABELS = {"safe": "안전", "caution": "주의", "warning": "경고", "danger": "위험"}
 
 
+def get_mock_forecast(region_name):
+    """시간대별 예보 데이터 생성"""
+    now = datetime.now()
+    forecasts = []
+
+    for i in range(24):
+        forecast_time = datetime(now.year, now.month, now.day, now.hour)
+        hour = (now.hour + i) % 24
+        day_offset = (now.hour + i) // 24
+
+        # 시간대별 기온 변화 (새벽 최저, 오후 최고)
+        if 6 <= hour <= 14:
+            temp_mod = (hour - 6) * 0.8
+        elif hour > 14:
+            temp_mod = (14 - 6) * 0.8 - (hour - 14) * 0.5
+        else:
+            temp_mod = -2
+
+        base_temp = -3 + random.uniform(-2, 2)
+        temp = round(base_temp + temp_mod, 1)
+
+        # 날씨 아이콘
+        if hour >= 6 and hour < 18:
+            icon = "☀️" if random.random() > 0.3 else "⛅"
+        else:
+            icon = "🌙" if random.random() > 0.3 else "☁️"
+
+        pop = random.randint(0, 30) if random.random() > 0.7 else 0
+
+        forecast_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        if day_offset > 0:
+            from datetime import timedelta
+            forecast_date = forecast_date + timedelta(days=day_offset)
+
+        forecasts.append({
+            "date": forecast_date.strftime("%Y%m%d"),
+            "time": f"{hour:02d}00",
+            "hour": hour,
+            "temperature": temp,
+            "icon": icon,
+            "pop": pop,
+            "sky": "맑음" if "☀️" in icon or "🌙" in icon else "구름많음"
+        })
+
+    return {
+        "success": True,
+        "region": region_name,
+        "baseTime": now.strftime("%m/%d %H:00 기준"),
+        "forecasts": forecasts
+    }
+
+
+def get_weather_alerts():
+    """기상 특보 데이터"""
+    return {
+        "success": True,
+        "alerts": [],
+        "message": "현재 발효 중인 기상 특보가 없습니다."
+    }
+
+
 def get_mock_climate_data(region_name):
     """Mock 기후 데이터 생성"""
     info = GYEONGGI_REGIONS.get(region_name, {"lat": 37.5, "lng": 127.0})
@@ -351,6 +412,13 @@ class handler(BaseHTTPRequestHandler):
                 response = fetch_kma_period(tm1, tm2, stn)
             else:
                 response = {"error": "tm1, tm2 파라미터가 필요합니다"}
+        elif path == '/api/kma-forecast':
+            from urllib.parse import unquote
+            region = query_params.get('region', ['수원시'])[0]
+            region = unquote(region)
+            response = get_mock_forecast(region)
+        elif path == '/api/kma-alerts':
+            response = get_weather_alerts()
         elif path == '/api/climate/all':
             target = query_params.get('target', [None])[0]
             response = get_all_climate_data(target)
