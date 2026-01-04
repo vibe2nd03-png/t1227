@@ -1,4 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import {
+  getWeatherType,
+  getRandomMessage,
+  getStyleTip,
+  getEmojiSet,
+  getWeatherEmoji,
+  CLOTHING_MESSAGES
+} from '../data/clothingRecommendations';
+import { useAuth } from '../contexts/AuthContext';
 
 // 성별/연령대 옵션
 const GENDER_OPTIONS = [
@@ -24,14 +33,30 @@ const STYLE_OPTIONS = [
 ];
 
 function OotdGenerator({ selectedRegion }) {
+  const { user, profile } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [gender, setGender] = useState('male');
   const [age, setAge] = useState('20s');
   const [style, setStyle] = useState('casual');
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImage, setGeneratedImage] = useState(null);
-  const [outfitDescription, setOutfitDescription] = useState('');
+  const [outfitDescription, setOutfitDescription] = useState([]);
   const [error, setError] = useState(null);
+  const [profileApplied, setProfileApplied] = useState(false);
+
+  // 로그인 시 프로필 정보로 기본값 설정
+  useEffect(() => {
+    if (user && profile && !profileApplied) {
+      if (profile.gender) setGender(profile.gender);
+      if (profile.age_group) setAge(profile.age_group);
+      if (profile.style_preference) setStyle(profile.style_preference);
+      setProfileApplied(true);
+    }
+    // 로그아웃 시 profileApplied 리셋
+    if (!user) {
+      setProfileApplied(false);
+    }
+  }, [user, profile, profileApplied]);
 
   // 기후 데이터를 패션 프롬프트로 변환
   const generateFashionPrompt = (climate, genderVal, ageVal, styleVal) => {
@@ -207,8 +232,8 @@ function OotdGenerator({ selectedRegion }) {
     }
   };
 
-  // 옷차림 설명 생성
-  const generateDescription = (climate, season) => {
+  // 옷차림 설명 생성 (성별/연령별 맞춤 메시지 포함)
+  const generateDescription = (climate, season, genderVal, ageVal, styleVal) => {
     const temp = climate.apparent_temperature || climate.temperature || 25;
     const humidity = climate.humidity || 50;
     const pm10 = climate.pm10 || 30;
@@ -218,6 +243,20 @@ function OotdGenerator({ selectedRegion }) {
 
     let desc = [];
     let recommendation = null;
+
+    // 날씨 타입 및 맞춤 메시지 가져오기
+    const weatherType = getWeatherType(temp);
+    const personalMessage = getRandomMessage(weatherType, genderVal, ageVal);
+    const styleTip = getStyleTip(styleVal, genderVal);
+
+    // 성별/연령/스타일별 이모티콘 세트 가져오기
+    const emojis = getEmojiSet(genderVal, ageVal, styleVal);
+    const weatherEmoji = getWeatherEmoji(weatherType);
+
+    // 맞춤 메시지 먼저 추가
+    if (personalMessage) {
+      desc.push(emojis.mood + ' ' + personalMessage);
+    }
 
     // 온도 기반 상세 추천
     if (temp >= 35) {
@@ -240,13 +279,13 @@ function OotdGenerator({ selectedRegion }) {
       recommendation = CLOTHING_RECOMMENDATIONS.freezing;
     }
 
-    // 기본 추천 추가
-    desc.push(recommendation.title);
-    desc.push(`💡 ${recommendation.main}`);
-    desc.push(`👕 상의: ${recommendation.tops.slice(0, 3).join(', ')}`);
-    desc.push(`👖 하의: ${recommendation.bottoms.slice(0, 3).join(', ')}`);
-    desc.push(`👟 신발: ${recommendation.shoes.slice(0, 3).join(', ')}`);
-    desc.push(`🎒 아이템: ${recommendation.accessories.slice(0, 3).join(', ')}`);
+    // 기본 추천 추가 (동적 이모티콘 사용)
+    desc.push(weatherEmoji + ' ' + recommendation.title);
+    desc.push(emojis.style + ' ' + recommendation.main);
+    desc.push(emojis.tops + ' 상의: ' + recommendation.tops.slice(0, 3).join(', '));
+    desc.push(emojis.bottoms + ' 하의: ' + recommendation.bottoms.slice(0, 3).join(', '));
+    desc.push(emojis.shoes + ' 신발: ' + recommendation.shoes.slice(0, 3).join(', '));
+    desc.push(emojis.accessories + ' 아이템: ' + recommendation.accessories.slice(0, 3).join(', '));
     desc.push(`🎨 추천 컬러: ${recommendation.colors}`);
 
     // 습도 기반 추가 추천
@@ -291,6 +330,11 @@ function OotdGenerator({ selectedRegion }) {
       desc.push(`💡 TIP: ${randomTip}`);
     }
 
+    // 스타일 팁 추가
+    if (styleTip) {
+      desc.push(`✨ 스타일 팁: ${styleTip}`);
+    }
+
     return desc;
   };
 
@@ -311,8 +355,8 @@ function OotdGenerator({ selectedRegion }) {
         climate, gender, age, style
       );
 
-      // 옷차림 설명 생성
-      const description = generateDescription(climate, season);
+      // 옷차림 설명 생성 (성별/연령/스타일 맞춤)
+      const description = generateDescription(climate, season, gender, age, style);
       setOutfitDescription(description);
 
       // Pollinations.ai 무료 이미지 생성 API (더 간단한 프롬프트)
@@ -381,6 +425,9 @@ function OotdGenerator({ selectedRegion }) {
           <div className="ootd-header">
             <h3>👗 AI OOTD 생성기</h3>
             <p>{selectedRegion.region} 날씨에 맞는 옷차림 추천</p>
+            {user && profile && (profile.gender || profile.age_group || profile.style_preference) && (
+              <span className="profile-badge">✓ 프로필 설정 적용됨</span>
+            )}
           </div>
 
           {/* 옵션 선택 */}

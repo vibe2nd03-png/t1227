@@ -4,6 +4,15 @@ import HourlyForecast from './HourlyForecast';
 import FavoriteRegions from './FavoriteRegions';
 import { useAuth } from '../contexts/AuthContext';
 import { useFavorites } from '../hooks/useFavorites';
+import { supabase } from '../supabase';
+import {
+  getWeatherType,
+  getRandomMessage,
+  getStyleTip,
+  getEmojiSet,
+  getWeatherEmoji,
+  CLOTHING_MESSAGES
+} from '../data/clothingRecommendations';
 
 // Lazy load heavy components (탭/모달별 분리)
 const UserProfile = lazy(() => import('./UserProfile'));
@@ -30,18 +39,24 @@ const MAIN_TABS = [
   { id: 'report', label: '체감제보', icon: '📢' },
 ];
 
-function Sidebar({ selectedRegion, explanation, target, onTargetChange, loading, onReportSubmit, allRegions, onRegionSelect, onOpenAuthModal }) {
-  const { user, profile, isAuthenticated } = useAuth();
+function Sidebar({ selectedRegion, explanation, target, onTargetChange, loading, onReportSubmit, allRegions, onRegionSelect, onOpenAuthModal, isMobileCollapsed, setIsMobileCollapsed }) {
+  const { user, profile, isAuthenticated, refreshReportStats } = useAuth();
   const { toggleFavorite, isFavorite } = useFavorites();
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [isNotificationSubscribed, setIsNotificationSubscribed] = useState(false);
   const [activeTab, setActiveTab] = useState('info');
-  const [isMobileCollapsed, setIsMobileCollapsed] = useState(true);
 
-  // 모바일 사이드바 토글
+  // 모바일 사이드바 토글 (헤더 클릭 시 펼치기)
   const toggleMobileSidebar = () => {
-    setIsMobileCollapsed(!isMobileCollapsed);
+    setIsMobileCollapsed(false);
+  };
+
+  // 제목 클릭 시 맨 위로 스크롤 + 전체화면
+  const handleTitleClick = (e) => {
+    e.stopPropagation();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setIsMobileCollapsed(false);
   };
 
   // 지역 선택 시 사이드바 확장
@@ -66,7 +81,7 @@ function Sidebar({ selectedRegion, explanation, target, onTargetChange, loading,
       <div className="sidebar-header" onClick={toggleMobileSidebar}>
         <div className="header-top">
           <div className="header-title">
-            <h1>경기 기후 체감 맵</h1>
+            <h1 onClick={handleTitleClick} style={{ cursor: 'pointer' }}>경기 기후 체감 맵</h1>
           </div>
 
           {/* 사용자 버튼 */}
@@ -444,6 +459,7 @@ function AirQualityNavButton({ climateData, onRegionSelect }) {
 
 // 인라인 OOTD 생성기 (탭 내 표시용)
 function OotdGeneratorInline({ selectedRegion }) {
+  const { user, profile } = useAuth();
   const [gender, setGender] = useState('male');
   const [age, setAge] = useState('20s');
   const [style, setStyle] = useState('casual');
@@ -451,6 +467,21 @@ function OotdGeneratorInline({ selectedRegion }) {
   const [generatedImage, setGeneratedImage] = useState(null);
   const [outfitTips, setOutfitTips] = useState([]);
   const [error, setError] = useState(null);
+  const [profileApplied, setProfileApplied] = useState(false);
+
+  // 로그인 시 프로필 정보로 기본값 설정
+  useEffect(() => {
+    if (user && profile && !profileApplied) {
+      if (profile.gender) setGender(profile.gender);
+      if (profile.age_group) setAge(profile.age_group);
+      if (profile.style_preference) setStyle(profile.style_preference);
+      setProfileApplied(true);
+    }
+    // 로그아웃 시 리셋
+    if (!user) {
+      setProfileApplied(false);
+    }
+  }, [user, profile, profileApplied]);
 
   const GENDER_OPTIONS = [
     { value: 'male', label: '남성', emoji: '👨' },
@@ -560,11 +591,96 @@ function OotdGeneratorInline({ selectedRegion }) {
     const climate = selectedRegion.climate_data;
     const temp = climate.apparent_temperature || climate.temperature || 25;
 
-    // 팁 생성
-    setOutfitTips(generateTips(climate));
+    // 날씨 타입 및 맞춤 메시지 가져오기
+    const weatherType = getWeatherType(temp);
+    const personalMessage = getRandomMessage(weatherType, gender, age);
+    const styleTip = getStyleTip(style, gender);
 
-    // 옷차림 데이터 생성
+    // 동적 이모티콘 가져오기
+    const emojis = getEmojiSet(gender, age, style);
+    const weatherEmoji = getWeatherEmoji(weatherType);
+
+    // 팁 생성
+    const tips = generateTips(climate);
+    if (personalMessage) {
+      tips.unshift(emojis.mood + ' ' + personalMessage);
+    }
+    if (styleTip) {
+      tips.push(emojis.style + ' ' + styleTip);
+    }
+    setOutfitTips(tips);
+
+    // 옷차림 데이터 생성 (동적 이모티콘 사용)
     const outfit = getOutfitData(temp, style);
+    outfit.top = emojis.tops;
+    outfit.bottom = emojis.bottoms;
+    outfit.shoes = emojis.shoes;
+    outfit.outer = temp < 17 ? emojis.accessories : '';
+
+    // 성별/연령/날씨/스타일별 맞춤 설명 생성
+    const generatePersonalizedDesc = (genderVal, ageVal, weatherVal, styleVal) => {
+      // 성별별 아이템
+      const genderItems = {
+        male: {
+          top: { hot: '반팔 셔츠', warm: '옥스포드 셔츠', cold: '니트/맨투맨' },
+          bottom: { hot: '반바지/면바지', warm: '청바지/슬랙스', cold: '기모 팬츠' },
+          outer: { mild: '자켓', cool: '코트/자켓', cold: '패딩/코트' }
+        },
+        female: {
+          top: { hot: '블라우스/크롭탑', warm: '니트/블라우스', cold: '터틀넥/니트' },
+          bottom: { hot: '반바지/스커트', warm: '청바지/롱스커트', cold: '기모 레깅스/울스커트' },
+          outer: { mild: '가디건', cool: '트렌치코트', cold: '롱패딩/코트' }
+        }
+      };
+
+      // 연령별 스타일 키워드
+      const ageStyle = {
+        teen: { prefix: '트렌디한', items: '오버핏', vibe: '힙한' },
+        '20s': { prefix: '세련된', items: '스타일리시한', vibe: '감각적인' },
+        '30s': { prefix: '깔끔한', items: '모던한', vibe: '세련된' },
+        '40s': { prefix: '단정한', items: '클래식한', vibe: '품격있는' },
+        '50s': { prefix: '편안한', items: '실용적인', vibe: '고급스러운' },
+        '60s': { prefix: '따뜻한', items: '편안한', vibe: '여유로운' },
+        '70s': { prefix: '보온성 좋은', items: '부드러운', vibe: '편안한' }
+      };
+
+      // 스타일별 추가 설명
+      const styleDesc = {
+        casual: '데일리룩',
+        office: '출근룩',
+        sporty: '액티브웨어',
+        minimal: '심플룩'
+      };
+
+      const g = genderItems[genderVal] || genderItems.male;
+      const a = ageStyle[ageVal] || ageStyle['20s'];
+      const s = styleDesc[styleVal] || '데일리룩';
+
+      // 날씨별 조합 생성
+      let topItem, bottomItem, outerItem = '';
+
+      if (['extremeHeat', 'veryHot', 'hot'].includes(weatherVal)) {
+        topItem = g.top.hot;
+        bottomItem = g.bottom.hot;
+      } else if (['warm', 'mild'].includes(weatherVal)) {
+        topItem = g.top.warm;
+        bottomItem = g.bottom.warm;
+        if (weatherVal === 'mild') outerItem = ' + ' + g.outer.mild;
+      } else if (['cool'].includes(weatherVal)) {
+        topItem = g.top.warm;
+        bottomItem = g.bottom.warm;
+        outerItem = ' + ' + g.outer.cool;
+      } else {
+        topItem = g.top.cold;
+        bottomItem = g.bottom.cold;
+        outerItem = ' + ' + g.outer.cold;
+      }
+
+      return a.prefix + ' ' + topItem + ' + ' + bottomItem + outerItem + ' (' + s + ')';
+    };
+
+    outfit.desc = generatePersonalizedDesc(gender, age, weatherType, style);
+
     setGeneratedImage(outfit);
     setIsGenerating(false);
   };
@@ -574,6 +690,9 @@ function OotdGeneratorInline({ selectedRegion }) {
       <div className="ootd-header-inline">
         <h3>👔 AI 오늘의 옷차림</h3>
         <p>{selectedRegion.region} 날씨에 맞는 스타일 추천</p>
+        {user && profile && (profile.gender || profile.age_group || profile.style_preference) && (
+          <span className="profile-badge">✓ 프로필 설정 적용됨</span>
+        )}
       </div>
 
       {/* 현재 날씨 요약 */}
@@ -680,7 +799,7 @@ function OotdGeneratorInline({ selectedRegion }) {
 
 // 인라인 제보 패널 (탭 내 표시용)
 function UserReportPanelInline({ selectedRegion, onReportSubmit }) {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, profile, refreshReportStats } = useAuth();
   const [selectedFeeling, setSelectedFeeling] = useState(null);
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -702,19 +821,21 @@ function UserReportPanelInline({ selectedRegion, onReportSubmit }) {
     '그늘도 더워요', '날씨 좋아요 ✨', '미세먼지 심해요'
   ];
 
-  // supabase import를 위한 동적 로드
+  // 최근 제보 로드 (직접 fetch 사용)
   const loadRecentReports = async () => {
     try {
-      const { supabase } = await import('../supabase');
-      const { data, error } = await supabase
-        .from('user_reports')
-        .select('*')
-        .eq('region', selectedRegion.region)
-        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-        .order('created_at', { ascending: false })
-        .limit(5);
+      const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const url = `https://pcdmrofcfqtyywtzyrfo.supabase.co/rest/v1/user_reports?region=eq.${encodeURIComponent(selectedRegion.region)}&created_at=gte.${since}&order=created_at.desc&limit=5`;
 
-      if (!error && data) {
+      const response = await fetch(url, {
+        headers: {
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q',
+          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
         setRecentReports(data);
       }
     } catch (error) {
@@ -732,49 +853,80 @@ function UserReportPanelInline({ selectedRegion, onReportSubmit }) {
     if (!selectedFeeling || !selectedRegion) return;
 
     setIsSubmitting(true);
+    console.log('제보 시작:', selectedRegion.region, selectedFeeling.label);
+
+    const reportData = {
+      region: selectedRegion.region,
+      lat: selectedRegion.lat,
+      lng: selectedRegion.lng,
+      emoji: selectedFeeling.emoji,
+      feeling_label: selectedFeeling.label,
+      sentiment_score: selectedFeeling.sentiment,
+      temp_adjustment: selectedFeeling.tempAdjust,
+      comment: comment || selectedFeeling.label,
+      is_air_quality: selectedFeeling.airQuality || false,
+      user_id: user?.id || null,
+    };
 
     try {
-      const { supabase } = await import('../supabase');
+      console.log('Supabase insert 시작:', reportData);
+      console.log('Supabase 클라이언트 확인:', supabase);
+      console.log('Supabase URL:', supabase?.supabaseUrl);
 
-      const reportData = {
-        region: selectedRegion.region,
-        lat: selectedRegion.lat,
-        lng: selectedRegion.lng,
-        emoji: selectedFeeling.emoji,
-        feeling_label: selectedFeeling.label,
-        sentiment_score: selectedFeeling.sentiment,
-        temp_adjustment: selectedFeeling.tempAdjust,
-        comment: comment || selectedFeeling.label,
-        is_air_quality: selectedFeeling.airQuality || false,
-        user_id: user?.id || null,
-      };
+      // fetch로 직접 요청
+      const response = await fetch('https://pcdmrofcfqtyywtzyrfo.supabase.co/rest/v1/user_reports', {
+        method: 'POST',
+        headers: {
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q',
+          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q',
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify(reportData)
+      });
 
-      // 타임아웃 적용 (10초)
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('요청 시간 초과')), 10000)
-      );
+      console.log('fetch 응답 상태:', response.status);
+      const result = await response.json();
+      console.log('fetch 응답 데이터:', result);
 
-      const insertPromise = supabase
-        .from('user_reports')
-        .insert([reportData])
-        .select();
+      if (!response.ok) {
+        throw new Error(result.message || '저장 실패');
+      }
 
-      const { data, error } = await Promise.race([insertPromise, timeoutPromise]);
+      const insertedData = Array.isArray(result) ? result[0] : result;
+      const error = null;
 
-      if (error) throw new Error(error.message);
+      console.log('Supabase insert 결과:', { insertedData, error });
 
+      if (error) {
+        console.error('Insert 오류 상세:', error);
+        throw new Error(error.message);
+      }
+
+      if (!insertedData) {
+        console.error('Insert 실패: 데이터가 반환되지 않음');
+        throw new Error('저장 실패 - 권한을 확인해주세요');
+      }
+
+      console.log('제보 저장 성공! ID:', insertedData.id);
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 2000);
+
+      // 프로필의 제보 통계 갱신 (DB에서 실제 값 조회)
+      if (user) {
+        refreshReportStats();
+      }
 
       setSelectedFeeling(null);
       setComment('');
       loadRecentReports();
 
       if (onReportSubmit) {
-        onReportSubmit(data?.[0] || reportData);
+        onReportSubmit(reportData);
       }
     } catch (error) {
-      alert(`제보 실패: ${error?.message || '알 수 없는 오류'}`);
+      console.error('제보 오류:', error);
+      alert('제보 실패: ' + (error?.message || '네트워크 오류'));
     } finally {
       setIsSubmitting(false);
     }

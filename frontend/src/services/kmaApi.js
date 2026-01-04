@@ -39,6 +39,17 @@ const getCachedOrFetch = async (key, fetchFn) => {
   return data;
 };
 
+// 주변 도시 관측소 매핑 (지역명 -> 관측소 코드)
+export const NEARBY_STATIONS = {
+  '서울': { stn: 108, name: '서울', lat: 37.5665, lng: 126.9780 },
+  '인천': { stn: 112, name: '인천', lat: 37.4563, lng: 126.7052 },
+  '춘천': { stn: 101, name: '춘천', lat: 37.8813, lng: 127.7300 },
+  '원주': { stn: 114, name: '원주', lat: 37.3422, lng: 127.9202 },
+  '충주': { stn: 127, name: '충주', lat: 36.9910, lng: 127.9259 },
+  '천안': { stn: 232, name: '천안', lat: 36.8151, lng: 127.1139 },
+  '세종': { stn: 239, name: '세종', lat: 36.4800, lng: 127.2890 },
+};
+
 // 경기도 관측소 매핑 (지역명 -> 관측소 코드)
 // 일부 지역은 가장 가까운 관측소 사용
 export const GYEONGGI_STATIONS = {
@@ -571,6 +582,172 @@ const processGyeonggiDataFromStations = (stationData, datetime) => {
 };
 
 /**
+ * 기상청 데이터를 주변 도시 형식으로 변환 (관측소 데이터 직접 전달)
+ */
+const processNearbyDataFromStations = (stationData, datetime) => {
+  const results = [];
+
+  for (const [regionName, stationInfo] of Object.entries(NEARBY_STATIONS)) {
+    const obs = stationData[stationInfo.stn];
+    if (!obs) continue;
+
+    // 기온과 습도로 체감온도 계산
+    const temp = obs.TA;
+    const humidity = obs.HM;
+    const windSpeed = obs.WS;
+    let apparentTemp = temp;
+
+    if (temp !== null) {
+      if (temp >= 27 && humidity !== null) {
+        apparentTemp = temp + 0.33 * (humidity / 100 * 6.105 * Math.exp(17.27 * temp / (237.7 + temp))) - 4.0;
+      } else if (temp <= 10 && windSpeed !== null && windSpeed > 0) {
+        apparentTemp = 13.12 + 0.6215 * temp - 11.37 * Math.pow(windSpeed * 3.6, 0.16) + 0.3965 * temp * Math.pow(windSpeed * 3.6, 0.16);
+      }
+      apparentTemp = Math.round(apparentTemp * 10) / 10;
+    }
+
+    // 체감지수 점수 계산
+    let score = 0;
+    if (apparentTemp !== null) {
+      if (apparentTemp >= 35) score += 40;
+      else if (apparentTemp >= 33) score += 35;
+      else if (apparentTemp >= 31) score += 30;
+      else if (apparentTemp >= 28) score += 20;
+      else if (apparentTemp >= 25) score += 10;
+      else if (apparentTemp <= -15) score += 35;
+      else if (apparentTemp <= -10) score += 25;
+      else if (apparentTemp <= -5) score += 15;
+      else if (apparentTemp <= 0) score += 10;
+    }
+
+    if (humidity !== null) {
+      if (humidity >= 85) score += 20;
+      else if (humidity >= 75) score += 15;
+      else if (humidity >= 65) score += 10;
+      else if (humidity <= 30) score += 10;
+    }
+
+    if (windSpeed !== null) {
+      if (windSpeed >= 14) score += 15;
+      else if (windSpeed >= 10) score += 10;
+      else if (windSpeed >= 7) score += 5;
+    }
+
+    const visibility = obs.VS;
+    if (visibility !== null) {
+      if (visibility <= 100) score += 25;
+      else if (visibility <= 200) score += 20;
+      else if (visibility <= 500) score += 15;
+      else if (visibility <= 1000) score += 10;
+    }
+
+    let pm10 = 30, pm25 = 15;
+    if (visibility !== null) {
+      if (visibility <= 100) { pm10 = 150; pm25 = 80; }
+      else if (visibility <= 200) { pm10 = 100; pm25 = 50; }
+      else if (visibility <= 500) { pm10 = 70; pm25 = 35; }
+      else if (visibility <= 1000) { pm10 = 50; pm25 = 25; }
+      else if (visibility <= 2000) { pm10 = 40; pm25 = 20; }
+    }
+
+    let uvIndex = 0;
+    const solarRadiation = obs.SI;
+    if (solarRadiation !== null && solarRadiation > 0) {
+      uvIndex = Math.min(11, Math.round(solarRadiation * 3));
+    } else {
+      const hour = new Date().getHours();
+      if (hour >= 11 && hour <= 14) uvIndex = 6;
+      else if (hour >= 9 && hour <= 16) uvIndex = 4;
+      else if (hour >= 7 && hour <= 18) uvIndex = 2;
+    }
+
+    score = Math.min(100, Math.max(0, score));
+
+    let risk;
+    if (score >= RISK_THRESHOLDS.DANGER) {
+      risk = RISK_LEVELS.danger;
+    } else if (score >= RISK_THRESHOLDS.WARNING) {
+      risk = RISK_LEVELS.warning;
+    } else if (score >= RISK_THRESHOLDS.CAUTION) {
+      risk = RISK_LEVELS.caution;
+    } else {
+      risk = RISK_LEVELS.safe;
+    }
+    const { level: riskLevel, label: riskLabel, color: riskColor } = risk;
+
+    results.push({
+      region: regionName,
+      lat: stationInfo.lat,
+      lng: stationInfo.lng,
+      score,
+      risk_level: riskLevel,
+      risk_label: riskLabel,
+      risk_color: riskColor,
+      isGyeonggi: false,
+      climate_data: {
+        temperature: temp,
+        apparent_temperature: apparentTemp,
+        humidity: humidity,
+        pm10: pm10,
+        pm25: pm25,
+        uv_index: uvIndex,
+        surface_temperature: obs.TS || temp,
+        wind_speed: windSpeed,
+        precipitation: obs.RN_DAY || 0,
+        visibility: visibility,
+        pressure: obs.PS,
+      },
+      station: stationInfo.name,
+      observed_at: datetime,
+    });
+  }
+
+  return results;
+};
+
+/**
+ * 주변 도시 실시간 날씨 조회
+ */
+export const getNearbyRealtimeWeather = async () => {
+  try {
+    const kst = getKSTDate();
+    kst.setHours(kst.getHours() - 1, 0, 0, 0);
+
+    const datetime = `${kst.getFullYear()}${String(kst.getMonth() + 1).padStart(2, '0')}${String(kst.getDate()).padStart(2, '0')}${String(kst.getHours()).padStart(2, '0')}00`;
+
+    log.info('주변 도시 기상청 API 요청', { datetime, timezone: 'KST' });
+
+    const allData = await getSurfaceData(datetime, 0);
+
+    if (allData && allData.length > 0) {
+      const stationData = {};
+      allData.forEach(obs => {
+        if (obs.STN) stationData[obs.STN] = obs;
+      });
+      return processNearbyDataFromStations(stationData, datetime);
+    }
+
+    // 실패시 2시간 전 시도
+    kst.setHours(kst.getHours() - 1);
+    const prevDatetime = `${kst.getFullYear()}${String(kst.getMonth() + 1).padStart(2, '0')}${String(kst.getDate()).padStart(2, '0')}${String(kst.getHours()).padStart(2, '0')}00`;
+
+    const prevData = await getSurfaceData(prevDatetime, 0);
+    if (prevData && prevData.length > 0) {
+      const stationData = {};
+      prevData.forEach(obs => {
+        if (obs.STN) stationData[obs.STN] = obs;
+      });
+      return processNearbyDataFromStations(stationData, prevDatetime);
+    }
+
+    return [];
+  } catch (error) {
+    log.error('주변 도시 기상청 API 오류', error);
+    return [];
+  }
+};
+
+/**
  * 캐시 초기화
  */
 export const clearCache = () => {
@@ -594,7 +771,9 @@ export default {
   getHistorical10YearMonthlyAverages,
   getObservationData,
   getGyeonggiRealtimeWeather,
+  getNearbyRealtimeWeather,
   clearCache,
   getCacheStats,
   GYEONGGI_STATIONS,
+  NEARBY_STATIONS,
 };

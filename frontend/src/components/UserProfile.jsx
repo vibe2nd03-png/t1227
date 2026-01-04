@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../contexts/AuthContext';
+import AdminDashboard, { ADMIN_EMAIL } from './AdminDashboard';
 
 const GYEONGGI_REGIONS = [
   '수원시', '성남시', '고양시', '용인시', '부천시', '안산시', '안양시', '남양주시',
@@ -16,6 +17,29 @@ const TARGET_OPTIONS = [
   { value: 'outdoor', label: '야외근로자', emoji: '👷' },
 ];
 
+// AI 옷차림 추천용 옵션
+const GENDER_OPTIONS = [
+  { value: 'male', label: '남성', emoji: '👨' },
+  { value: 'female', label: '여성', emoji: '👩' },
+];
+
+const AGE_OPTIONS = [
+  { value: 'teen', label: '10대', emoji: '🧒' },
+  { value: '20s', label: '20대', emoji: '🧑' },
+  { value: '30s', label: '30대', emoji: '👨‍💼' },
+  { value: '40s', label: '40대', emoji: '👨‍💼' },
+  { value: '50s', label: '50대', emoji: '👴' },
+  { value: '60s', label: '60대', emoji: '👴' },
+  { value: '70s', label: '70대 이상', emoji: '👴' },
+];
+
+const STYLE_OPTIONS = [
+  { value: 'casual', label: '캐주얼', emoji: '👕' },
+  { value: 'office', label: '오피스', emoji: '👔' },
+  { value: 'sporty', label: '스포티', emoji: '🏃' },
+  { value: 'minimal', label: '미니멀', emoji: '🎨' },
+];
+
 function UserProfile({ isOpen, onClose }) {
   const { user, profile, signOut, updateProfile, getFavoriteRegions, addFavoriteRegion, removeFavoriteRegion, getMyReports, deleteMyReport } = useAuth();
   const [activeTab, setActiveTab] = useState('profile');
@@ -25,6 +49,9 @@ function UserProfile({ isOpen, onClose }) {
     display_name: '',
     preferred_region: '',
     preferred_target: 'general',
+    gender: '',
+    age_group: '',
+    style_preference: '',
     notification_enabled: true,
     notification_threshold: 70,
   });
@@ -34,6 +61,10 @@ function UserProfile({ isOpen, onClose }) {
   const [myReports, setMyReports] = useState([]);
   const [loadingReports, setLoadingReports] = useState(false);
   const [deletingReport, setDeletingReport] = useState(null);
+  const [showAdminDashboard, setShowAdminDashboard] = useState(false);
+
+  // 관리자 권한 확인
+  const isAdmin = user?.email === ADMIN_EMAIL;
 
   // 프로필 및 즐겨찾기 로드
   useEffect(() => {
@@ -42,6 +73,9 @@ function UserProfile({ isOpen, onClose }) {
         display_name: profile.display_name || '',
         preferred_region: profile.preferred_region || '',
         preferred_target: profile.preferred_target || 'general',
+        gender: profile.gender || '',
+        age_group: profile.age_group || '',
+        style_preference: profile.style_preference || '',
         notification_enabled: profile.notification_enabled ?? true,
         notification_threshold: profile.notification_threshold || 70,
       });
@@ -172,6 +206,14 @@ function UserProfile({ isOpen, onClose }) {
               <span>📝 제보 {profile?.total_reports || 0}건</span>
               <span>⭐ 평판 {profile?.reputation_score || 0}점</span>
             </div>
+            {isAdmin && (
+              <button
+                className="admin-access-btn"
+                onClick={() => setShowAdminDashboard(true)}
+              >
+                🛡️ 관리자
+              </button>
+            )}
           </div>
           <button className="close-btn" onClick={onClose}>×</button>
         </div>
@@ -259,6 +301,85 @@ function UserProfile({ isOpen, onClose }) {
                   <span>
                     {TARGET_OPTIONS.find((t) => t.value === formData.preferred_target)?.emoji}{' '}
                     {TARGET_OPTIONS.find((t) => t.value === formData.preferred_target)?.label}
+                  </span>
+                )}
+              </div>
+
+              {/* AI 옷차림 추천 설정 */}
+              <div className="setting-divider">
+                <span>AI 옷차림 추천 기본값</span>
+              </div>
+
+              {/* 성별 */}
+              <div className="setting-item">
+                <label>성별</label>
+                {editMode ? (
+                  <div className="target-select">
+                    {GENDER_OPTIONS.map((option) => (
+                      <button
+                        key={option.value}
+                        className={`target-option ${formData.gender === option.value ? 'selected' : ''}`}
+                        onClick={() => setFormData({ ...formData, gender: option.value })}
+                      >
+                        <span>{option.emoji}</span>
+                        <span>{option.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <span>
+                    {formData.gender
+                      ? `${GENDER_OPTIONS.find((g) => g.value === formData.gender)?.emoji} ${GENDER_OPTIONS.find((g) => g.value === formData.gender)?.label}`
+                      : '설정되지 않음'}
+                  </span>
+                )}
+              </div>
+
+              {/* 연령 */}
+              <div className="setting-item">
+                <label>연령대</label>
+                {editMode ? (
+                  <div className="target-select age-select">
+                    {AGE_OPTIONS.map((option) => (
+                      <button
+                        key={option.value}
+                        className={`target-option ${formData.age_group === option.value ? 'selected' : ''}`}
+                        onClick={() => setFormData({ ...formData, age_group: option.value })}
+                      >
+                        <span>{option.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <span>
+                    {formData.age_group
+                      ? AGE_OPTIONS.find((a) => a.value === formData.age_group)?.label
+                      : '설정되지 않음'}
+                  </span>
+                )}
+              </div>
+
+              {/* 스타일 */}
+              <div className="setting-item">
+                <label>선호 스타일</label>
+                {editMode ? (
+                  <div className="target-select">
+                    {STYLE_OPTIONS.map((option) => (
+                      <button
+                        key={option.value}
+                        className={`target-option ${formData.style_preference === option.value ? 'selected' : ''}`}
+                        onClick={() => setFormData({ ...formData, style_preference: option.value })}
+                      >
+                        <span>{option.emoji}</span>
+                        <span>{option.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <span>
+                    {formData.style_preference
+                      ? `${STYLE_OPTIONS.find((s) => s.value === formData.style_preference)?.emoji} ${STYLE_OPTIONS.find((s) => s.value === formData.style_preference)?.label}`
+                      : '설정되지 않음'}
                   </span>
                 )}
               </div>
@@ -417,7 +538,15 @@ function UserProfile({ isOpen, onClose }) {
     </div>
   );
 
-  return createPortal(modalContent, document.body);
+  return (
+    <>
+      {createPortal(modalContent, document.body)}
+      <AdminDashboard
+        isOpen={showAdminDashboard}
+        onClose={() => setShowAdminDashboard(false)}
+      />
+    </>
+  );
 }
 
 export default UserProfile;

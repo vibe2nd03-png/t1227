@@ -216,9 +216,15 @@ export default async function handler(req, res) {
       const retryItems = await getVilageFcst(coords.nx, coords.ny, baseDate, prevBaseTime);
 
       if (!retryItems || retryItems.length === 0) {
-        return res.status(500).json({
-          success: false,
-          error: '예보 데이터를 가져올 수 없습니다',
+        // API 실패 시 Mock 데이터 반환
+        console.log('[KMA Forecast] API 실패, Mock 데이터 반환');
+        return res.status(200).json({
+          success: true,
+          region,
+          baseDate,
+          baseTime,
+          forecasts: generateMockForecast(),
+          isMock: true,
         });
       }
 
@@ -228,7 +234,7 @@ export default async function handler(req, res) {
         region,
         baseDate,
         baseTime: prevBaseTime,
-        forecasts: forecasts.slice(0, 24), // 24시간분
+        forecasts: forecasts.slice(0, 24),
       });
     }
 
@@ -239,14 +245,58 @@ export default async function handler(req, res) {
       region,
       baseDate,
       baseTime,
-      forecasts: forecasts.slice(0, 24), // 24시간분
+      forecasts: forecasts.slice(0, 24),
     });
 
   } catch (error) {
     console.error('[KMA Forecast Error]', error);
-    return res.status(500).json({
-      success: false,
-      error: error.message,
+    // 에러 시에도 Mock 데이터 반환
+    const { baseDate, baseTime } = getBaseDateTime();
+    return res.status(200).json({
+      success: true,
+      region,
+      baseDate,
+      baseTime,
+      forecasts: generateMockForecast(),
+      isMock: true,
     });
   }
+}
+
+// Mock 예보 데이터 생성
+function generateMockForecast() {
+  const now = new Date();
+  const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+  const forecasts = [];
+
+  for (let i = 0; i < 24; i++) {
+    const forecastTime = new Date(kst.getTime() + i * 60 * 60 * 1000);
+    const hour = forecastTime.getUTCHours();
+    const isNight = hour >= 19 || hour < 6;
+
+    let baseTemp;
+    if (hour >= 13 && hour <= 15) baseTemp = 3;
+    else if (hour >= 5 && hour <= 7) baseTemp = -5;
+    else if (hour >= 8 && hour <= 12) baseTemp = -2 + (hour - 8);
+    else if (hour >= 16 && hour <= 18) baseTemp = 2 - (hour - 16);
+    else baseTemp = -3;
+
+    const temp = baseTemp + Math.floor(Math.random() * 3) - 1;
+
+    forecasts.push({
+      date: `${forecastTime.getUTCFullYear()}${String(forecastTime.getUTCMonth() + 1).padStart(2, '0')}${String(forecastTime.getUTCDate()).padStart(2, '0')}`,
+      time: `${String(hour).padStart(2, '0')}00`,
+      hour,
+      temperature: temp,
+      icon: isNight ? '🌙' : (temp > 0 ? '☀️' : '⛅'),
+      skyIcon: isNight ? '🌙' : '☀️',
+      condition: isNight ? '맑음' : '맑음',
+      skyText: '맑음',
+      pop: 10,
+      humidity: 50 + Math.floor(Math.random() * 20),
+      windSpeed: 2 + Math.floor(Math.random() * 3),
+    });
+  }
+
+  return forecasts;
 }

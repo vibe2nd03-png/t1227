@@ -1,24 +1,26 @@
 import React from 'react';
 import { useFavorites } from '../hooks/useFavorites';
+import { useAuth } from '../contexts/AuthContext';
 
 /**
  * 즐겨찾기 지역 빠른 접근 컴포넌트
  */
 function FavoriteRegions({ allRegions, onRegionSelect, selectedRegion }) {
   const { favorites, loading, removeFavorite } = useFavorites();
+  const { user } = useAuth();
+
+  // 로그인하지 않은 경우 표시 안 함
+  if (!user) {
+    return null;
+  }
 
   if (loading) {
     return null;
   }
 
+  // 즐겨찾기가 없으면 표시 안 함
   if (favorites.length === 0) {
-    return (
-      <div className="favorite-regions empty">
-        <span className="empty-icon">⭐</span>
-        <span className="empty-text">즐겨찾기한 지역이 없습니다</span>
-        <span className="empty-hint">지역 선택 후 ⭐ 버튼을 눌러 추가하세요</span>
-      </div>
-    );
+    return null;
   }
 
   // 즐겨찾기 지역의 전체 데이터 찾기

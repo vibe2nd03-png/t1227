@@ -63,15 +63,25 @@ function FloatingReports({ visible }) {
   }, [visible, reports]);
 
   const loadRecentReports = async () => {
+    console.log('FloatingReports: 제보 로드 시작');
     try {
-      const { data, error } = await supabase
-        .from('user_reports')
-        .select('*')
-        .gte('created_at', new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString())
-        .order('created_at', { ascending: false })
-        .limit(30);
+      const since = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
+      const url = `https://pcdmrofcfqtyywtzyrfo.supabase.co/rest/v1/user_reports?created_at=gte.${since}&order=created_at.desc&limit=30`;
 
-      if (!error && data) {
+      console.log('FloatingReports: fetch URL:', url);
+      const response = await fetch(url, {
+        headers: {
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q',
+          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q'
+        }
+      });
+
+      console.log('FloatingReports: 응답 상태:', response.status);
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('FloatingReports: 받은 데이터:', data.length, '개', data);
+
         // 같은 지역의 중복 제보는 최신 것만 표시
         const uniqueByLocation = data.reduce((acc, report) => {
           const key = `${report.lat.toFixed(3)}-${report.lng.toFixed(3)}`;
@@ -81,7 +91,11 @@ function FloatingReports({ visible }) {
           return acc;
         }, {});
 
-        setReports(Object.values(uniqueByLocation));
+        const uniqueReports = Object.values(uniqueByLocation);
+        console.log('FloatingReports: 표시할 제보:', uniqueReports.length, '개');
+        setReports(uniqueReports);
+      } else {
+        console.error('FloatingReports: 응답 실패:', response.status);
       }
     } catch (error) {
       console.error('제보 마커 로드 실패:', error);

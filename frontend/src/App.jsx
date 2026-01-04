@@ -1,8 +1,9 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import ClimateMap from './components/ClimateMap';
 import Sidebar from './components/Sidebar';
 import WeatherAlertBanner from './components/WeatherAlertBanner';
 import { getGyeonggiRealtimeWeather } from './services/kmaApi';
+import { useAuth } from './contexts/AuthContext';
 
 // Lazy load AuthModal
 const AuthModal = lazy(() => import('./components/AuthModal'));
@@ -26,6 +27,7 @@ const getThemeFromRisk = (riskLevel, score) => {
 };
 
 function App() {
+  const { user, profile } = useAuth();
   const [regions, setRegions] = useState([]);
   const [selectedRegion, setSelectedRegion] = useState(null);
   const [explanation, setExplanation] = useState(null);
@@ -34,6 +36,8 @@ function App() {
   const [dataSource, setDataSource] = useState('loading');
   const [lastUpdated, setLastUpdated] = useState(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [isMobileCollapsed, setIsMobileCollapsed] = useState(true);
+  const preferredRegionApplied = useRef(false);
 
   // 테마 변경 효과 (선택된 지역 또는 평균 점수 기반)
   useEffect(() => {
@@ -57,6 +61,23 @@ function App() {
   useEffect(() => {
     loadAllRegions();
   }, [target]);
+
+  // 로그인 시 관심지역 자동 선택
+  useEffect(() => {
+    // 사용자가 로그인하고, 프로필에 관심지역이 있고, 지역 데이터가 로드된 경우
+    if (user && profile?.preferred_region && regions.length > 0 && !preferredRegionApplied.current) {
+      const preferredRegion = regions.find(r => r.region === profile.preferred_region);
+      if (preferredRegion) {
+        log.info('관심지역 자동 선택', { region: profile.preferred_region });
+        handleRegionSelect(preferredRegion);
+        preferredRegionApplied.current = true;
+      }
+    }
+    // 로그아웃 시 리셋
+    if (!user) {
+      preferredRegionApplied.current = false;
+    }
+  }, [user, profile, regions]);
 
   // 데이터 로드 (기상청 API 우선, 10초 타임아웃)
   const loadAllRegions = async () => {
@@ -206,7 +227,18 @@ function App() {
       {/* 데이터 출처 배지 */}
       <div className="data-source-badge">
         <span className={`source-indicator ${dataSource}`}></span>
-        <span>{formatDataSource()}</span>
+        {dataSource === 'kma' ? (
+          <a
+            href="https://climate.gg.go.kr"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="source-link"
+          >
+            {formatDataSource()}
+          </a>
+        ) : (
+          <span>{formatDataSource()}</span>
+        )}
       </div>
 
       <div className="main-content">
@@ -219,11 +251,14 @@ function App() {
           allRegions={regions}
           onRegionSelect={handleRegionSelect}
           onOpenAuthModal={() => setShowAuthModal(true)}
+          isMobileCollapsed={isMobileCollapsed}
+          setIsMobileCollapsed={setIsMobileCollapsed}
         />
         <ClimateMap
           regions={regions}
           selectedRegion={selectedRegion}
           onRegionSelect={handleRegionSelect}
+          onMapClick={() => setIsMobileCollapsed(true)}
         />
       </div>
 

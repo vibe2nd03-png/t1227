@@ -12,6 +12,7 @@ export function AuthProvider({ children }) {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState(null);
+  const [accessToken, setAccessToken] = useState(null);
 
   // 타임아웃 헬퍼 함수 (모바일 네트워크 고려하여 30초로 증가)
   const withTimeout = (promise, ms = 30000) => {
@@ -28,8 +29,10 @@ export function AuthProvider({ children }) {
     // 현재 세션 가져오기
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
+      setAccessToken(session?.access_token ?? null);
       if (session?.user) {
-        fetchProfile(session.user.id);
+        // 세션의 access_token을 직접 전달
+        fetchProfile(session.user.id, session.access_token);
       }
       setLoading(false);
     });
@@ -38,8 +41,10 @@ export function AuthProvider({ children }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         setUser(session?.user ?? null);
+        setAccessToken(session?.access_token ?? null);
         if (session?.user) {
-          await fetchProfile(session.user.id);
+          // 세션의 access_token을 직접 전달
+          await fetchProfile(session.user.id, session.access_token);
         } else {
           setProfile(null);
         }
@@ -50,43 +55,119 @@ export function AuthProvider({ children }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  // 프로필 조회
-  const fetchProfile = async (userId) => {
+  // 프로필 조회 (직접 fetch) - 사용자 토큰 사용
+  const fetchProfile = async (userId, token = null) => {
     try {
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
+      const authToken = token || accessToken;
+      const url = `https://pcdmrofcfqtyywtzyrfo.supabase.co/rest/v1/user_profiles?id=eq.${userId}&select=*`;
+      const response = await fetch(url, {
+        headers: {
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q',
+          'Authorization': `Bearer ${authToken || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q'}`
+        }
+      });
 
-      if (error && error.code !== 'PGRST116') {
-        log.error('프로필 조회 오류', error);
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.length > 0) {
+          setProfile(data[0]);
+          console.log('프로필 조회 성공:', data[0]);
+          // 로그인 시 제보 통계 동기화
+          await syncReportStats(userId, authToken);
+        } else {
+          setProfile(null);
+        }
       }
-      setProfile(data);
     } catch (error) {
       log.error('프로필 조회 실패', error);
+    }
+  };
+
+  // 제보 통계 동기화 (userId와 token을 직접 받음)
+  const syncReportStats = async (userId, token) => {
+    if (!userId || !token) return;
+
+    try {
+      // 1. 실제 제보 건수 조회
+      const countUrl = `https://pcdmrofcfqtyywtzyrfo.supabase.co/rest/v1/user_reports?user_id=eq.${userId}&select=id`;
+      const countRes = await fetch(countUrl, {
+        headers: {
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!countRes.ok) return;
+      const countData = await countRes.json();
+      const totalReports = countData?.length || 0;
+
+      // 2. 총 좋아요 수 조회
+      const likesUrl = `https://pcdmrofcfqtyywtzyrfo.supabase.co/rest/v1/user_reports?user_id=eq.${userId}&select=likes`;
+      const likesRes = await fetch(likesUrl, {
+        headers: {
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      let totalLikes = 0;
+      if (likesRes.ok) {
+        const likesData = await likesRes.json();
+        totalLikes = likesData?.reduce((sum, r) => sum + (r.likes || 0), 0) || 0;
+      }
+
+      // 3. 평판 점수 계산: 제보 1건 = 1점, 좋아요 1개 = 2점
+      const reputationScore = totalReports + (totalLikes * 2);
+
+      console.log('제보 통계 동기화:', { totalReports, totalLikes, reputationScore });
+
+      // 4. 프로필 업데이트
+      const patchUrl = `https://pcdmrofcfqtyywtzyrfo.supabase.co/rest/v1/user_profiles?id=eq.${userId}`;
+      const patchRes = await fetch(patchUrl, {
+        method: 'PATCH',
+        headers: {
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q',
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify({
+          total_reports: totalReports,
+          reputation_score: reputationScore,
+          updated_at: new Date().toISOString()
+        })
+      });
+
+      if (patchRes.ok) {
+        const data = await patchRes.json();
+        if (data && data.length > 0) {
+          setProfile(data[0]);
+          console.log('프로필 통계 동기화 완료:', data[0]);
+        }
+      }
+    } catch (error) {
+      console.error('제보 통계 동기화 오류:', error);
     }
   };
 
   // 이메일+비밀번호 회원가입 (이메일 인증 없이 즉시 가입)
   const signUpWithEmail = async (email, password) => {
     setAuthError(null);
-    log.info('회원가입 시도', { email });
+    console.log('회원가입 시도:', email);
 
     try {
-      const { data, error } = await withTimeout(
-        supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              email_confirmed: true,
-            },
+      console.log('Supabase 회원가입 호출 시작');
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            email_confirmed: true,
           },
-        })
-      );
+        },
+      });
 
-      log.info('회원가입 응답', { data, error });
+      console.log('Supabase 회원가입 응답:', { data, error });
 
       if (error) throw error;
 
@@ -101,12 +182,10 @@ export function AuthProvider({ children }) {
       }
 
       // 세션이 없으면 자동 로그인 시도
-      const { data: signInData, error: signInError } = await withTimeout(
-        supabase.auth.signInWithPassword({
-          email,
-          password,
-        })
-      );
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
       if (signInError) {
         return { success: true, needsConfirmation: false };
@@ -114,8 +193,8 @@ export function AuthProvider({ children }) {
 
       return { success: true, needsConfirmation: false };
     } catch (error) {
+      console.error('회원가입 오류:', error);
       setAuthError(error.message);
-      log.error('회원가입 오류', error);
       return { success: false, error: error.message };
     }
   };
@@ -123,23 +202,33 @@ export function AuthProvider({ children }) {
   // 이메일+비밀번호 로그인
   const signInWithEmail = async (email, password) => {
     setAuthError(null);
-    log.info('로그인 시도', { email });
+    console.log('로그인 시도:', email);
 
     try {
-      const { data, error } = await withTimeout(
-        supabase.auth.signInWithPassword({
-          email,
-          password,
-        })
-      );
+      console.log('Supabase 로그인 호출 시작');
+      console.log('Supabase URL:', 'https://pcdmrofcfqtyywtzyrfo.supabase.co');
 
-      log.info('로그인 응답', { data, error });
+      // 타임아웃 추가 (15초)
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => {
+          reject(new Error('로그인 시간 초과 (15초) - 네트워크를 확인해주세요'));
+        }, 15000);
+      });
+
+      const authPromise = supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      const { data, error } = await Promise.race([authPromise, timeoutPromise]);
+
+      console.log('Supabase 로그인 응답:', { data, error });
 
       if (error) throw error;
       return { success: true, data };
     } catch (error) {
+      console.error('로그인 오류:', error);
       setAuthError(error.message);
-      log.error('로그인 오류', error);
       return { success: false, error: error.message };
     }
   };
@@ -189,174 +278,345 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // 로그아웃
+  // 로그아웃 (로컬 상태 초기화)
   const signOut = async () => {
-    log.info('로그아웃 시도');
+    console.log('로그아웃 시도');
+    // 로컬 상태 즉시 초기화
+    setUser(null);
+    setProfile(null);
+    setAccessToken(null);
+
+    // localStorage에서 supabase 세션 제거
     try {
-      const { error } = await withTimeout(supabase.auth.signOut());
-      if (error) throw error;
-      setUser(null);
-      setProfile(null);
-      log.info('로그아웃 성공');
-    } catch (error) {
-      log.error('로그아웃 오류', error);
-      // 타임아웃이어도 로컬 상태는 초기화
-      setUser(null);
-      setProfile(null);
+      localStorage.removeItem('sb-pcdmrofcfqtyywtzyrfo-auth-token');
+    } catch (e) {
+      console.log('localStorage 정리 실패:', e);
     }
+
+    // 백그라운드에서 서버 로그아웃 시도 (응답 기다리지 않음)
+    supabase.auth.signOut().catch(() => {});
+
+    console.log('로그아웃 완료');
   };
 
-  // 프로필 업데이트 (없으면 생성)
+  // 사용자 토큰 가져오기 (저장된 토큰 사용)
+  const getUserToken = () => {
+    return accessToken;
+  };
+
+  // 프로필 업데이트 (없으면 생성) - 직접 fetch
   const updateProfile = async (updates) => {
     if (!user) return { success: false, error: '로그인이 필요합니다' };
 
-    log.info('프로필 업데이트 시도', { userId: user.id, updates });
+    console.log('프로필 업데이트 시도:', updates);
 
     try {
-      const { data, error } = await withTimeout(
-        supabase
-          .from('user_profiles')
-          .upsert({
-            id: user.id,
-            ...updates,
-            updated_at: new Date().toISOString()
-          })
-          .select()
-          .single()
-      );
+      const token = getUserToken();
+      console.log('토큰 확인:', token ? '있음' : '없음');
+      if (!token) return { success: false, error: '인증 토큰이 없습니다' };
 
-      log.info('프로필 업데이트 응답', { data, error });
+      const profileData = {
+        ...updates,
+        updated_at: new Date().toISOString()
+      };
 
-      if (error) throw error;
-      setProfile(data);
-      return { success: true, data };
+      // 먼저 PATCH로 업데이트 시도
+      const patchUrl = `https://pcdmrofcfqtyywtzyrfo.supabase.co/rest/v1/user_profiles?id=eq.${user.id}`;
+      console.log('PATCH 시도:', patchUrl);
+
+      const patchResponse = await fetch(patchUrl, {
+        method: 'PATCH',
+        headers: {
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q',
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify(profileData)
+      });
+
+      console.log('PATCH 응답:', patchResponse.status);
+
+      if (patchResponse.ok) {
+        const data = await patchResponse.json();
+        console.log('PATCH 결과:', data);
+
+        // PATCH가 성공했지만 데이터가 없으면 INSERT 필요
+        if (Array.isArray(data) && data.length === 0) {
+          console.log('프로필 없음, INSERT 시도');
+          return await createProfile(token, updates);
+        }
+
+        const updatedProfile = Array.isArray(data) ? data[0] : data;
+        setProfile(updatedProfile);
+        console.log('프로필 업데이트 성공:', updatedProfile);
+        return { success: true, data: updatedProfile };
+      }
+
+      // PATCH 실패시 INSERT 시도
+      console.log('PATCH 실패, INSERT 시도');
+      return await createProfile(token, updates);
     } catch (error) {
-      log.error('프로필 업데이트 오류', error);
+      console.error('프로필 업데이트 오류:', error);
       return { success: false, error: error.message };
     }
   };
 
-  // 즐겨찾기 지역 추가
+  // 프로필 생성 헬퍼
+  const createProfile = async (token, updates) => {
+    const profileData = {
+      id: user.id,
+      ...updates,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    const postResponse = await fetch('https://pcdmrofcfqtyywtzyrfo.supabase.co/rest/v1/user_profiles', {
+      method: 'POST',
+      headers: {
+        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q',
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify(profileData)
+    });
+
+    console.log('POST 응답:', postResponse.status);
+
+    if (postResponse.ok) {
+      const data = await postResponse.json();
+      const newProfile = Array.isArray(data) ? data[0] : data;
+      setProfile(newProfile);
+      console.log('프로필 생성 성공:', newProfile);
+      return { success: true, data: newProfile };
+    }
+
+    const errorText = await postResponse.text();
+    console.error('프로필 생성 실패:', postResponse.status, errorText);
+    throw new Error(errorText || '프로필 생성 실패');
+  };
+
+  // 즐겨찾기 지역 추가 (직접 fetch)
   const addFavoriteRegion = async (region) => {
     if (!user) return { success: false, error: '로그인이 필요합니다' };
 
-    log.info('즐겨찾기 추가 시도', { region, userId: user.id });
+    console.log('즐겨찾기 추가 시도:', region);
 
     try {
-      const { data, error } = await withTimeout(
-        supabase
-          .from('user_favorite_regions')
-          .insert({ user_id: user.id, region })
-          .select()
-      );
+      const token = getUserToken();
+      if (!token) return { success: false, error: '인증 토큰이 없습니다' };
 
-      log.info('즐겨찾기 추가 응답', { data, error });
+      const response = await fetch('https://pcdmrofcfqtyywtzyrfo.supabase.co/rest/v1/user_favorite_regions', {
+        method: 'POST',
+        headers: {
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q',
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify({ user_id: user.id, region })
+      });
 
-      if (error) throw error;
-      return { success: true };
+      if (response.ok) {
+        console.log('즐겨찾기 추가 성공');
+        return { success: true };
+      }
+      const errorData = await response.json();
+      console.error('즐겨찾기 추가 실패:', errorData);
+      throw new Error(errorData.message || '추가 실패');
     } catch (error) {
-      log.error('즐겨찾기 추가 오류', error);
+      console.error('즐겨찾기 추가 오류:', error);
       return { success: false, error: error.message };
     }
   };
 
-  // 즐겨찾기 지역 삭제
+  // 즐겨찾기 지역 삭제 (직접 fetch)
   const removeFavoriteRegion = async (region) => {
     if (!user) return { success: false, error: '로그인이 필요합니다' };
 
-    log.info('즐겨찾기 삭제 시도', { region, userId: user.id });
+    console.log('즐겨찾기 삭제 시도:', region);
 
     try {
-      const { data, error } = await withTimeout(
-        supabase
-          .from('user_favorite_regions')
-          .delete()
-          .eq('user_id', user.id)
-          .eq('region', region)
-          .select()
-      );
+      const token = getUserToken();
+      if (!token) return { success: false, error: '인증 토큰이 없습니다' };
 
-      log.info('즐겨찾기 삭제 응답', { data, error });
+      const url = `https://pcdmrofcfqtyywtzyrfo.supabase.co/rest/v1/user_favorite_regions?user_id=eq.${user.id}&region=eq.${encodeURIComponent(region)}`;
+      const response = await fetch(url, {
+        method: 'DELETE',
+        headers: {
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q',
+          'Authorization': `Bearer ${token}`
+        }
+      });
 
-      if (error) throw error;
-      return { success: true };
+      if (response.ok || response.status === 204) {
+        console.log('즐겨찾기 삭제 성공');
+        return { success: true };
+      }
+      throw new Error('삭제 실패');
     } catch (error) {
-      log.error('즐겨찾기 삭제 오류', error);
+      console.error('즐겨찾기 삭제 오류:', error);
       return { success: false, error: error.message };
     }
   };
 
-  // 즐겨찾기 목록 조회
+  // 즐겨찾기 목록 조회 (직접 fetch)
   const getFavoriteRegions = async () => {
     if (!user) return [];
 
-    log.info('즐겨찾기 조회 시도', { userId: user.id });
+    console.log('즐겨찾기 조회 시도:', user.id);
 
     try {
-      const { data, error } = await withTimeout(
-        supabase
-          .from('user_favorite_regions')
-          .select('region')
-          .eq('user_id', user.id)
-      );
+      const token = getUserToken();
+      const url = `https://pcdmrofcfqtyywtzyrfo.supabase.co/rest/v1/user_favorite_regions?user_id=eq.${user.id}&select=region`;
+      const response = await fetch(url, {
+        headers: {
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q',
+          'Authorization': `Bearer ${token || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q'}`
+        }
+      });
 
-      log.info('즐겨찾기 조회 응답', { data, error });
-
-      if (error) throw error;
-      return data?.map((r) => r.region) || [];
+      if (response.ok) {
+        const data = await response.json();
+        console.log('즐겨찾기 조회 성공:', data.length, '개');
+        return data?.map((r) => r.region) || [];
+      }
+      return [];
     } catch (error) {
-      log.error('즐겨찾기 조회 오류', error);
+      console.error('즐겨찾기 조회 오류:', error);
       return [];
     }
   };
 
-  // 내 제보 목록 조회
+  // 내 제보 목록 조회 (직접 fetch)
   const getMyReports = async () => {
     if (!user) return [];
 
-    log.info('내 제보 조회 시도', { userId: user.id });
+    console.log('내 제보 조회 시도:', user.id);
 
     try {
-      const { data, error } = await withTimeout(
-        supabase
-          .from('user_reports')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(20)
-      );
+      const token = getUserToken();
+      const url = `https://pcdmrofcfqtyywtzyrfo.supabase.co/rest/v1/user_reports?user_id=eq.${user.id}&order=created_at.desc&limit=20`;
+      const response = await fetch(url, {
+        headers: {
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q',
+          'Authorization': `Bearer ${token || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q'}`
+        }
+      });
 
-      log.info('내 제보 조회 응답', { count: data?.length, error });
-
-      if (error) throw error;
-      return data || [];
+      if (response.ok) {
+        const data = await response.json();
+        console.log('내 제보 조회 성공:', data.length, '개');
+        return data || [];
+      }
+      return [];
     } catch (error) {
-      log.error('내 제보 조회 오류', error);
+      console.error('내 제보 조회 오류:', error);
       return [];
     }
   };
 
-  // 제보 삭제
+  // 제보 삭제 (직접 fetch)
   const deleteMyReport = async (reportId) => {
     if (!user) return { success: false, error: '로그인이 필요합니다' };
 
-    log.info('제보 삭제 시도', { reportId, userId: user.id });
+    console.log('제보 삭제 시도:', reportId);
 
     try {
-      const { error } = await withTimeout(
-        supabase
-          .from('user_reports')
-          .delete()
-          .eq('id', reportId)
-          .eq('user_id', user.id)
-      );
+      const token = getUserToken();
+      if (!token) return { success: false, error: '인증 토큰이 없습니다' };
 
-      if (error) throw error;
-      log.info('제보 삭제 성공', { reportId });
-      return { success: true };
+      const url = `https://pcdmrofcfqtyywtzyrfo.supabase.co/rest/v1/user_reports?id=eq.${reportId}&user_id=eq.${user.id}`;
+      const response = await fetch(url, {
+        method: 'DELETE',
+        headers: {
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok || response.status === 204) {
+        console.log('제보 삭제 성공');
+        // 제보 삭제 후 프로필 통계 업데이트
+        await refreshReportStats();
+        return { success: true };
+      }
+      throw new Error('삭제 실패');
     } catch (error) {
-      log.error('제보 삭제 오류', error);
+      console.error('제보 삭제 오류:', error);
       return { success: false, error: error.message };
+    }
+  };
+
+  // 제보 통계 갱신 (DB에서 실제 값 조회)
+  const refreshReportStats = async () => {
+    if (!user) return;
+
+    try {
+      const token = getUserToken();
+
+      // 1. 실제 제보 건수 조회
+      const countUrl = `https://pcdmrofcfqtyywtzyrfo.supabase.co/rest/v1/user_reports?user_id=eq.${user.id}&select=id`;
+      const countRes = await fetch(countUrl, {
+        headers: {
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q',
+          'Authorization': `Bearer ${token || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q'}`
+        }
+      });
+
+      if (!countRes.ok) return;
+      const countData = await countRes.json();
+      const totalReports = countData?.length || 0;
+
+      // 2. 총 좋아요 수 조회
+      const likesUrl = `https://pcdmrofcfqtyywtzyrfo.supabase.co/rest/v1/user_reports?user_id=eq.${user.id}&select=likes`;
+      const likesRes = await fetch(likesUrl, {
+        headers: {
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q',
+          'Authorization': `Bearer ${token || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q'}`
+        }
+      });
+
+      let totalLikes = 0;
+      if (likesRes.ok) {
+        const likesData = await likesRes.json();
+        totalLikes = likesData?.reduce((sum, r) => sum + (r.likes || 0), 0) || 0;
+      }
+
+      // 3. 평판 점수 계산: 제보 1건 = 1점, 좋아요 1개 = 2점
+      const reputationScore = totalReports + (totalLikes * 2);
+
+      console.log('제보 통계:', { totalReports, totalLikes, reputationScore });
+
+      // 4. 프로필 업데이트
+      if (token) {
+        const patchUrl = `https://pcdmrofcfqtyywtzyrfo.supabase.co/rest/v1/user_profiles?id=eq.${user.id}`;
+        const patchRes = await fetch(patchUrl, {
+          method: 'PATCH',
+          headers: {
+            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q',
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=representation'
+          },
+          body: JSON.stringify({
+            total_reports: totalReports,
+            reputation_score: reputationScore,
+            updated_at: new Date().toISOString()
+          })
+        });
+
+        if (patchRes.ok) {
+          const data = await patchRes.json();
+          if (data && data.length > 0) {
+            setProfile(data[0]);
+            console.log('프로필 통계 업데이트 완료:', data[0]);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('제보 통계 갱신 오류:', error);
     }
   };
 
@@ -376,6 +636,7 @@ export function AuthProvider({ children }) {
     getFavoriteRegions,
     getMyReports,
     deleteMyReport,
+    refreshReportStats,
     isAuthenticated: !!user,
   };
 

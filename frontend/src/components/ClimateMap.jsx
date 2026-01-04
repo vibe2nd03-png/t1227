@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, CircleMarker, Tooltip, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import FloatingReports from './FloatingReports';
 import RegionRanking from './RegionRanking';
 import BonggongiGuide from './BonggongiGuide';
+import { getNearbyRealtimeWeather } from '../services/kmaApi';
 
 // 경기도 31개 시군 목록
 const GYEONGGI_REGIONS = [
@@ -199,60 +200,55 @@ function AnimatedMarker({ region, isSelected, onSelect, getMarkerRadius, isGyeon
         click: () => onSelect(region),
       }}
     >
-      <Popup>
-        <div className="marker-popup-content" style={{ textAlign: 'center', minWidth: '160px', padding: '4px' }}>
+      <Tooltip
+        direction="top"
+        offset={[0, -10]}
+        opacity={0.95}
+        className="city-tooltip"
+      >
+        <div style={{ textAlign: 'center', minWidth: '120px', padding: '4px' }}>
           <div style={{
-            fontSize: '18px',
+            fontSize: '15px',
             fontWeight: '700',
-            marginBottom: '10px',
-            letterSpacing: '-0.02em'
+            marginBottom: '6px',
           }}>
             {region.region}
-            {!isGyeonggi && <span style={{ fontSize: '12px', opacity: 0.6, marginLeft: '6px' }}>(주변)</span>}
+            {!isGyeonggi && <span style={{ fontSize: '11px', opacity: 0.6, marginLeft: '4px' }}>(주변)</span>}
           </div>
           <div
             style={{
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '8px',
-              padding: '8px 16px',
-              borderRadius: '20px',
+              gap: '6px',
+              padding: '4px 10px',
+              borderRadius: '12px',
               backgroundColor: region.risk_color,
               color: region.risk_level === 'caution' ? '#333' : '#fff',
-              fontSize: isGyeonggi ? '15px' : '13px',
-              fontWeight: '700',
-              boxShadow: `0 4px 12px ${region.risk_color}66`,
-              opacity: isGyeonggi ? 1 : 0.85,
+              fontSize: '12px',
+              fontWeight: '600',
             }}
           >
-            <span style={{ fontSize: '1.2em' }}>
-              {region.risk_level === 'danger' ? '🔴' :
-               region.risk_level === 'warning' ? '🟠' :
-               region.risk_level === 'caution' ? '🟡' : '🔵'}
-            </span>
+            {region.risk_level === 'danger' ? '🔴' :
+             region.risk_level === 'warning' ? '🟠' :
+             region.risk_level === 'caution' ? '🟡' : '🔵'}
             {region.risk_label} {region.adjusted_score || region.score}점
           </div>
-          <div style={{
-            fontSize: '14px',
-            marginTop: '12px',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            gap: '6px'
-          }}>
-            <span style={{ fontSize: '1.3em' }}>🌡️</span>
-            <span>체감 <strong>{formatTemperature(region.climate_data)}</strong></span>
+          <div style={{ fontSize: '12px', marginTop: '6px' }}>
+            🌡️ 체감 {formatTemperature(region.climate_data)}
           </div>
         </div>
-      </Popup>
+      </Tooltip>
     </CircleMarker>
   );
 }
 
-function ClimateMap({ regions, selectedRegion, onRegionSelect }) {
+function ClimateMap({ regions, selectedRegion, onRegionSelect, onMapClick }) {
   const [previousRegion, setPreviousRegion] = useState(null);
   const [showReports, setShowReports] = useState(true);
-  const gyeonggiCenter = [37.4138, 127.5183];
+  const [legendCollapsed, setLegendCollapsed] = useState(false);
+  const [nearbyRegions, setNearbyRegions] = useState([]);
+  // 구리시 중심, 동두천시(상단)~오산시(하단) 모두 표시
+  const gyeonggiCenter = [37.52, 127.05];
 
   // 이전 선택 지역 추적
   useEffect(() => {
@@ -260,6 +256,25 @@ function ClimateMap({ regions, selectedRegion, onRegionSelect }) {
       setPreviousRegion(selectedRegion);
     };
   }, [selectedRegion]);
+
+  // 주변 도시 실시간 데이터 조회
+  useEffect(() => {
+    const fetchNearbyData = async () => {
+      try {
+        const data = await getNearbyRealtimeWeather();
+        if (data && data.length > 0) {
+          setNearbyRegions(data);
+        }
+      } catch (error) {
+        console.error('주변 도시 데이터 조회 실패:', error);
+      }
+    };
+
+    fetchNearbyData();
+    // 10분마다 갱신
+    const interval = setInterval(fetchNearbyData, 10 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   // 위험 등급별 마커 크기
   const getMarkerRadius = (riskLevel) => {
@@ -274,16 +289,19 @@ function ClimateMap({ regions, selectedRegion, onRegionSelect }) {
   // 경기도 지역과 주변 지역 분류
   const gyeonggiRegions = regions.filter(r => GYEONGGI_REGIONS.includes(r.region));
 
-  // 주변 지역 데이터 (고정값 - 겨울철 기준)
-  const nearbyRegionsWithData = [
-    { region: '서울', lat: 37.5665, lng: 126.9780, isGyeonggi: false, score: 35, risk_level: 'caution', risk_label: '주의', risk_color: '#FFEB3B', adjusted_score: 35, climate_data: { temperature: -2, apparent_temperature: -5, humidity: 45 }},
-    { region: '인천', lat: 37.4563, lng: 126.7052, isGyeonggi: false, score: 40, risk_level: 'caution', risk_label: '주의', risk_color: '#FFEB3B', adjusted_score: 40, climate_data: { temperature: -1, apparent_temperature: -4, humidity: 55 }},
-    { region: '춘천', lat: 37.8813, lng: 127.7300, isGyeonggi: false, score: 55, risk_level: 'warning', risk_label: '경고', risk_color: '#FF9800', adjusted_score: 55, climate_data: { temperature: -8, apparent_temperature: -14, humidity: 35 }},
-    { region: '원주', lat: 37.3422, lng: 127.9202, isGyeonggi: false, score: 45, risk_level: 'caution', risk_label: '주의', risk_color: '#FFEB3B', adjusted_score: 45, climate_data: { temperature: -5, apparent_temperature: -10, humidity: 40 }},
-    { region: '충주', lat: 36.9910, lng: 127.9259, isGyeonggi: false, score: 38, risk_level: 'caution', risk_label: '주의', risk_color: '#FFEB3B', adjusted_score: 38, climate_data: { temperature: -3, apparent_temperature: -7, humidity: 42 }},
-    { region: '천안', lat: 36.8151, lng: 127.1139, isGyeonggi: false, score: 32, risk_level: 'caution', risk_label: '주의', risk_color: '#FFEB3B', adjusted_score: 32, climate_data: { temperature: -1, apparent_temperature: -4, humidity: 48 }},
-    { region: '세종', lat: 36.4800, lng: 127.2890, isGyeonggi: false, score: 28, risk_level: 'safe', risk_label: '안전', risk_color: '#2196F3', adjusted_score: 28, climate_data: { temperature: 0, apparent_temperature: -2, humidity: 50 }},
-  ];
+  // 주변 지역 데이터 (실시간 API 데이터 사용, 없으면 fallback)
+  const fallbackNearbyData = NEARBY_REGIONS.map(r => ({
+    ...r,
+    isGyeonggi: false,
+    score: 30,
+    risk_level: 'safe',
+    risk_label: '안전',
+    risk_color: '#2196F3',
+    adjusted_score: 30,
+    climate_data: { temperature: null, apparent_temperature: null, humidity: null },
+  }));
+
+  const nearbyRegionsWithData = nearbyRegions.length > 0 ? nearbyRegions : fallbackNearbyData;
 
   // 선택된 지역이 맨 위에 렌더링되도록 정렬
   const sortedGyeonggiRegions = [...gyeonggiRegions].sort((a, b) => {
@@ -292,8 +310,15 @@ function ClimateMap({ regions, selectedRegion, onRegionSelect }) {
     return 0;
   });
 
+  // 모바일에서 지도 클릭 시 사이드바 접기
+  const handleMapClick = () => {
+    if (onMapClick && window.innerWidth <= 768) {
+      onMapClick();
+    }
+  };
+
   return (
-    <div className="map-container">
+    <div className="map-container" onClick={handleMapClick}>
       <MapContainer
         center={gyeonggiCenter}
         zoom={9}
@@ -312,13 +337,13 @@ function ClimateMap({ regions, selectedRegion, onRegionSelect }) {
           previousRegion={previousRegion}
         />
 
-        {/* 주변 지역 마커 (50% 작게) */}
+        {/* 주변 지역 마커 (50% 작게, 클릭 가능) */}
         {nearbyRegionsWithData.map((region) => (
           <AnimatedMarker
             key={region.region}
             region={region}
-            isSelected={false}
-            onSelect={() => {}}
+            isSelected={selectedRegion?.region === region.region}
+            onSelect={onRegionSelect}
             getMarkerRadius={getMarkerRadius}
             isGyeonggi={false}
           />
@@ -351,34 +376,39 @@ function ClimateMap({ regions, selectedRegion, onRegionSelect }) {
         </div>
       )}
 
-      {/* 범례 */}
-      <div className="map-legend">
-        <h4>위험 등급</h4>
-        <div className="legend-item">
-          <div className="legend-color" style={{ backgroundColor: '#2196F3' }}></div>
-          <span>안전 (0-29점)</span>
+      {/* 범례 - 축소 가능 */}
+      <div className={`map-legend ${legendCollapsed ? 'collapsed' : ''}`}>
+        <div className="legend-header" onClick={() => setLegendCollapsed(!legendCollapsed)}>
+          <h4>{legendCollapsed ? '📊' : '위험 등급'}</h4>
+          <span className="legend-toggle">{legendCollapsed ? '▲' : '▼'}</span>
         </div>
-        <div className="legend-item">
-          <div className="legend-color" style={{ backgroundColor: '#FFEB3B' }}></div>
-          <span>주의 (30-49점)</span>
-        </div>
-        <div className="legend-item">
-          <div className="legend-color" style={{ backgroundColor: '#FF9800' }}></div>
-          <span>경고 (50-74점)</span>
-        </div>
-        <div className="legend-item">
-          <div className="legend-color" style={{ backgroundColor: '#F44336' }}></div>
-          <span>위험 (75-100점)</span>
-        </div>
-
-        {/* 제보 표시 토글 */}
-        <div className="legend-divider"></div>
-        <button
-          className={`report-toggle ${showReports ? 'active' : ''}`}
-          onClick={() => setShowReports(!showReports)}
-        >
-          {showReports ? '💬 제보 숨기기' : '💬 제보 보기'}
-        </button>
+        {!legendCollapsed && (
+          <>
+            <div className="legend-item">
+              <div className="legend-color" style={{ backgroundColor: '#2196F3' }}></div>
+              <span>안전 (0-29점)</span>
+            </div>
+            <div className="legend-item">
+              <div className="legend-color" style={{ backgroundColor: '#FFEB3B' }}></div>
+              <span>주의 (30-49점)</span>
+            </div>
+            <div className="legend-item">
+              <div className="legend-color" style={{ backgroundColor: '#FF9800' }}></div>
+              <span>경고 (50-74점)</span>
+            </div>
+            <div className="legend-item">
+              <div className="legend-color" style={{ backgroundColor: '#F44336' }}></div>
+              <span>위험 (75-100점)</span>
+            </div>
+            <div className="legend-divider"></div>
+            <button
+              className={`report-toggle ${showReports ? 'active' : ''}`}
+              onClick={(e) => { e.stopPropagation(); setShowReports(!showReports); }}
+            >
+              {showReports ? '💬 제보 숨기기' : '💬 제보 보기'}
+            </button>
+          </>
+        )}
       </div>
 
       {/* 지역별 랭킹 */}

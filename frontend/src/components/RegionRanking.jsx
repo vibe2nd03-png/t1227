@@ -4,7 +4,7 @@ import { supabase } from '../supabase';
 function RegionRanking({ regions, onRegionClick }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [reportStats, setReportStats] = useState({});
-  const [activeTab, setActiveTab] = useState('hot'); // hot, cool, reports
+  const [activeTab, setActiveTab] = useState('best'); // best, cool, reports
   const [isRiskLevelVisible, setIsRiskLevelVisible] = useState(false);
 
   // 제보 통계 로드
@@ -61,15 +61,23 @@ function RegionRanking({ regions, onRegionClick }) {
     return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || '🌡️';
   };
 
-  // 가장 더운 지역 (점수 높은 순)
-  const hottestRegions = [...regions]
+  // 현재 월 기준으로 계절 판단 (6~10월: 여름/가을, 11~5월: 겨울/봄)
+  const currentMonth = new Date().getMonth() + 1; // 1-12
+  const isSummerSeason = currentMonth >= 6 && currentMonth <= 10;
+
+  // 최고 동네: 여름(6~10월)은 가장 더운 곳, 겨울(11~5월)은 가장 추운 곳
+  const bestRegions = [...regions]
     .map((r) => ({
       ...r,
+      temperature: r.climate_data?.apparent_temperature || 0,
       adjustedScore: r.score + (reportStats[r.region]?.avgTempAdj || 0) * 2,
       reportCount: reportStats[r.region]?.count || 0,
       topEmoji: reportStats[r.region]?.topEmoji || null,
     }))
-    .sort((a, b) => b.adjustedScore - a.adjustedScore)
+    .sort((a, b) => isSummerSeason
+      ? b.temperature - a.temperature  // 여름: 높은 온도순 (가장 더운)
+      : a.temperature - b.temperature  // 겨울: 낮은 온도순 (가장 추운)
+    )
     .slice(0, 5);
 
   // 가장 쾌적한 지역 (점수 낮은 순)
@@ -84,14 +92,20 @@ function RegionRanking({ regions, onRegionClick }) {
     .slice(0, 5);
 
   // 제보 많은 지역
-  const mostReportedRegions = [...regions]
-    .map((r) => ({
-      ...r,
-      reportCount: reportStats[r.region]?.count || 0,
-      topEmoji: reportStats[r.region]?.topEmoji || null,
-      avgSentiment: reportStats[r.region]?.avgSentiment || 0,
-    }))
-    .filter((r) => r.reportCount > 0)
+  // reportStats에서 직접 데이터 생성 (regions prop에 의존하지 않음)
+  const mostReportedRegions = Object.entries(reportStats)
+    .filter(([_, stats]) => stats.count > 0)
+    .map(([regionName, stats]) => {
+      // regions에서 해당 지역 정보 찾기
+      const regionData = regions.find(r => r.region === regionName) || {};
+      return {
+        region: regionName,
+        ...regionData,
+        reportCount: stats.count,
+        topEmoji: stats.topEmoji,
+        avgSentiment: stats.avgSentiment,
+      };
+    })
     .sort((a, b) => b.reportCount - a.reportCount)
     .slice(0, 5);
 
@@ -134,17 +148,7 @@ function RegionRanking({ regions, onRegionClick }) {
               )}
             </div>
             <div className="rank-stats">
-              {type === 'hot' && (
-                <>
-                  <span className="rank-score" style={{ color: region.risk_color }}>
-                    {Math.round(region.adjustedScore)}점
-                  </span>
-                  <span className="rank-temp">
-                    {region.climate_data?.apparent_temperature}°C
-                  </span>
-                </>
-              )}
-              {type === 'cool' && (
+              {(type === 'best' || type === 'cool') && (
                 <>
                   <span className="rank-score" style={{ color: region.risk_color }}>
                     {Math.round(region.adjustedScore)}점
@@ -185,10 +189,10 @@ function RegionRanking({ regions, onRegionClick }) {
           {/* 탭 메뉴 */}
           <div className="ranking-tabs">
             <button
-              className={`tab-btn ${activeTab === 'hot' ? 'active' : ''}`}
-              onClick={() => setActiveTab('hot')}
+              className={`tab-btn ${activeTab === 'best' ? 'active' : ''}`}
+              onClick={() => setActiveTab('best')}
             >
-              🥵 더운 동네
+              {isSummerSeason ? '🥵 최고 더운' : '🥶 최고 추운'}
             </button>
             <button
               className={`tab-btn ${activeTab === 'cool' ? 'active' : ''}`}
@@ -206,7 +210,7 @@ function RegionRanking({ regions, onRegionClick }) {
 
           {/* 랭킹 리스트 */}
           <div className="ranking-list-container">
-            {activeTab === 'hot' && renderRankList(hottestRegions, 'hot')}
+            {activeTab === 'best' && renderRankList(bestRegions, 'best')}
             {activeTab === 'cool' && renderRankList(coolestRegions, 'cool')}
             {activeTab === 'reports' && renderRankList(mostReportedRegions, 'reports')}
           </div>
