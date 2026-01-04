@@ -4532,6 +4532,25 @@ a:focus-visible {
   color: var(--risk-safe);
 }
 
+/* PC 화면 - 퀵 액션 버튼 컴팩트 */
+@media (min-width: 769px) {
+  .quick-actions {
+    padding: 6px var(--space-md);
+    gap: 8px;
+  }
+
+  .quick-action-btn {
+    flex-direction: row;
+    gap: 6px;
+    padding: 6px 12px;
+    font-size: 0.75rem;
+  }
+
+  .quick-action-btn span:first-child {
+    font-size: 1rem;
+  }
+}
+
 /* 메인 탭 */
 .main-tabs {
   display: flex;
