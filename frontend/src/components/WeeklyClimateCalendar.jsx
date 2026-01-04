@@ -57,7 +57,7 @@ function WeeklyClimateCalendar({ regionName, climateData }) {
         // API 데이터가 선택 범위에 없으면 Mock 데이터로 보완
         if (dailyForecasts.length === 0) {
           setForecasts(generateMockWeekly());
-          setError('선택한 기간의 예보 데이터가 없습니다');
+          // 경고 메시지 없이 예상 데이터만 표시
         } else if (dailyForecasts.length < 7) {
           // 부족한 날짜는 Mock으로 보완
           const supplemented = supplementWithMock(dailyForecasts);
@@ -70,8 +70,7 @@ function WeeklyClimateCalendar({ regionName, climateData }) {
       }
     } catch (err) {
       console.error('주간예보 로드 실패:', err);
-      setError(err.message);
-      // 에러시 Mock 데이터 생성
+      // 경고 메시지 없이 예상 데이터만 표시
       setForecasts(generateMockWeekly());
     } finally {
       setLoading(false);
