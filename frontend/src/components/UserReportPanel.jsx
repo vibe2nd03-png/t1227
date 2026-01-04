@@ -1,35 +1,41 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '../supabase';
+import React, { useState, useEffect } from "react";
+import { supabase } from "../supabase";
 
 // 체감 이모지 옵션
 const FEELING_OPTIONS = [
-  { emoji: '🥵', label: '너무 더워요', sentiment: -3, tempAdjust: 5 },
-  { emoji: '😰', label: '더워요', sentiment: -2, tempAdjust: 3 },
-  { emoji: '😅', label: '조금 더워요', sentiment: -1, tempAdjust: 1 },
-  { emoji: '😊', label: '쾌적해요', sentiment: 0, tempAdjust: 0 },
-  { emoji: '😌', label: '조금 쌀쌀해요', sentiment: 1, tempAdjust: -1 },
-  { emoji: '🥶', label: '추워요', sentiment: 2, tempAdjust: -3 },
-  { emoji: '😷', label: '공기 안좋아요', sentiment: -2, tempAdjust: 0, airQuality: true },
+  { emoji: "🥵", label: "너무 더워요", sentiment: -3, tempAdjust: 5 },
+  { emoji: "😰", label: "더워요", sentiment: -2, tempAdjust: 3 },
+  { emoji: "😅", label: "조금 더워요", sentiment: -1, tempAdjust: 1 },
+  { emoji: "😊", label: "쾌적해요", sentiment: 0, tempAdjust: 0 },
+  { emoji: "😌", label: "조금 쌀쌀해요", sentiment: 1, tempAdjust: -1 },
+  { emoji: "🥶", label: "추워요", sentiment: 2, tempAdjust: -3 },
+  {
+    emoji: "😷",
+    label: "공기 안좋아요",
+    sentiment: -2,
+    tempAdjust: 0,
+    airQuality: true,
+  },
 ];
 
 // 밈 코멘트 프리셋
 const MEME_PRESETS = [
-  '살려줘요 🆘',
-  '녹아내리는 중 🫠',
-  '여긴 사우나인가요?',
-  '에어컨 없이는 못 살아',
-  '햇빛이 칼이야 🔪☀️',
-  '습해서 빨래가 안 말라요',
-  '그늘도 더워요',
-  '아스팔트에서 계란 익겠다',
-  '미세먼지 폭탄 💣',
-  '숨쉬기 힘들어요',
-  '날씨 완전 좋아요! ✨',
-  '산책하기 딱 좋은 날',
+  "살려줘요 🆘",
+  "녹아내리는 중 🫠",
+  "여긴 사우나인가요?",
+  "에어컨 없이는 못 살아",
+  "햇빛이 칼이야 🔪☀️",
+  "습해서 빨래가 안 말라요",
+  "그늘도 더워요",
+  "아스팔트에서 계란 익겠다",
+  "미세먼지 폭탄 💣",
+  "숨쉬기 힘들어요",
+  "날씨 완전 좋아요! ✨",
+  "산책하기 딱 좋은 날",
 ];
 
 // 로컬 스토리지 키
-const REPORTS_STORAGE_KEY = 'climate_user_reports';
+const REPORTS_STORAGE_KEY = "climate_user_reports";
 
 // 로컬 스토리지에서 제보 가져오기
 const getLocalReports = () => {
@@ -58,7 +64,7 @@ const saveLocalReport = (report) => {
 function UserReportPanel({ selectedRegion, onReportSubmit }) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedFeeling, setSelectedFeeling] = useState(null);
-  const [comment, setComment] = useState('');
+  const [comment, setComment] = useState("");
   const [recentReports, setRecentReports] = useState([]);
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -73,11 +79,14 @@ function UserReportPanel({ selectedRegion, onReportSubmit }) {
     try {
       // Supabase에서 24시간 이내 제보 조회
       const { data, error } = await supabase
-        .from('user_reports')
-        .select('*')
-        .eq('region', regionName)
-        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-        .order('created_at', { ascending: false })
+        .from("user_reports")
+        .select("*")
+        .eq("region", regionName)
+        .gte(
+          "created_at",
+          new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+        )
+        .order("created_at", { ascending: false })
         .limit(10);
 
       if (!error && data) {
@@ -85,14 +94,15 @@ function UserReportPanel({ selectedRegion, onReportSubmit }) {
         return;
       }
     } catch (err) {
-      console.warn('Supabase 조회 실패, 로컬 사용:', err);
+      console.warn("Supabase 조회 실패, 로컬 사용:", err);
     }
 
     // Supabase 실패시 로컬 스토리지 사용
     const allReports = getLocalReports();
     const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
-    const filtered = allReports.filter(r =>
-      r.region === regionName && new Date(r.created_at).getTime() > dayAgo
+    const filtered = allReports.filter(
+      (r) =>
+        r.region === regionName && new Date(r.created_at).getTime() > dayAgo,
     );
     setRecentReports(filtered.slice(0, 10));
   };
@@ -124,7 +134,7 @@ function UserReportPanel({ selectedRegion, onReportSubmit }) {
 
     // 폼 초기화
     setSelectedFeeling(null);
-    setComment('');
+    setComment("");
 
     // 부모 컴포넌트에 알림
     if (onReportSubmit) {
@@ -134,28 +144,32 @@ function UserReportPanel({ selectedRegion, onReportSubmit }) {
     // 제보 목록 새로고침
     const allReports = getLocalReports();
     const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
-    const filtered = allReports.filter(r =>
-      r.region === selectedRegion.region && new Date(r.created_at).getTime() > dayAgo
+    const filtered = allReports.filter(
+      (r) =>
+        r.region === selectedRegion.region &&
+        new Date(r.created_at).getTime() > dayAgo,
     );
     setRecentReports(filtered.slice(0, 10));
 
     // 백그라운드에서 Supabase 저장 시도 (실패해도 무시)
     supabase
-      .from('user_reports')
-      .insert([{
-        region: reportData.region,
-        lat: reportData.lat,
-        lng: reportData.lng,
-        emoji: reportData.emoji,
-        feeling_label: reportData.feeling_label,
-        sentiment_score: reportData.sentiment_score,
-        temp_adjustment: reportData.temp_adjustment,
-        comment: reportData.comment,
-        is_air_quality: reportData.is_air_quality,
-      }])
+      .from("user_reports")
+      .insert([
+        {
+          region: reportData.region,
+          lat: reportData.lat,
+          lng: reportData.lng,
+          emoji: reportData.emoji,
+          feeling_label: reportData.feeling_label,
+          sentiment_score: reportData.sentiment_score,
+          temp_adjustment: reportData.temp_adjustment,
+          comment: reportData.comment,
+          is_air_quality: reportData.is_air_quality,
+        },
+      ])
       .then(({ error }) => {
-        if (error) console.warn('Supabase 백업 실패:', error.message);
-        else console.log('Supabase 백업 성공');
+        if (error) console.warn("Supabase 백업 실패:", error.message);
+        else console.log("Supabase 백업 성공");
       });
   };
 
@@ -165,7 +179,7 @@ function UserReportPanel({ selectedRegion, onReportSubmit }) {
     const diffMs = now - date;
     const diffMins = Math.floor(diffMs / 60000);
 
-    if (diffMins < 1) return '방금 전';
+    if (diffMins < 1) return "방금 전";
     if (diffMins < 60) return `${diffMins}분 전`;
     const diffHours = Math.floor(diffMins / 60);
     if (diffHours < 24) return `${diffHours}시간 전`;
@@ -178,7 +192,7 @@ function UserReportPanel({ selectedRegion, onReportSubmit }) {
     <div className="user-report-panel">
       {/* 토글 버튼 */}
       <button
-        className={`report-toggle-btn ${isOpen ? 'active' : ''}`}
+        className={`report-toggle-btn ${isOpen ? "active" : ""}`}
         onClick={() => setIsOpen(!isOpen)}
       >
         <span className="toggle-icon">📢</span>
@@ -203,7 +217,7 @@ function UserReportPanel({ selectedRegion, onReportSubmit }) {
               {FEELING_OPTIONS.map((option) => (
                 <button
                   key={option.emoji}
-                  className={`feeling-btn ${selectedFeeling?.emoji === option.emoji ? 'selected' : ''}`}
+                  className={`feeling-btn ${selectedFeeling?.emoji === option.emoji ? "selected" : ""}`}
                   onClick={() => setSelectedFeeling(option)}
                 >
                   <span className="feeling-emoji">{option.emoji}</span>
@@ -220,7 +234,7 @@ function UserReportPanel({ selectedRegion, onReportSubmit }) {
               {MEME_PRESETS.slice(0, 6).map((meme) => (
                 <button
                   key={meme}
-                  className={`meme-btn ${comment === meme ? 'selected' : ''}`}
+                  className={`meme-btn ${comment === meme ? "selected" : ""}`}
                   onClick={() => setComment(meme)}
                 >
                   {meme}
@@ -239,11 +253,11 @@ function UserReportPanel({ selectedRegion, onReportSubmit }) {
 
           {/* 제출 버튼 */}
           <button
-            className={`submit-report-btn ${showSuccess ? 'success' : ''}`}
+            className={`submit-report-btn ${showSuccess ? "success" : ""}`}
             onClick={handleSubmit}
             disabled={!selectedFeeling || showSuccess}
           >
-            {showSuccess ? '✓ 제보 완료!' : '🚀 제보하기'}
+            {showSuccess ? "✓ 제보 완료!" : "🚀 제보하기"}
           </button>
 
           {/* 저장 안내 */}
@@ -263,10 +277,14 @@ function UserReportPanel({ selectedRegion, onReportSubmit }) {
                     <div className="report-content">
                       <span className="report-comment">{report.comment}</span>
                       {report.nickname && (
-                        <span className="report-author">by {report.nickname}</span>
+                        <span className="report-author">
+                          by {report.nickname}
+                        </span>
                       )}
                     </div>
-                    <span className="report-time">{formatTimeAgo(report.created_at)}</span>
+                    <span className="report-time">
+                      {formatTimeAgo(report.created_at)}
+                    </span>
                   </div>
                 ))}
               </div>

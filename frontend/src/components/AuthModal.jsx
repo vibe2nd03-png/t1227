@@ -1,22 +1,28 @@
-import React, { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import React, { useState } from "react";
+import { useAuth } from "../contexts/AuthContext";
 
 function AuthModal({ isOpen, onClose }) {
-  const { signUpWithEmail, signInWithEmail, sendPhoneOtp, verifyPhoneOtp, authError } = useAuth();
-  const [authMode, setAuthMode] = useState('select'); // select, phone, email
-  const [emailMode, setEmailMode] = useState('login'); // login, signup
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [otpCode, setOtpCode] = useState('');
+  const {
+    signUpWithEmail,
+    signInWithEmail,
+    sendPhoneOtp,
+    verifyPhoneOtp,
+    authError,
+  } = useAuth();
+  const [authMode, setAuthMode] = useState("select"); // select, phone, email
+  const [emailMode, setEmailMode] = useState("login"); // login, signup
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [otpCode, setOtpCode] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState("");
 
   const handleSendPhoneOtp = async () => {
     if (!phone || phone.length < 10) {
-      setMessage('올바른 전화번호를 입력해주세요');
+      setMessage("올바른 전화번호를 입력해주세요");
       return;
     }
 
@@ -26,15 +32,15 @@ function AuthModal({ isOpen, onClose }) {
 
     if (result.success) {
       setOtpSent(true);
-      setMessage('인증번호가 발송되었습니다');
+      setMessage("인증번호가 발송되었습니다");
     } else {
-      setMessage(result.error || '인증번호 발송에 실패했습니다');
+      setMessage(result.error || "인증번호 발송에 실패했습니다");
     }
   };
 
   const handleVerifyOtp = async () => {
     if (!otpCode || otpCode.length < 6) {
-      setMessage('6자리 인증번호를 입력해주세요');
+      setMessage("6자리 인증번호를 입력해주세요");
       return;
     }
 
@@ -43,23 +49,23 @@ function AuthModal({ isOpen, onClose }) {
     setLoading(false);
 
     if (result.success) {
-      setMessage('로그인 성공!');
+      setMessage("로그인 성공!");
       setTimeout(() => {
         onClose();
         resetForm();
       }, 1000);
     } else {
-      setMessage(result.error || '인증에 실패했습니다');
+      setMessage(result.error || "인증에 실패했습니다");
     }
   };
 
   const handleEmailLogin = async () => {
-    if (!email || !email.includes('@')) {
-      setMessage('올바른 이메일을 입력해주세요');
+    if (!email || !email.includes("@")) {
+      setMessage("올바른 이메일을 입력해주세요");
       return;
     }
     if (!password || password.length < 6) {
-      setMessage('비밀번호는 6자 이상이어야 합니다');
+      setMessage("비밀번호는 6자 이상이어야 합니다");
       return;
     }
 
@@ -68,36 +74,42 @@ function AuthModal({ isOpen, onClose }) {
     setLoading(false);
 
     if (result.success) {
-      setMessage('로그인 성공!');
+      setMessage("로그인 성공!");
       setTimeout(() => {
         onClose();
         resetForm();
       }, 1000);
     } else {
       // 에러 메시지 분류
-      if (result.error?.includes('Invalid login')) {
-        setMessage('이메일 또는 비밀번호가 잘못되었습니다');
-      } else if (result.error?.includes('시간 초과') || result.error?.includes('timeout')) {
-        setMessage('네트워크 연결이 느립니다. 다시 시도해주세요.');
-      } else if (result.error?.includes('fetch') || result.error?.includes('network')) {
-        setMessage('인터넷 연결을 확인해주세요.');
+      if (result.error?.includes("Invalid login")) {
+        setMessage("이메일 또는 비밀번호가 잘못되었습니다");
+      } else if (
+        result.error?.includes("시간 초과") ||
+        result.error?.includes("timeout")
+      ) {
+        setMessage("네트워크 연결이 느립니다. 다시 시도해주세요.");
+      } else if (
+        result.error?.includes("fetch") ||
+        result.error?.includes("network")
+      ) {
+        setMessage("인터넷 연결을 확인해주세요.");
       } else {
-        setMessage(result.error || '로그인에 실패했습니다');
+        setMessage(result.error || "로그인에 실패했습니다");
       }
     }
   };
 
   const handleEmailSignUp = async () => {
-    if (!email || !email.includes('@')) {
-      setMessage('올바른 이메일을 입력해주세요');
+    if (!email || !email.includes("@")) {
+      setMessage("올바른 이메일을 입력해주세요");
       return;
     }
     if (!password || password.length < 6) {
-      setMessage('비밀번호는 6자 이상이어야 합니다');
+      setMessage("비밀번호는 6자 이상이어야 합니다");
       return;
     }
     if (password !== confirmPassword) {
-      setMessage('비밀번호가 일치하지 않습니다');
+      setMessage("비밀번호가 일치하지 않습니다");
       return;
     }
 
@@ -106,40 +118,49 @@ function AuthModal({ isOpen, onClose }) {
     setLoading(false);
 
     if (result.success) {
-      setMessage('회원가입 성공!');
+      setMessage("회원가입 성공!");
       setTimeout(() => {
         onClose();
         resetForm();
       }, 1000);
     } else {
       // 에러 메시지 분류
-      if (result.error?.includes('시간 초과') || result.error?.includes('timeout')) {
-        setMessage('네트워크 연결이 느립니다. 다시 시도해주세요.');
-      } else if (result.error?.includes('fetch') || result.error?.includes('network')) {
-        setMessage('인터넷 연결을 확인해주세요.');
+      if (
+        result.error?.includes("시간 초과") ||
+        result.error?.includes("timeout")
+      ) {
+        setMessage("네트워크 연결이 느립니다. 다시 시도해주세요.");
+      } else if (
+        result.error?.includes("fetch") ||
+        result.error?.includes("network")
+      ) {
+        setMessage("인터넷 연결을 확인해주세요.");
       } else {
-        setMessage(result.error || '회원가입에 실패했습니다');
+        setMessage(result.error || "회원가입에 실패했습니다");
       }
     }
   };
 
   const resetForm = () => {
-    setAuthMode('select');
-    setEmailMode('login');
-    setPhone('');
-    setEmail('');
-    setPassword('');
-    setConfirmPassword('');
-    setOtpCode('');
+    setAuthMode("select");
+    setEmailMode("login");
+    setPhone("");
+    setEmail("");
+    setPassword("");
+    setConfirmPassword("");
+    setOtpCode("");
     setOtpSent(false);
-    setMessage('');
+    setMessage("");
   };
 
   if (!isOpen) return null;
 
   return (
     <div className="auth-modal-overlay" onClick={onClose}>
-      <div className="auth-modal-container" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="auth-modal-container"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* 닫기 버튼 */}
         <button className="auth-close-btn" onClick={onClose}>
           <span>✕</span>
@@ -148,25 +169,29 @@ function AuthModal({ isOpen, onClose }) {
         {/* 헤더 영역 */}
         <div className="auth-hero">
           <div className="auth-hero-icon">
-            {authMode === 'select' && '🌤️'}
-            {authMode === 'phone' && '📱'}
-            {authMode === 'email' && '✉️'}
+            {authMode === "select" && "🌤️"}
+            {authMode === "phone" && "📱"}
+            {authMode === "email" && "✉️"}
           </div>
           <h2 className="auth-title">
-            {authMode === 'select' && '환영합니다!'}
-            {authMode === 'phone' && '전화번호 인증'}
-            {authMode === 'email' && (emailMode === 'login' ? '로그인' : '회원가입')}
+            {authMode === "select" && "환영합니다!"}
+            {authMode === "phone" && "전화번호 인증"}
+            {authMode === "email" &&
+              (emailMode === "login" ? "로그인" : "회원가입")}
           </h2>
           <p className="auth-subtitle">
-            {authMode === 'select' && '경기 기후 체감 맵과 함께하세요'}
-            {authMode === 'phone' && '빠르고 간편한 인증'}
-            {authMode === 'email' && (emailMode === 'login' ? '다시 만나서 반가워요' : '1분이면 완료!')}
+            {authMode === "select" && "경기 기후 체감 맵과 함께하세요"}
+            {authMode === "phone" && "빠르고 간편한 인증"}
+            {authMode === "email" &&
+              (emailMode === "login"
+                ? "다시 만나서 반가워요"
+                : "1분이면 완료!")}
           </p>
         </div>
 
         {/* 내용 */}
         <div className="auth-modal-content">
-          {authMode === 'select' && (
+          {authMode === "select" && (
             <div className="auth-select-area">
               <div className="auth-benefits">
                 <div className="benefit-item">
@@ -186,7 +211,7 @@ function AuthModal({ isOpen, onClose }) {
               {/* 이메일 로그인 */}
               <button
                 className="auth-method-btn email"
-                onClick={() => setAuthMode('email')}
+                onClick={() => setAuthMode("email")}
               >
                 <span className="method-icon">✉️</span>
                 <span className="method-text">이메일로 시작하기</span>
@@ -195,7 +220,7 @@ function AuthModal({ isOpen, onClose }) {
             </div>
           )}
 
-          {authMode === 'phone' && (
+          {authMode === "phone" && (
             <div className="auth-form-area">
               {!otpSent ? (
                 <>
@@ -209,7 +234,9 @@ function AuthModal({ isOpen, onClose }) {
                         name="phone"
                         placeholder="01012345678"
                         value={phone}
-                        onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, ''))}
+                        onChange={(e) =>
+                          setPhone(e.target.value.replace(/[^0-9]/g, ""))
+                        }
                         maxLength={11}
                       />
                     </div>
@@ -222,9 +249,11 @@ function AuthModal({ isOpen, onClose }) {
                     disabled={loading || phone.length < 10}
                   >
                     {loading ? (
-                      <><span className="btn-spinner"></span> 발송 중...</>
+                      <>
+                        <span className="btn-spinner"></span> 발송 중...
+                      </>
                     ) : (
-                      '인증번호 받기'
+                      "인증번호 받기"
                     )}
                   </button>
                 </>
@@ -236,8 +265,11 @@ function AuthModal({ isOpen, onClose }) {
                       <span>인증번호 발송 완료</span>
                     </div>
                     <div className="phone-number">
-                      {phone.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3')}
-                      <button className="change-link" onClick={() => setOtpSent(false)}>
+                      {phone.replace(/(\d{3})(\d{4})(\d{4})/, "$1-$2-$3")}
+                      <button
+                        className="change-link"
+                        onClick={() => setOtpSent(false)}
+                      >
                         변경
                       </button>
                     </div>
@@ -253,7 +285,9 @@ function AuthModal({ isOpen, onClose }) {
                         className="otp-input"
                         placeholder="● ● ● ● ● ●"
                         value={otpCode}
-                        onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, ''))}
+                        onChange={(e) =>
+                          setOtpCode(e.target.value.replace(/[^0-9]/g, ""))
+                        }
                         maxLength={6}
                       />
                     </div>
@@ -265,9 +299,11 @@ function AuthModal({ isOpen, onClose }) {
                     disabled={loading || otpCode.length < 6}
                   >
                     {loading ? (
-                      <><span className="btn-spinner"></span> 확인 중...</>
+                      <>
+                        <span className="btn-spinner"></span> 확인 중...
+                      </>
                     ) : (
-                      '인증 완료하기'
+                      "인증 완료하기"
                     )}
                   </button>
 
@@ -287,19 +323,25 @@ function AuthModal({ isOpen, onClose }) {
             </div>
           )}
 
-          {authMode === 'email' && (
+          {authMode === "email" && (
             <div className="auth-form-area">
               {/* 로그인/회원가입 탭 */}
               <div className="auth-toggle-tabs">
                 <button
-                  className={`toggle-tab ${emailMode === 'login' ? 'active' : ''}`}
-                  onClick={() => { setEmailMode('login'); setMessage(''); }}
+                  className={`toggle-tab ${emailMode === "login" ? "active" : ""}`}
+                  onClick={() => {
+                    setEmailMode("login");
+                    setMessage("");
+                  }}
                 >
                   로그인
                 </button>
                 <button
-                  className={`toggle-tab ${emailMode === 'signup' ? 'active' : ''}`}
-                  onClick={() => { setEmailMode('signup'); setMessage(''); }}
+                  className={`toggle-tab ${emailMode === "signup" ? "active" : ""}`}
+                  onClick={() => {
+                    setEmailMode("signup");
+                    setMessage("");
+                  }}
                 >
                   회원가입
                 </button>
@@ -336,7 +378,7 @@ function AuthModal({ isOpen, onClose }) {
                 </div>
               </div>
 
-              {emailMode === 'signup' && (
+              {emailMode === "signup" && (
                 <div className="auth-input-group">
                   <label htmlFor="auth-confirm-password">비밀번호 확인</label>
                   <div className="input-with-icon">
@@ -355,20 +397,27 @@ function AuthModal({ isOpen, onClose }) {
 
               <button
                 className="auth-submit-btn"
-                onClick={emailMode === 'login' ? handleEmailLogin : handleEmailSignUp}
-                disabled={loading || !email.includes('@') || password.length < 6}
+                onClick={
+                  emailMode === "login" ? handleEmailLogin : handleEmailSignUp
+                }
+                disabled={
+                  loading || !email.includes("@") || password.length < 6
+                }
               >
                 {loading ? (
-                  <><span className="btn-spinner"></span> {emailMode === 'login' ? '로그인 중...' : '가입 중...'}</>
+                  <>
+                    <span className="btn-spinner"></span>{" "}
+                    {emailMode === "login" ? "로그인 중..." : "가입 중..."}
+                  </>
+                ) : emailMode === "login" ? (
+                  "로그인하기"
                 ) : (
-                  emailMode === 'login' ? '로그인하기' : '가입하기'
+                  "가입하기"
                 )}
               </button>
 
-              {emailMode === 'signup' && (
-                <p className="signup-notice">
-                  ✓ 가입 즉시 모든 기능 사용 가능
-                </p>
+              {emailMode === "signup" && (
+                <p className="signup-notice">✓ 가입 즉시 모든 기능 사용 가능</p>
               )}
 
               <button className="auth-back-btn" onClick={resetForm}>
@@ -379,9 +428,13 @@ function AuthModal({ isOpen, onClose }) {
 
           {/* 메시지 표시 */}
           {(message || authError) && (
-            <div className={`auth-toast ${message.includes('성공') || message.includes('발송') ? 'success' : 'error'}`}>
+            <div
+              className={`auth-toast ${message.includes("성공") || message.includes("발송") ? "success" : "error"}`}
+            >
               <span className="toast-icon">
-                {message.includes('성공') || message.includes('발송') ? '✓' : '!'}
+                {message.includes("성공") || message.includes("발송")
+                  ? "✓"
+                  : "!"}
               </span>
               <span className="toast-text">{message || authError}</span>
             </div>
@@ -390,7 +443,9 @@ function AuthModal({ isOpen, onClose }) {
 
         {/* 푸터 */}
         <div className="auth-footer">
-          <p>로그인 시 <span className="link">이용약관</span>에 동의합니다</p>
+          <p>
+            로그인 시 <span className="link">이용약관</span>에 동의합니다
+          </p>
         </div>
       </div>
     </div>

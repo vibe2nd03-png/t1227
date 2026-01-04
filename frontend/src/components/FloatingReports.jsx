@@ -1,16 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Marker, Popup, useMap } from 'react-leaflet';
-import L from 'leaflet';
-import { supabase, SUPABASE_URL, SUPABASE_ANON_KEY } from '../supabase';
+import React, { useState, useEffect, useRef } from "react";
+import { Marker, Popup, useMap } from "react-leaflet";
+import L from "leaflet";
+import { supabase, SUPABASE_URL, SUPABASE_ANON_KEY } from "../supabase";
 
 // 떠다니는 제보를 위한 커스텀 아이콘 생성
 const createFloatingIcon = (emoji, comment) => {
   return L.divIcon({
-    className: 'floating-report-marker',
+    className: "floating-report-marker",
     html: `
       <div class="floating-bubble">
         <span class="bubble-emoji">${emoji}</span>
-        <span class="bubble-text">${comment.length > 15 ? comment.slice(0, 15) + '...' : comment}</span>
+        <span class="bubble-text">${comment.length > 15 ? comment.slice(0, 15) + "..." : comment}</span>
       </div>
     `,
     iconSize: [120, 50],
@@ -63,24 +63,24 @@ function FloatingReports({ visible }) {
   }, [visible, reports]);
 
   const loadRecentReports = async () => {
-    console.log('FloatingReports: 제보 로드 시작');
+    console.log("FloatingReports: 제보 로드 시작");
     try {
       const since = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
       const url = `${SUPABASE_URL}/rest/v1/user_reports?created_at=gte.${since}&order=created_at.desc&limit=30`;
 
-      console.log('FloatingReports: fetch URL:', url);
+      console.log("FloatingReports: fetch URL:", url);
       const response = await fetch(url, {
         headers: {
-          'apikey': SUPABASE_ANON_KEY,
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-        }
+          apikey: SUPABASE_ANON_KEY,
+          Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        },
       });
 
-      console.log('FloatingReports: 응답 상태:', response.status);
+      console.log("FloatingReports: 응답 상태:", response.status);
 
       if (response.ok) {
         const data = await response.json();
-        console.log('FloatingReports: 받은 데이터:', data.length, '개', data);
+        console.log("FloatingReports: 받은 데이터:", data.length, "개", data);
 
         // 같은 지역의 중복 제보는 최신 것만 표시
         const uniqueByLocation = data.reduce((acc, report) => {
@@ -92,13 +92,17 @@ function FloatingReports({ visible }) {
         }, {});
 
         const uniqueReports = Object.values(uniqueByLocation);
-        console.log('FloatingReports: 표시할 제보:', uniqueReports.length, '개');
+        console.log(
+          "FloatingReports: 표시할 제보:",
+          uniqueReports.length,
+          "개",
+        );
         setReports(uniqueReports);
       } else {
-        console.error('FloatingReports: 응답 실패:', response.status);
+        console.error("FloatingReports: 응답 실패:", response.status);
       }
     } catch (error) {
-      console.error('제보 마커 로드 실패:', error);
+      console.error("제보 마커 로드 실패:", error);
     }
   };
 
@@ -107,7 +111,7 @@ function FloatingReports({ visible }) {
     const date = new Date(dateString);
     const diffMins = Math.floor((now - date) / 60000);
 
-    if (diffMins < 1) return '방금 전';
+    if (diffMins < 1) return "방금 전";
     if (diffMins < 60) return `${diffMins}분 전`;
     const diffHours = Math.floor(diffMins / 60);
     return `${diffHours}시간 전`;
@@ -121,8 +125,8 @@ function FloatingReports({ visible }) {
         const offset = animationOffsets[report.id] || { x: 0, y: 0 };
         // 약간의 랜덤 오프셋 추가 (같은 위치 제보가 겹치지 않도록)
         const jitter = {
-          lat: (Math.sin(report.id * 12.34) * 0.005),
-          lng: (Math.cos(report.id * 56.78) * 0.008),
+          lat: Math.sin(report.id * 12.34) * 0.005,
+          lng: Math.cos(report.id * 56.78) * 0.008,
         };
 
         return (
@@ -132,7 +136,10 @@ function FloatingReports({ visible }) {
               parseFloat(report.lat) + offset.y + jitter.lat,
               parseFloat(report.lng) + offset.x + jitter.lng,
             ]}
-            icon={createFloatingIcon(report.emoji, report.comment || report.feeling_label)}
+            icon={createFloatingIcon(
+              report.emoji,
+              report.comment || report.feeling_label,
+            )}
           >
             <Popup>
               <div className="report-popup">
@@ -140,12 +147,17 @@ function FloatingReports({ visible }) {
                   <span className="popup-emoji">{report.emoji}</span>
                   <span className="popup-region">{report.region}</span>
                 </div>
-                <p className="popup-comment">{report.comment || report.feeling_label}</p>
+                <p className="popup-comment">
+                  {report.comment || report.feeling_label}
+                </p>
                 <div className="popup-meta">
-                  <span className="popup-time">{formatTimeAgo(report.created_at)}</span>
+                  <span className="popup-time">
+                    {formatTimeAgo(report.created_at)}
+                  </span>
                   {report.temp_adjustment !== 0 && (
                     <span className="popup-temp-adj">
-                      체감 {report.temp_adjustment > 0 ? '+' : ''}{report.temp_adjustment}°C
+                      체감 {report.temp_adjustment > 0 ? "+" : ""}
+                      {report.temp_adjustment}°C
                     </span>
                   )}
                 </div>

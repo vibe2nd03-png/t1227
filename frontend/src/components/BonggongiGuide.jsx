@@ -1,7 +1,13 @@
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { Marker, Popup, useMap } from 'react-leaflet';
-import L from 'leaflet';
-import { useAuth } from '../contexts/AuthContext';
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  useMemo,
+} from "react";
+import { Marker, Popup, useMap } from "react-leaflet";
+import L from "leaflet";
+import { useAuth } from "../contexts/AuthContext";
 
 // 음성 합성 (TTS) 유틸리티 - 어린 남자아이 목소리
 const speakMessage = (text, onEnd) => {
@@ -10,9 +16,9 @@ const speakMessage = (text, onEnd) => {
 
   // 이모지 및 특수문자, 문장부호 제거 (문자만 읽기)
   const cleanText = text
-    .replace(/[🐝❄️🌬️😷🌤️⚠️👆👨‍👩‍👧‍👦🏆🧤🥶🌟📊]/g, '')  // 이모지 제거
-    .replace(/[!~.?,;:'"()[\]{}@#$%^&*+=<>\/\\|`_-]/g, ' ')  // 문장부호 → 공백
-    .replace(/\s+/g, ' ')  // 연속 공백 정리
+    .replace(/[🐝❄️🌬️😷🌤️⚠️👆👨‍👩‍👧‍👦🏆🧤🥶🌟📊]/g, "") // 이모지 제거
+    .replace(/[!~.?,;:'"()[\]{}@#$%^&*+=<>\/\\|`_-]/g, " ") // 문장부호 → 공백
+    .replace(/\s+/g, " ") // 연속 공백 정리
     .trim();
   if (!cleanText) return;
 
@@ -20,16 +26,16 @@ const speakMessage = (text, onEnd) => {
 
   // 한국어 음성 찾기
   const voices = window.speechSynthesis.getVoices();
-  const koreanVoice = voices.find(v => v.lang.includes('ko')) || voices[0];
+  const koreanVoice = voices.find((v) => v.lang.includes("ko")) || voices[0];
 
   if (koreanVoice) {
     utterance.voice = koreanVoice;
   }
 
   // 5살 남자아이 목소리 설정 (매우 높은 피치, 귀여운 톤)
-  utterance.lang = 'ko-KR';
-  utterance.pitch = 1.9;  // 매우 높은 피치 (5살 아이 목소리)
-  utterance.rate = 0.95;  // 약간 느린 속도 (어린아이 말투)
+  utterance.lang = "ko-KR";
+  utterance.pitch = 1.9; // 매우 높은 피치 (5살 아이 목소리)
+  utterance.rate = 0.95; // 약간 느린 속도 (어린아이 말투)
   utterance.volume = 0.85; // 볼륨
 
   if (onEnd) {
@@ -55,59 +61,84 @@ const initVoices = () => {
 
 // 대상그룹별 외출 조건
 const TARGET_CONDITIONS = {
-  general: { minTemp: -10, maxTemp: 35, maxPop: 50, label: '일반' },
-  elderly: { minTemp: -5, maxTemp: 30, maxPop: 30, label: '노인' },
-  child: { minTemp: -5, maxTemp: 32, maxPop: 30, label: '아동' },
-  outdoor: { minTemp: -15, maxTemp: 38, maxPop: 60, label: '야외활동' },
+  general: { minTemp: -10, maxTemp: 35, maxPop: 50, label: "일반" },
+  elderly: { minTemp: -5, maxTemp: 30, maxPop: 30, label: "노인" },
+  child: { minTemp: -5, maxTemp: 32, maxPop: 30, label: "아동" },
+  outdoor: { minTemp: -15, maxTemp: 38, maxPop: 60, label: "야외활동" },
 };
 
 // 시간대별 활동 추천
 const TIME_ACTIVITIES = {
-  morning: { start: 6, end: 9, label: '아침', activity: '산책/조깅' },
-  midMorning: { start: 9, end: 12, label: '오전', activity: '야외활동' },
-  afternoon: { start: 12, end: 15, label: '점심/오후', activity: '외출' },
-  lateAfternoon: { start: 15, end: 18, label: '오후', activity: '산책' },
-  evening: { start: 18, end: 21, label: '저녁', activity: '가벼운 산책' },
+  morning: { start: 6, end: 9, label: "아침", activity: "산책/조깅" },
+  midMorning: { start: 9, end: 12, label: "오전", activity: "야외활동" },
+  afternoon: { start: 12, end: 15, label: "점심/오후", activity: "외출" },
+  lateAfternoon: { start: 15, end: 18, label: "오후", activity: "산책" },
+  evening: { start: 18, end: 21, label: "저녁", activity: "가벼운 산책" },
 };
 
 // 봉공이 안내 메시지 (겨울철)
 const GUIDE_MESSAGES = [
-  { type: 'cold', message: '오늘 많이 춥네요! 따뜻하게 입고 외출하세요~ ❄️' },
-  { type: 'wind', message: '바람이 불면 체감온도가 더 낮아져요! 방한용품 챙기세요~ 🌬️' },
-  { type: 'pm', message: '미세먼지가 높은 지역이 있어요. 마스크 잊지 마세요! 😷' },
-  { type: 'safe', message: '이 지역은 비교적 쾌적해요! 산책하기 좋은 날씨~ 🌤️' },
-  { type: 'danger', message: '이 지역은 주의가 필요해요! 외출 시 조심하세요~ ⚠️' },
-  { type: 'tip1', message: '지도에서 지역을 클릭하면 상세 정보를 볼 수 있어요! 👆' },
-  { type: 'tip2', message: '대상별(일반/노인/아동/야외) 맞춤 정보도 확인해보세요! 👨‍👩‍👧‍👦' },
-  { type: 'tip3', message: '오른쪽 랭킹에서 가장 쾌적한 지역을 찾아보세요! 🏆' },
-  { type: 'winter', message: '동상 조심! 손발이 시리면 바로 따뜻하게 해주세요~ 🧤' },
+  { type: "cold", message: "오늘 많이 춥네요! 따뜻하게 입고 외출하세요~ ❄️" },
+  {
+    type: "wind",
+    message: "바람이 불면 체감온도가 더 낮아져요! 방한용품 챙기세요~ 🌬️",
+  },
+  {
+    type: "pm",
+    message: "미세먼지가 높은 지역이 있어요. 마스크 잊지 마세요! 😷",
+  },
+  {
+    type: "safe",
+    message: "이 지역은 비교적 쾌적해요! 산책하기 좋은 날씨~ 🌤️",
+  },
+  {
+    type: "danger",
+    message: "이 지역은 주의가 필요해요! 외출 시 조심하세요~ ⚠️",
+  },
+  {
+    type: "tip1",
+    message: "지도에서 지역을 클릭하면 상세 정보를 볼 수 있어요! 👆",
+  },
+  {
+    type: "tip2",
+    message: "대상별(일반/노인/아동/야외) 맞춤 정보도 확인해보세요! 👨‍👩‍👧‍👦",
+  },
+  {
+    type: "tip3",
+    message: "오른쪽 랭킹에서 가장 쾌적한 지역을 찾아보세요! 🏆",
+  },
+  {
+    type: "winter",
+    message: "동상 조심! 손발이 시리면 바로 따뜻하게 해주세요~ 🧤",
+  },
 ];
 
 // 최적 외출 시간 계산 함수
-const calculateBestOutingTime = (forecasts, targetGroup = 'general') => {
+const calculateBestOutingTime = (forecasts, targetGroup = "general") => {
   if (!forecasts || forecasts.length === 0) return null;
 
-  const conditions = TARGET_CONDITIONS[targetGroup] || TARGET_CONDITIONS.general;
+  const conditions =
+    TARGET_CONDITIONS[targetGroup] || TARGET_CONDITIONS.general;
   const now = new Date();
   const currentHour = now.getHours();
 
   // 오늘과 내일의 예보만 필터링
-  const todayStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+  const todayStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}`;
   const tomorrow = new Date(now);
   tomorrow.setDate(tomorrow.getDate() + 1);
-  const tomorrowStr = `${tomorrow.getFullYear()}${String(tomorrow.getMonth() + 1).padStart(2, '0')}${String(tomorrow.getDate()).padStart(2, '0')}`;
+  const tomorrowStr = `${tomorrow.getFullYear()}${String(tomorrow.getMonth() + 1).padStart(2, "0")}${String(tomorrow.getDate()).padStart(2, "0")}`;
 
   // 각 예보에 점수 부여
   const scoredForecasts = forecasts
-    .filter(f => f.date === todayStr || f.date === tomorrowStr)
-    .filter(f => {
+    .filter((f) => f.date === todayStr || f.date === tomorrowStr)
+    .filter((f) => {
       // 오늘이면 현재 시간 이후만
       if (f.date === todayStr) {
         return f.hour >= currentHour;
       }
       return true;
     })
-    .map(f => {
+    .map((f) => {
       let score = 100;
       const temp = f.temperature;
       const pop = f.pop || 0;
@@ -130,7 +161,7 @@ const calculateBestOutingTime = (forecasts, targetGroup = 'general') => {
 
       // 강수확률 점수
       if (pop > conditions.maxPop) {
-        score -= (pop - conditions.maxPop);
+        score -= pop - conditions.maxPop;
       }
       if (pop === 0) {
         score += 10;
@@ -146,11 +177,11 @@ const calculateBestOutingTime = (forecasts, targetGroup = 'general') => {
       }
 
       // 날씨 아이콘 기반 보너스
-      if (f.icon === '☀️' || f.icon === '🌤️') {
+      if (f.icon === "☀️" || f.icon === "🌤️") {
         score += 15;
-      } else if (f.icon === '⛅') {
+      } else if (f.icon === "⛅") {
         score += 5;
-      } else if (f.icon === '🌧️' || f.icon === '❄️') {
+      } else if (f.icon === "🌧️" || f.icon === "❄️") {
         score -= 20;
       }
 
@@ -168,18 +199,18 @@ const calculateBestOutingTime = (forecasts, targetGroup = 'general') => {
   const best = scoredForecasts[0];
 
   // 시간대 라벨 결정
-  let timeLabel = '';
-  if (best.hour >= 6 && best.hour < 9) timeLabel = '아침';
-  else if (best.hour >= 9 && best.hour < 12) timeLabel = '오전';
-  else if (best.hour >= 12 && best.hour < 15) timeLabel = '점심~오후';
-  else if (best.hour >= 15 && best.hour < 18) timeLabel = '오후';
-  else if (best.hour >= 18 && best.hour < 21) timeLabel = '저녁';
-  else timeLabel = '밤';
+  let timeLabel = "";
+  if (best.hour >= 6 && best.hour < 9) timeLabel = "아침";
+  else if (best.hour >= 9 && best.hour < 12) timeLabel = "오전";
+  else if (best.hour >= 12 && best.hour < 15) timeLabel = "점심~오후";
+  else if (best.hour >= 15 && best.hour < 18) timeLabel = "오후";
+  else if (best.hour >= 18 && best.hour < 21) timeLabel = "저녁";
+  else timeLabel = "밤";
 
   return {
     forecast: best,
     timeLabel,
-    dayLabel: best.isToday ? '오늘' : '내일',
+    dayLabel: best.isToday ? "오늘" : "내일",
     score: best.score,
   };
 };
@@ -188,7 +219,7 @@ const calculateBestOutingTime = (forecasts, targetGroup = 'general') => {
 const generateOutingRecommendation = (bestTime, targetGroup, regionName) => {
   if (!bestTime) {
     return {
-      type: 'outing',
+      type: "outing",
       message: `${regionName}의 예보를 확인 중이에요~ 잠시만요! 🔍`,
     };
   }
@@ -196,42 +227,43 @@ const generateOutingRecommendation = (bestTime, targetGroup, regionName) => {
   const { forecast, timeLabel, dayLabel, score } = bestTime;
   const temp = forecast.temperature;
   const icon = forecast.icon;
-  const conditions = TARGET_CONDITIONS[targetGroup] || TARGET_CONDITIONS.general;
+  const conditions =
+    TARGET_CONDITIONS[targetGroup] || TARGET_CONDITIONS.general;
 
   // 점수에 따른 메시지
   if (score >= 80) {
     return {
-      type: 'outing-great',
+      type: "outing-great",
       message: `${dayLabel} ${timeLabel}이 외출하기 딱 좋아요! ${icon} ${temp}°C로 ${conditions.label}분께 추천해요~`,
     };
   } else if (score >= 60) {
     return {
-      type: 'outing-good',
+      type: "outing-good",
       message: `${dayLabel} ${timeLabel}에 나가시면 좋겠어요! ${icon} ${temp}°C 예상이에요~`,
     };
   } else if (score >= 40) {
     return {
-      type: 'outing-caution',
+      type: "outing-caution",
       message: `${dayLabel} ${timeLabel}이 그나마 나아요. ${icon} ${temp}°C지만 따뜻하게 입으세요!`,
     };
   } else {
     return {
-      type: 'outing-warning',
-      message: `오늘은 실내 활동을 추천해요! ${icon} ${temp}°C로 많이 ${temp < 0 ? '추워요' : '더워요'}~ ⚠️`,
+      type: "outing-warning",
+      message: `오늘은 실내 활동을 추천해요! ${icon} ${temp}°C로 많이 ${temp < 0 ? "추워요" : "더워요"}~ ⚠️`,
     };
   }
 };
 
 // 경기도 주요 지점 (봉공이 이동 경로)
 const PATROL_POINTS = [
-  { lat: 37.2636, lng: 127.0286, name: '수원시' },
-  { lat: 37.6584, lng: 126.8320, name: '고양시' },
-  { lat: 37.4449, lng: 127.1389, name: '성남시' },
-  { lat: 37.7381, lng: 127.0337, name: '의정부시' },
-  { lat: 37.1996, lng: 126.8312, name: '화성시' },
-  { lat: 37.5034, lng: 126.7660, name: '부천시' },
-  { lat: 37.8949, lng: 127.2002, name: '포천시' },
-  { lat: 37.4138, lng: 127.5183, name: '경기도 중앙' },
+  { lat: 37.2636, lng: 127.0286, name: "수원시" },
+  { lat: 37.6584, lng: 126.832, name: "고양시" },
+  { lat: 37.4449, lng: 127.1389, name: "성남시" },
+  { lat: 37.7381, lng: 127.0337, name: "의정부시" },
+  { lat: 37.1996, lng: 126.8312, name: "화성시" },
+  { lat: 37.5034, lng: 126.766, name: "부천시" },
+  { lat: 37.8949, lng: 127.2002, name: "포천시" },
+  { lat: 37.4138, lng: 127.5183, name: "경기도 중앙" },
 ];
 
 // 봉공이 캐릭터 아이콘 (SVG) - 큰 사이즈
@@ -275,14 +307,14 @@ const createBonggongiIcon = () => {
 
   return L.divIcon({
     html: `<div class="bonggongi-container">${svgIcon}</div>`,
-    className: 'bonggongi-icon',
+    className: "bonggongi-icon",
     iconSize: [100, 100],
     iconAnchor: [50, 100],
     popupAnchor: [0, -90],
   });
 };
 
-function BonggongiGuide({ regions, selectedRegion, targetGroup = 'general' }) {
+function BonggongiGuide({ regions, selectedRegion, targetGroup = "general" }) {
   const map = useMap();
   const { profile } = useAuth();
   const markerRef = useRef(null);
@@ -297,8 +329,8 @@ function BonggongiGuide({ regions, selectedRegion, targetGroup = 'general' }) {
   const [forecastData, setForecastData] = useState([]);
   const [outingRecommendation, setOutingRecommendation] = useState(null);
   const prevMessageRef = useRef(null);
-  const hasShownOutingRef = useRef(false);  // 외출 추천 1회만 표시
-  const isPatrolMoving = useRef(false);  // 순찰 이동 중 음성 방지
+  const hasShownOutingRef = useRef(false); // 외출 추천 1회만 표시
+  const isPatrolMoving = useRef(false); // 순찰 이동 중 음성 방지
 
   // 로그인 여부 확인
   const isLoggedIn = !!profile?.display_name;
@@ -307,9 +339,12 @@ function BonggongiGuide({ regions, selectedRegion, targetGroup = 'general' }) {
   const greetingMessage = useMemo(() => {
     const nickname = profile?.display_name;
     if (nickname) {
-      return { type: 'greeting', message: `${nickname}님 안녕하세요! 저는 AI반디예요 🐝` };
+      return {
+        type: "greeting",
+        message: `${nickname}님 안녕하세요! 저는 AI반디예요 🐝`,
+      };
     }
-    return { type: 'greeting', message: '안녕하세요~ 로그인하세요! 🐝' };
+    return { type: "greeting", message: "안녕하세요~ 로그인하세요! 🐝" };
   }, [profile?.display_name]);
 
   const [currentMessage, setCurrentMessage] = useState(null);
@@ -323,7 +358,7 @@ function BonggongiGuide({ regions, selectedRegion, targetGroup = 'general' }) {
 
   // 음성 합성 초기화
   useEffect(() => {
-    if ('speechSynthesis' in window) {
+    if ("speechSynthesis" in window) {
       initVoices().then(() => {
         setVoicesReady(true);
       });
@@ -331,7 +366,7 @@ function BonggongiGuide({ regions, selectedRegion, targetGroup = 'general' }) {
 
     // 컴포넌트 언마운트 시 음성 중단
     return () => {
-      if ('speechSynthesis' in window) {
+      if ("speechSynthesis" in window) {
         window.speechSynthesis.cancel();
       }
     };
@@ -344,7 +379,9 @@ function BonggongiGuide({ regions, selectedRegion, targetGroup = 'general' }) {
 
     const fetchForecast = async (regionName) => {
       try {
-        const response = await fetch(`/api/kma-forecast?region=${encodeURIComponent(regionName)}`);
+        const response = await fetch(
+          `/api/kma-forecast?region=${encodeURIComponent(regionName)}`,
+        );
         const data = await response.json();
 
         if (data.success && data.forecasts) {
@@ -353,17 +390,21 @@ function BonggongiGuide({ regions, selectedRegion, targetGroup = 'general' }) {
           // 최적 외출 시간 계산
           const bestTime = calculateBestOutingTime(data.forecasts, targetGroup);
           if (bestTime) {
-            const recommendation = generateOutingRecommendation(bestTime, targetGroup, regionName);
+            const recommendation = generateOutingRecommendation(
+              bestTime,
+              targetGroup,
+              regionName,
+            );
             setOutingRecommendation(recommendation);
           }
         }
       } catch (err) {
-        console.error('예보 데이터 로드 실패:', err);
+        console.error("예보 데이터 로드 실패:", err);
       }
     };
 
     // 선택된 지역이 있으면 해당 지역, 없으면 현재 순찰 위치
-    const regionName = selectedRegion?.region || position.name || '수원시';
+    const regionName = selectedRegion?.region || position.name || "수원시";
     fetchForecast(regionName);
   }, [isLoggedIn, selectedRegion, position.name, targetGroup]);
 
@@ -378,7 +419,7 @@ function BonggongiGuide({ regions, selectedRegion, targetGroup = 'general' }) {
     }
 
     // 첫 인사는 한 번만
-    if (currentMessage.type === 'greeting') {
+    if (currentMessage.type === "greeting") {
       if (hasSpokenGreeting.current) return;
       hasSpokenGreeting.current = true;
     }
@@ -406,62 +447,82 @@ function BonggongiGuide({ regions, selectedRegion, targetGroup = 'general' }) {
   }, [position, currentMessage, isVisible]);
 
   // 지역 상태에 따른 메시지 선택 (중복 방지)
-  const getContextualMessage = useCallback((pos) => {
-    const nearbyRegion = regions.find(r =>
-      Math.abs(r.lat - pos.lat) < 0.1 && Math.abs(r.lng - pos.lng) < 0.1
-    );
+  const getContextualMessage = useCallback(
+    (pos) => {
+      const nearbyRegion = regions.find(
+        (r) =>
+          Math.abs(r.lat - pos.lat) < 0.1 && Math.abs(r.lng - pos.lng) < 0.1,
+      );
 
-    // 가능한 메시지 후보들을 수집
-    const candidates = [];
+      // 가능한 메시지 후보들을 수집
+      const candidates = [];
 
-    // 외출 추천 메시지 - 1회만 표시
-    // (getContextualMessage에서는 추가하지 않음 - 첫 인사 후 1회만 별도 처리)
+      // 외출 추천 메시지 - 1회만 표시
+      // (getContextualMessage에서는 추가하지 않음 - 첫 인사 후 1회만 별도 처리)
 
-    if (nearbyRegion) {
-      const temp = nearbyRegion.climate_data?.apparent_temperature;
-      const pm10 = nearbyRegion.climate_data?.pm10;
-      const regionName = nearbyRegion.region || pos.name;
+      if (nearbyRegion) {
+        const temp = nearbyRegion.climate_data?.apparent_temperature;
+        const pm10 = nearbyRegion.climate_data?.pm10;
+        const regionName = nearbyRegion.region || pos.name;
 
-      // 기온 기반 메시지
-      if (temp !== null && temp <= -10) {
-        candidates.push({ type: 'cold', message: `${regionName}은 체감온도 ${temp}°C! 정말 추우니 조심하세요! 🥶` });
-        candidates.push(GUIDE_MESSAGES.find(m => m.type === 'cold'));
+        // 기온 기반 메시지
+        if (temp !== null && temp <= -10) {
+          candidates.push({
+            type: "cold",
+            message: `${regionName}은 체감온도 ${temp}°C! 정말 추우니 조심하세요! 🥶`,
+          });
+          candidates.push(GUIDE_MESSAGES.find((m) => m.type === "cold"));
+        }
+
+        // 미세먼지 메시지
+        if (pm10 && pm10 >= 80) {
+          candidates.push(GUIDE_MESSAGES.find((m) => m.type === "pm"));
+        }
+
+        // 위험도 기반 메시지
+        if (
+          nearbyRegion.risk_level === "danger" ||
+          nearbyRegion.risk_level === "warning"
+        ) {
+          candidates.push(GUIDE_MESSAGES.find((m) => m.type === "danger"));
+        } else if (nearbyRegion.risk_level === "safe") {
+          candidates.push({
+            type: "safe",
+            message: `${regionName}은 비교적 쾌적해요! 산책하기 좋은 날씨~ 🌟`,
+          });
+          candidates.push(GUIDE_MESSAGES.find((m) => m.type === "safe"));
+        }
       }
 
-      // 미세먼지 메시지
-      if (pm10 && pm10 >= 80) {
-        candidates.push(GUIDE_MESSAGES.find(m => m.type === 'pm'));
-      }
+      // 팁 메시지들 추가
+      const tips = GUIDE_MESSAGES.filter(
+        (m) =>
+          m.type.startsWith("tip") || m.type === "winter" || m.type === "wind",
+      );
+      candidates.push(...tips);
 
-      // 위험도 기반 메시지
-      if (nearbyRegion.risk_level === 'danger' || nearbyRegion.risk_level === 'warning') {
-        candidates.push(GUIDE_MESSAGES.find(m => m.type === 'danger'));
-      } else if (nearbyRegion.risk_level === 'safe') {
-        candidates.push({ type: 'safe', message: `${regionName}은 비교적 쾌적해요! 산책하기 좋은 날씨~ 🌟` });
-        candidates.push(GUIDE_MESSAGES.find(m => m.type === 'safe'));
-      }
-    }
+      // 유효한 후보만 필터링
+      const validCandidates = candidates.filter((c) => c && c.message);
 
-    // 팁 메시지들 추가
-    const tips = GUIDE_MESSAGES.filter(m => m.type.startsWith('tip') || m.type === 'winter' || m.type === 'wind');
-    candidates.push(...tips);
+      // 이전 메시지와 다른 메시지 선택
+      const prevMessage = prevMessageRef.current;
+      const differentCandidates = validCandidates.filter(
+        (c) => c.message !== prevMessage?.message,
+      );
 
-    // 유효한 후보만 필터링
-    const validCandidates = candidates.filter(c => c && c.message);
+      // 다른 메시지가 있으면 그 중에서, 없으면 전체에서 선택
+      const pool =
+        differentCandidates.length > 0 ? differentCandidates : validCandidates;
+      const selected =
+        pool[Math.floor(Math.random() * pool.length)] || GUIDE_MESSAGES[0];
 
-    // 이전 메시지와 다른 메시지 선택
-    const prevMessage = prevMessageRef.current;
-    const differentCandidates = validCandidates.filter(c => c.message !== prevMessage?.message);
+      // 선택된 메시지 저장
+      prevMessageRef.current = selected;
 
-    // 다른 메시지가 있으면 그 중에서, 없으면 전체에서 선택
-    const pool = differentCandidates.length > 0 ? differentCandidates : validCandidates;
-    const selected = pool[Math.floor(Math.random() * pool.length)] || GUIDE_MESSAGES[0];
-
-    // 선택된 메시지 저장
-    prevMessageRef.current = selected;
-
-    return selected;
-  }, [regions]);
+      return selected;
+    },
+    [regions],
+  );
 
   // 첫 인사 후 외출 추천 1회 표시 (로그인 시에만)
   useEffect(() => {
@@ -486,7 +547,13 @@ function BonggongiGuide({ regions, selectedRegion, targetGroup = 'general' }) {
 
       return () => clearTimeout(greetingTimer);
     }
-  }, [hasGreeted, getContextualMessage, position, outingRecommendation, isLoggedIn]);
+  }, [
+    hasGreeted,
+    getContextualMessage,
+    position,
+    outingRecommendation,
+    isLoggedIn,
+  ]);
 
   // 순찰 이동 (로그인 후 인사 완료 시에만) - 음성 안내 없이 이동만
   useEffect(() => {
@@ -494,8 +561,8 @@ function BonggongiGuide({ regions, selectedRegion, targetGroup = 'general' }) {
     if (!isLoggedIn || !hasGreeted) return;
 
     const moveInterval = setInterval(() => {
-      isPatrolMoving.current = true;  // 순찰 이동 중 플래그
-      setPatrolIndex(prev => {
+      isPatrolMoving.current = true; // 순찰 이동 중 플래그
+      setPatrolIndex((prev) => {
         const nextIndex = (prev + 1) % PATROL_POINTS.length;
         const nextPos = PATROL_POINTS[nextIndex];
         setPosition(nextPos);
@@ -524,15 +591,30 @@ function BonggongiGuide({ regions, selectedRegion, targetGroup = 'general' }) {
       // 선택된 지역에 맞는 메시지 (외출 추천은 첫 접속 시 1회만)
       const temp = selectedRegion.climate_data?.apparent_temperature;
       if (temp !== null && temp <= -15) {
-        setCurrentMessage({ type: 'cold', message: `${selectedRegion.region}은 체감온도 ${temp}°C! 정말 추우니 조심하세요! 🥶` });
+        setCurrentMessage({
+          type: "cold",
+          message: `${selectedRegion.region}은 체감온도 ${temp}°C! 정말 추우니 조심하세요! 🥶`,
+        });
       } else if (temp !== null && temp <= -5) {
-        setCurrentMessage({ type: 'cold', message: `${selectedRegion.region}의 체감온도는 ${temp}°C예요. 따뜻하게 입으세요~ ❄️` });
-      } else if (selectedRegion.risk_level === 'danger') {
-        setCurrentMessage({ type: 'danger', message: `${selectedRegion.region}은 주의가 필요한 지역이에요! ⚠️` });
-      } else if (selectedRegion.risk_level === 'safe') {
-        setCurrentMessage({ type: 'safe', message: `${selectedRegion.region}은 비교적 쾌적한 지역이에요! 🌟` });
+        setCurrentMessage({
+          type: "cold",
+          message: `${selectedRegion.region}의 체감온도는 ${temp}°C예요. 따뜻하게 입으세요~ ❄️`,
+        });
+      } else if (selectedRegion.risk_level === "danger") {
+        setCurrentMessage({
+          type: "danger",
+          message: `${selectedRegion.region}은 주의가 필요한 지역이에요! ⚠️`,
+        });
+      } else if (selectedRegion.risk_level === "safe") {
+        setCurrentMessage({
+          type: "safe",
+          message: `${selectedRegion.region}은 비교적 쾌적한 지역이에요! 🌟`,
+        });
       } else {
-        setCurrentMessage({ type: 'info', message: `${selectedRegion.region}의 기후 정보를 확인해보세요! 📊` });
+        setCurrentMessage({
+          type: "info",
+          message: `${selectedRegion.region}의 기후 정보를 확인해보세요! 📊`,
+        });
       }
     }
   }, [selectedRegion, isLoggedIn]);
@@ -554,7 +636,9 @@ function BonggongiGuide({ regions, selectedRegion, targetGroup = 'general' }) {
             if (outingRecommendation && Math.random() < 0.5) {
               setCurrentMessage(outingRecommendation);
             } else {
-              const tips = GUIDE_MESSAGES.filter(m => m.type.startsWith('tip'));
+              const tips = GUIDE_MESSAGES.filter((m) =>
+                m.type.startsWith("tip"),
+              );
               setCurrentMessage(tips[Math.floor(Math.random() * tips.length)]);
             }
           },
@@ -567,7 +651,7 @@ function BonggongiGuide({ regions, selectedRegion, targetGroup = 'general' }) {
               <div className="speech-controls">
                 {/* 음성 토글 버튼 */}
                 <button
-                  className={`voice-toggle-btn ${isSpeaking ? 'speaking' : ''}`}
+                  className={`voice-toggle-btn ${isSpeaking ? "speaking" : ""}`}
                   onClick={(e) => {
                     e.stopPropagation();
                     if (isMuted) {
@@ -581,9 +665,9 @@ function BonggongiGuide({ regions, selectedRegion, targetGroup = 'general' }) {
                       window.speechSynthesis.cancel();
                     }
                   }}
-                  title={isMuted ? '음성 켜기' : '음성 끄기'}
+                  title={isMuted ? "음성 켜기" : "음성 끄기"}
                 >
-                  {isMuted ? '🔇' : (isSpeaking ? '🔊' : '🔈')}
+                  {isMuted ? "🔇" : isSpeaking ? "🔊" : "🔈"}
                 </button>
                 <button
                   className="close-guide-btn"
@@ -597,7 +681,9 @@ function BonggongiGuide({ regions, selectedRegion, targetGroup = 'general' }) {
                 </button>
               </div>
             </div>
-            <p className="speech-text">{currentMessage?.message || '로딩 중...'}</p>
+            <p className="speech-text">
+              {currentMessage?.message || "로딩 중..."}
+            </p>
             {/* 외출 추천 버튼 - 로그인한 사용자에게만 표시 */}
             {isLoggedIn && (
               <div className="speech-actions">
@@ -609,8 +695,8 @@ function BonggongiGuide({ regions, selectedRegion, targetGroup = 'general' }) {
                       setCurrentMessage(outingRecommendation);
                     } else {
                       setCurrentMessage({
-                        type: 'loading',
-                        message: '예보 데이터를 불러오는 중이에요~ 🔍',
+                        type: "loading",
+                        message: "예보 데이터를 불러오는 중이에요~ 🔍",
                       });
                     }
                   }}
@@ -626,10 +712,7 @@ function BonggongiGuide({ regions, selectedRegion, targetGroup = 'general' }) {
 
       {/* 봉공이 토글 버튼 (숨겼을 때 다시 표시) */}
       {!isVisible && (
-        <div
-          className="bonggongi-toggle"
-          onClick={() => setIsVisible(true)}
-        >
+        <div className="bonggongi-toggle" onClick={() => setIsVisible(true)}>
           🐝 AI반디 부르기
         </div>
       )}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -10,9 +10,9 @@ import {
   Tooltip,
   Legend,
   Filler,
-} from 'chart.js';
-import { Line, Bar } from 'react-chartjs-2';
-import { getSurfaceDataPeriod, GYEONGGI_STATIONS } from '../services/kmaApi';
+} from "chart.js";
+import { Line, Bar } from "react-chartjs-2";
+import { getSurfaceDataPeriod, GYEONGGI_STATIONS } from "../services/kmaApi";
 
 // Chart.js 컴포넌트 등록
 ChartJS.register(
@@ -24,19 +24,19 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  Filler
+  Filler,
 );
 
 // 차트 유형
 const CHART_TYPES = [
-  { id: 'temperature', label: '온도', unit: '°C', color: '#FF6384' },
-  { id: 'humidity', label: '습도', unit: '%', color: '#36A2EB' },
-  { id: 'pm', label: '미세먼지', unit: 'μg/m³', color: '#FFCE56' },
-  { id: 'uv', label: '자외선', unit: 'UV', color: '#9966FF' },
+  { id: "temperature", label: "온도", unit: "°C", color: "#FF6384" },
+  { id: "humidity", label: "습도", unit: "%", color: "#36A2EB" },
+  { id: "pm", label: "미세먼지", unit: "μg/m³", color: "#FFCE56" },
+  { id: "uv", label: "자외선", unit: "UV", color: "#9966FF" },
 ];
 
 function WeatherComparisonChart({ region, climateData }) {
-  const [activeChart, setActiveChart] = useState('temperature');
+  const [activeChart, setActiveChart] = useState("temperature");
   const [historicalData, setHistoricalData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -46,7 +46,7 @@ function WeatherComparisonChart({ region, climateData }) {
 
   // 오늘 날짜 (MMDD)
   const today = new Date();
-  const monthDay = `${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+  const monthDay = `${String(today.getMonth() + 1).padStart(2, "0")}${String(today.getDate()).padStart(2, "0")}`;
 
   // 연도별 오늘 날짜 데이터 로드
   useEffect(() => {
@@ -67,10 +67,16 @@ function WeatherComparisonChart({ region, climateData }) {
           const endTime = `${year}${monthDay}2300`;
 
           try {
-            const data = await getSurfaceDataPeriod(startTime, endTime, station.stn);
+            const data = await getSurfaceDataPeriod(
+              startTime,
+              endTime,
+              station.stn,
+            );
             if (data && data.length > 0) {
               // 12시 데이터 또는 가장 가까운 데이터 선택
-              const noonData = data.find(d => String(d.TM).includes('1200')) || data[Math.floor(data.length / 2)];
+              const noonData =
+                data.find((d) => String(d.TM).includes("1200")) ||
+                data[Math.floor(data.length / 2)];
               return {
                 year,
                 temperature: noonData.TA,
@@ -87,10 +93,10 @@ function WeatherComparisonChart({ region, climateData }) {
         });
 
         const allResults = await Promise.all(promises);
-        setHistoricalData(allResults.filter(r => r.temperature !== null));
+        setHistoricalData(allResults.filter((r) => r.temperature !== null));
       } catch (err) {
-        console.error('과거 데이터 로드 실패:', err);
-        setError('데이터를 불러오지 못했습니다');
+        console.error("과거 데이터 로드 실패:", err);
+        setError("데이터를 불러오지 못했습니다");
       } finally {
         setIsLoading(false);
       }
@@ -112,7 +118,9 @@ function WeatherComparisonChart({ region, climateData }) {
 
   // UV 지수 추정 (12월 기준)
   const estimateUV = (month) => {
-    const uvByMonth = [2.5, 3.2, 4.8, 6.2, 7.5, 8.8, 9.2, 8.5, 6.8, 4.5, 2.8, 2.2];
+    const uvByMonth = [
+      2.5, 3.2, 4.8, 6.2, 7.5, 8.8, 9.2, 8.5, 6.8, 4.5, 2.8, 2.2,
+    ];
     return uvByMonth[month] || 3;
   };
 
@@ -120,11 +128,11 @@ function WeatherComparisonChart({ region, climateData }) {
   const chartData = useMemo(() => {
     if (historicalData.length === 0) return null;
 
-    const labels = historicalData.map(d => `${d.year}년`);
+    const labels = historicalData.map((d) => `${d.year}년`);
 
     // 올해 데이터 추가 (현재 기상 데이터)
     const allData = [...historicalData];
-    if (climateData && !allData.find(d => d.year === currentYear)) {
+    if (climateData && !allData.find((d) => d.year === currentYear)) {
       allData.push({
         year: currentYear,
         temperature: climateData.temperature,
@@ -134,58 +142,66 @@ function WeatherComparisonChart({ region, climateData }) {
     }
 
     const sortedData = allData.sort((a, b) => a.year - b.year);
-    const finalLabels = sortedData.map(d => `${d.year}년`);
+    const finalLabels = sortedData.map((d) => `${d.year}년`);
 
     return {
       temperature: {
         labels: finalLabels,
-        datasets: [{
-          label: `${today.getMonth() + 1}월 ${today.getDate()}일 온도`,
-          data: sortedData.map(d => d.temperature),
-          borderColor: '#FF6384',
-          backgroundColor: 'rgba(255, 99, 132, 0.2)',
-          fill: true,
-          tension: 0.3,
-          pointRadius: 6,
-          pointBackgroundColor: sortedData.map(d =>
-            d.year === currentYear ? '#FF6384' : 'rgba(255, 99, 132, 0.6)'
-          ),
-          pointBorderWidth: sortedData.map(d => d.year === currentYear ? 3 : 1),
-        }],
+        datasets: [
+          {
+            label: `${today.getMonth() + 1}월 ${today.getDate()}일 온도`,
+            data: sortedData.map((d) => d.temperature),
+            borderColor: "#FF6384",
+            backgroundColor: "rgba(255, 99, 132, 0.2)",
+            fill: true,
+            tension: 0.3,
+            pointRadius: 6,
+            pointBackgroundColor: sortedData.map((d) =>
+              d.year === currentYear ? "#FF6384" : "rgba(255, 99, 132, 0.6)",
+            ),
+            pointBorderWidth: sortedData.map((d) =>
+              d.year === currentYear ? 3 : 1,
+            ),
+          },
+        ],
       },
       humidity: {
         labels: finalLabels,
-        datasets: [{
-          label: `${today.getMonth() + 1}월 ${today.getDate()}일 습도`,
-          data: sortedData.map(d => d.humidity),
-          borderColor: '#36A2EB',
-          backgroundColor: 'rgba(54, 162, 235, 0.2)',
-          fill: true,
-          tension: 0.3,
-          pointRadius: 6,
-          pointBackgroundColor: sortedData.map(d =>
-            d.year === currentYear ? '#36A2EB' : 'rgba(54, 162, 235, 0.6)'
-          ),
-          pointBorderWidth: sortedData.map(d => d.year === currentYear ? 3 : 1),
-        }],
+        datasets: [
+          {
+            label: `${today.getMonth() + 1}월 ${today.getDate()}일 습도`,
+            data: sortedData.map((d) => d.humidity),
+            borderColor: "#36A2EB",
+            backgroundColor: "rgba(54, 162, 235, 0.2)",
+            fill: true,
+            tension: 0.3,
+            pointRadius: 6,
+            pointBackgroundColor: sortedData.map((d) =>
+              d.year === currentYear ? "#36A2EB" : "rgba(54, 162, 235, 0.6)",
+            ),
+            pointBorderWidth: sortedData.map((d) =>
+              d.year === currentYear ? 3 : 1,
+            ),
+          },
+        ],
       },
       pm: {
         labels: finalLabels,
         datasets: [
           {
-            label: 'PM10 (추정)',
-            data: sortedData.map(d => estimatePM(d.visibility).pm10),
-            borderColor: '#FFCE56',
-            backgroundColor: 'rgba(255, 206, 86, 0.2)',
+            label: "PM10 (추정)",
+            data: sortedData.map((d) => estimatePM(d.visibility).pm10),
+            borderColor: "#FFCE56",
+            backgroundColor: "rgba(255, 206, 86, 0.2)",
             fill: true,
             tension: 0.3,
             pointRadius: 6,
           },
           {
-            label: 'PM2.5 (추정)',
-            data: sortedData.map(d => estimatePM(d.visibility).pm25),
-            borderColor: '#FF9F40',
-            backgroundColor: 'rgba(255, 159, 64, 0.2)',
+            label: "PM2.5 (추정)",
+            data: sortedData.map((d) => estimatePM(d.visibility).pm25),
+            borderColor: "#FF9F40",
+            backgroundColor: "rgba(255, 159, 64, 0.2)",
             fill: true,
             tension: 0.3,
             pointRadius: 6,
@@ -194,15 +210,17 @@ function WeatherComparisonChart({ region, climateData }) {
       },
       uv: {
         labels: finalLabels,
-        datasets: [{
-          label: `${today.getMonth() + 1}월 자외선지수 (추정)`,
-          data: sortedData.map(() => estimateUV(today.getMonth())),
-          borderColor: '#9966FF',
-          backgroundColor: 'rgba(153, 102, 255, 0.2)',
-          fill: true,
-          tension: 0.3,
-          pointRadius: 6,
-        }],
+        datasets: [
+          {
+            label: `${today.getMonth() + 1}월 자외선지수 (추정)`,
+            data: sortedData.map(() => estimateUV(today.getMonth())),
+            borderColor: "#9966FF",
+            backgroundColor: "rgba(153, 102, 255, 0.2)",
+            fill: true,
+            tension: 0.3,
+            pointRadius: 6,
+          },
+        ],
       },
     };
   }, [historicalData, climateData, currentYear, today]);
@@ -211,12 +229,17 @@ function WeatherComparisonChart({ region, climateData }) {
   const stats = useMemo(() => {
     if (historicalData.length === 0) return null;
 
-    const temps = historicalData.map(d => d.temperature).filter(t => t !== null);
-    const humids = historicalData.map(d => d.humidity).filter(h => h !== null);
+    const temps = historicalData
+      .map((d) => d.temperature)
+      .filter((t) => t !== null);
+    const humids = historicalData
+      .map((d) => d.humidity)
+      .filter((h) => h !== null);
 
-    const avg = arr => arr.length > 0 ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
-    const max = arr => arr.length > 0 ? Math.max(...arr) : 0;
-    const min = arr => arr.length > 0 ? Math.min(...arr) : 0;
+    const avg = (arr) =>
+      arr.length > 0 ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
+    const max = (arr) => (arr.length > 0 ? Math.max(...arr) : 0);
+    const min = (arr) => (arr.length > 0 ? Math.min(...arr) : 0);
 
     const currentTemp = climateData?.temperature || 0;
     const currentHumid = climateData?.humidity || 0;
@@ -244,7 +267,7 @@ function WeatherComparisonChart({ region, climateData }) {
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: 'top',
+        position: "top",
         labels: { boxWidth: 12, padding: 8, font: { size: 11 } },
       },
       tooltip: {
@@ -252,10 +275,10 @@ function WeatherComparisonChart({ region, climateData }) {
           label: (context) => {
             const value = context.parsed.y;
             if (value === null) return null;
-            let unit = '';
-            if (activeChart === 'temperature') unit = '°C';
-            else if (activeChart === 'humidity') unit = '%';
-            else if (activeChart === 'pm') unit = 'μg/m³';
+            let unit = "";
+            if (activeChart === "temperature") unit = "°C";
+            else if (activeChart === "humidity") unit = "%";
+            else if (activeChart === "pm") unit = "μg/m³";
             return `${context.dataset.label}: ${value}${unit}`;
           },
         },
@@ -263,8 +286,8 @@ function WeatherComparisonChart({ region, climateData }) {
     },
     scales: {
       y: {
-        beginAtZero: activeChart !== 'temperature',
-        grid: { color: 'rgba(0, 0, 0, 0.05)' },
+        beginAtZero: activeChart !== "temperature",
+        grid: { color: "rgba(0, 0, 0, 0.05)" },
       },
       x: { grid: { display: false } },
     },
@@ -274,7 +297,11 @@ function WeatherComparisonChart({ region, climateData }) {
     return (
       <div className="weather-chart-placeholder">
         <div className="placeholder-icon">📊</div>
-        <p>지역을 선택하면 연도별<br />오늘 날씨를 비교할 수 있습니다</p>
+        <p>
+          지역을 선택하면 연도별
+          <br />
+          오늘 날씨를 비교할 수 있습니다
+        </p>
       </div>
     );
   }
@@ -283,7 +310,9 @@ function WeatherComparisonChart({ region, climateData }) {
     <div className="weather-comparison-chart">
       <div className="chart-header">
         <h3>📊 {region} 10년 비교</h3>
-        <span className="chart-date">{today.getMonth() + 1}월 {today.getDate()}일 기준</span>
+        <span className="chart-date">
+          {today.getMonth() + 1}월 {today.getDate()}일 기준
+        </span>
       </div>
 
       {/* 차트 타입 선택 */}
@@ -291,9 +320,9 @@ function WeatherComparisonChart({ region, climateData }) {
         {CHART_TYPES.map((type) => (
           <button
             key={type.id}
-            className={`chart-tab ${activeChart === type.id ? 'active' : ''}`}
+            className={`chart-tab ${activeChart === type.id ? "active" : ""}`}
             onClick={() => setActiveChart(type.id)}
-            style={{ '--tab-color': type.color }}
+            style={{ "--tab-color": type.color }}
           >
             {type.label}
           </button>
@@ -324,11 +353,14 @@ function WeatherComparisonChart({ region, climateData }) {
         <div className="comparison-summary">
           <div className="summary-card">
             <span className="summary-label">오늘 온도</span>
-            <span className={`summary-value ${stats.temperature.diff > 0 ? 'higher' : 'lower'}`}>
+            <span
+              className={`summary-value ${stats.temperature.diff > 0 ? "higher" : "lower"}`}
+            >
               {stats.temperature.current.toFixed(1)}°C
             </span>
             <span className="summary-note">
-              평균 대비 {stats.temperature.diff > 0 ? '+' : ''}{stats.temperature.diff.toFixed(1)}°C
+              평균 대비 {stats.temperature.diff > 0 ? "+" : ""}
+              {stats.temperature.diff.toFixed(1)}°C
             </span>
           </div>
           <div className="summary-card">
@@ -337,16 +369,20 @@ function WeatherComparisonChart({ region, climateData }) {
               {stats.temperature.avg.toFixed(1)}°C
             </span>
             <span className="summary-note">
-              {stats.temperature.min.toFixed(1)} ~ {stats.temperature.max.toFixed(1)}°C
+              {stats.temperature.min.toFixed(1)} ~{" "}
+              {stats.temperature.max.toFixed(1)}°C
             </span>
           </div>
           <div className="summary-card">
             <span className="summary-label">오늘 습도</span>
-            <span className={`summary-value ${stats.humidity.diff > 0 ? 'higher' : 'lower'}`}>
+            <span
+              className={`summary-value ${stats.humidity.diff > 0 ? "higher" : "lower"}`}
+            >
               {stats.humidity.current.toFixed(0)}%
             </span>
             <span className="summary-note">
-              평균 대비 {stats.humidity.diff > 0 ? '+' : ''}{stats.humidity.diff.toFixed(0)}%
+              평균 대비 {stats.humidity.diff > 0 ? "+" : ""}
+              {stats.humidity.diff.toFixed(0)}%
             </span>
           </div>
           <div className="summary-card">
@@ -363,8 +399,15 @@ function WeatherComparisonChart({ region, climateData }) {
 
       {/* 데이터 출처 */}
       <div className="data-source-note">
-        <span>📌 기상청 API 허브 - 연도별 {today.getMonth() + 1}월 {today.getDate()}일 12시 관측자료</span>
-        <a href="https://apihub.kma.go.kr" target="_blank" rel="noopener noreferrer">
+        <span>
+          📌 기상청 API 허브 - 연도별 {today.getMonth() + 1}월 {today.getDate()}
+          일 12시 관측자료
+        </span>
+        <a
+          href="https://apihub.kma.go.kr"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           기상청 API
         </a>
       </div>

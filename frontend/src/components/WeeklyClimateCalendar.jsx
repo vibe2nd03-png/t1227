@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 
 /**
  * 주간 기후 리스크 캘린더 컴포넌트
@@ -22,7 +22,7 @@ function WeeklyClimateCalendar({ regionName, climateData }) {
   // 날짜를 YYYYMMDD 형식으로 변환
   const formatDateStr = (date) => {
     const d = new Date(date);
-    return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
+    return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
   };
 
   // 선택한 날짜 범위 계산
@@ -34,7 +34,7 @@ function WeeklyClimateCalendar({ regionName, climateData }) {
       startStr: formatDateStr(start),
       endStr: formatDateStr(end),
       start,
-      end
+      end,
     };
   };
 
@@ -46,7 +46,9 @@ function WeeklyClimateCalendar({ regionName, climateData }) {
 
     try {
       // 날짜 범위 파라미터 추가
-      const response = await fetch(`/api/kma-forecast?region=${encodeURIComponent(regionName)}&startDate=${startStr}&endDate=${endStr}`);
+      const response = await fetch(
+        `/api/kma-forecast?region=${encodeURIComponent(regionName)}&startDate=${startStr}&endDate=${endStr}`,
+      );
       const data = await response.json();
 
       if (data.success && data.forecasts) {
@@ -66,10 +68,10 @@ function WeeklyClimateCalendar({ regionName, climateData }) {
           setForecasts(dailyForecasts);
         }
       } else {
-        throw new Error(data.error || '예보 데이터를 가져올 수 없습니다');
+        throw new Error(data.error || "예보 데이터를 가져올 수 없습니다");
       }
     } catch (err) {
-      console.error('주간예보 로드 실패:', err);
+      console.error("주간예보 로드 실패:", err);
       // 경고 메시지 없이 예상 데이터만 표시
       setForecasts(generateMockWeekly());
     } finally {
@@ -80,7 +82,7 @@ function WeeklyClimateCalendar({ regionName, climateData }) {
   // 선택한 날짜 범위로 필터링
   const filterByDateRange = (forecastList) => {
     const { startStr, endStr } = getDateRange();
-    return forecastList.filter(f => {
+    return forecastList.filter((f) => {
       const dateStr = f.date;
       return dateStr >= startStr && dateStr <= endStr;
     });
@@ -89,7 +91,7 @@ function WeeklyClimateCalendar({ regionName, climateData }) {
   // Mock 데이터로 부족한 날짜 보완
   const supplementWithMock = (existingForecasts) => {
     const { start } = getDateRange();
-    const existingDates = new Set(existingForecasts.map(f => f.date));
+    const existingDates = new Set(existingForecasts.map((f) => f.date));
     const result = [...existingForecasts];
 
     for (let i = 0; i < 7; i++) {
@@ -113,8 +115,8 @@ function WeeklyClimateCalendar({ regionName, climateData }) {
     const maxTemp = minTemp + Math.floor(Math.random() * 8) + 5;
     const pop = Math.random() > 0.7 ? Math.floor(Math.random() * 60) + 20 : 0;
 
-    const icons = ['☀️', '🌤️', '⛅', '☁️', '🌧️', '❄️'];
-    const conditions = ['맑음', '구름조금', '구름많음', '흐림', '비', '눈'];
+    const icons = ["☀️", "🌤️", "⛅", "☁️", "🌧️", "❄️"];
+    const conditions = ["맑음", "구름조금", "구름많음", "흐림", "비", "눈"];
     const idx = Math.floor(Math.random() * icons.length);
 
     return {
@@ -133,7 +135,7 @@ function WeeklyClimateCalendar({ regionName, climateData }) {
   const groupByDate = (forecastList) => {
     const grouped = {};
 
-    forecastList.forEach(f => {
+    forecastList.forEach((f) => {
       const date = f.date;
       if (!grouped[date]) {
         grouped[date] = {
@@ -171,12 +173,13 @@ function WeeklyClimateCalendar({ regionName, climateData }) {
 
     // 배열로 변환 및 정렬
     return Object.values(grouped)
-      .map(day => ({
+      .map((day) => ({
         ...day,
         minTemp: day.minTemp === Infinity ? null : day.minTemp,
         maxTemp: day.maxTemp === -Infinity ? null : day.maxTemp,
-        mainIcon: day.mainIcon || day.forecasts[0]?.icon || '☀️',
-        mainCondition: day.mainCondition || day.forecasts[0]?.condition || '맑음',
+        mainIcon: day.mainIcon || day.forecasts[0]?.icon || "☀️",
+        mainCondition:
+          day.mainCondition || day.forecasts[0]?.condition || "맑음",
         riskLevel: calculateDayRisk(day, climateData),
       }))
       .sort((a, b) => a.date.localeCompare(b.date))
@@ -215,10 +218,10 @@ function WeeklyClimateCalendar({ regionName, climateData }) {
     }
 
     // 등급 결정
-    if (score >= 50) return 'danger';
-    if (score >= 35) return 'warning';
-    if (score >= 20) return 'caution';
-    return 'safe';
+    if (score >= 50) return "danger";
+    if (score >= 35) return "warning";
+    if (score >= 20) return "caution";
+    return "safe";
   };
 
   // Mock 주간 데이터 생성
@@ -234,18 +237,20 @@ function WeeklyClimateCalendar({ regionName, climateData }) {
       const maxTemp = minTemp + Math.floor(Math.random() * 8) + 5;
       const pop = Math.random() > 0.7 ? Math.floor(Math.random() * 60) + 20 : 0;
 
-      const icons = ['☀️', '🌤️', '⛅', '☁️', '🌧️', '❄️'];
-      const conditions = ['맑음', '구름조금', '구름많음', '흐림', '비', '눈'];
+      const icons = ["☀️", "🌤️", "⛅", "☁️", "🌧️", "❄️"];
+      const conditions = ["맑음", "구름조금", "구름많음", "흐림", "비", "눈"];
       const idx = Math.floor(Math.random() * icons.length);
 
       days.push({
-        date: date.toISOString().slice(0, 10).replace(/-/g, ''),
+        date: date.toISOString().slice(0, 10).replace(/-/g, ""),
         minTemp,
         maxTemp,
         mainIcon: icons[idx],
         mainCondition: conditions[idx],
         maxPop: pop,
-        riskLevel: ['safe', 'caution', 'warning', 'danger'][Math.floor(Math.random() * 4)],
+        riskLevel: ["safe", "caution", "warning", "danger"][
+          Math.floor(Math.random() * 4)
+        ],
       });
     }
 
@@ -254,12 +259,12 @@ function WeeklyClimateCalendar({ regionName, climateData }) {
 
   // 날짜 포맷팅
   const formatDate = (dateStr) => {
-    if (!dateStr || typeof dateStr !== 'string') {
+    if (!dateStr || typeof dateStr !== "string") {
       const today = new Date();
       return {
         month: today.getMonth() + 1,
         day: today.getDate(),
-        weekday: ['일', '월', '화', '수', '목', '금', '토'][today.getDay()],
+        weekday: ["일", "월", "화", "수", "목", "금", "토"][today.getDay()],
         isToday: true,
         isWeekend: today.getDay() === 0 || today.getDay() === 6,
       };
@@ -270,7 +275,7 @@ function WeeklyClimateCalendar({ regionName, climateData }) {
     const day = parseInt(dateStr.slice(6, 8));
     const date = new Date(year, month - 1, day);
 
-    const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+    const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
     return {
       month: month,
       day: day,
@@ -284,29 +289,39 @@ function WeeklyClimateCalendar({ regionName, climateData }) {
   const isToday = (dateStr) => {
     if (!dateStr) return false;
     const today = new Date();
-    const todayStr = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+    const todayStr = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, "0")}${String(today.getDate()).padStart(2, "0")}`;
     return dateStr === todayStr;
   };
 
   // 위험등급별 색상
   const getRiskColor = (level) => {
     switch (level) {
-      case 'danger': return '#F44336';
-      case 'warning': return '#FF9800';
-      case 'caution': return '#FFEB3B';
-      case 'safe': return '#4CAF50';
-      default: return '#9E9E9E';
+      case "danger":
+        return "#F44336";
+      case "warning":
+        return "#FF9800";
+      case "caution":
+        return "#FFEB3B";
+      case "safe":
+        return "#4CAF50";
+      default:
+        return "#9E9E9E";
     }
   };
 
   // 위험등급별 라벨
   const getRiskLabel = (level) => {
     switch (level) {
-      case 'danger': return '위험';
-      case 'warning': return '경고';
-      case 'caution': return '주의';
-      case 'safe': return '좋음';
-      default: return '-';
+      case "danger":
+        return "위험";
+      case "warning":
+        return "경고";
+      case "caution":
+        return "주의";
+      case "safe":
+        return "좋음";
+      default:
+        return "-";
     }
   };
 
@@ -370,15 +385,15 @@ function WeeklyClimateCalendar({ regionName, climateData }) {
   const getBestDay = () => {
     if (forecasts.length === 0) return null;
 
-    const safeDays = forecasts.filter(f => f.riskLevel === 'safe');
+    const safeDays = forecasts.filter((f) => f.riskLevel === "safe");
     if (safeDays.length > 0) {
       // 가장 따뜻한 안전한 날
       return safeDays.reduce((best, day) =>
-        (day.maxTemp || 0) > (best.maxTemp || 0) ? day : best
+        (day.maxTemp || 0) > (best.maxTemp || 0) ? day : best,
       );
     }
 
-    const cautionDays = forecasts.filter(f => f.riskLevel === 'caution');
+    const cautionDays = forecasts.filter((f) => f.riskLevel === "caution");
     if (cautionDays.length > 0) {
       return cautionDays[0];
     }
@@ -420,7 +435,11 @@ function WeeklyClimateCalendar({ regionName, climateData }) {
             📆 {getWeekRangeText()}
           </span>
           {!isTodayInRange() && (
-            <button className="today-btn" onClick={goToToday} title="오늘로 이동">
+            <button
+              className="today-btn"
+              onClick={goToToday}
+              title="오늘로 이동"
+            >
               오늘
             </button>
           )}
@@ -435,7 +454,7 @@ function WeeklyClimateCalendar({ regionName, climateData }) {
         <div className="date-picker-popup">
           <input
             type="date"
-            value={startDate.toISOString().split('T')[0]}
+            value={startDate.toISOString().split("T")[0]}
             onChange={(e) => goToDate(e.target.value)}
             className="date-input"
           />
@@ -459,7 +478,11 @@ function WeeklyClimateCalendar({ regionName, climateData }) {
         <div className="best-day-banner">
           <span className="best-icon">🌟</span>
           <span className="best-text">
-            이번 주 최적의 외출일: <strong>{formatDate(bestDay.date).month}/{formatDate(bestDay.date).day}({formatDate(bestDay.date).weekday})</strong>
+            이번 주 최적의 외출일:{" "}
+            <strong>
+              {formatDate(bestDay.date).month}/{formatDate(bestDay.date).day}(
+              {formatDate(bestDay.date).weekday})
+            </strong>
             <span className="best-temp">최고 {bestDay.maxTemp}°C</span>
           </span>
         </div>
@@ -473,16 +496,24 @@ function WeeklyClimateCalendar({ regionName, climateData }) {
           return (
             <div
               key={day.date}
-              className={`calendar-day ${dateInfo.isToday ? 'today' : ''} ${dateInfo.isWeekend ? 'weekend' : ''} ${selectedDay === day.date ? 'selected' : ''} ${day.isMock ? 'mock-data' : ''}`}
-              onClick={() => setSelectedDay(selectedDay === day.date ? null : day.date)}
-              style={{ '--risk-color': getRiskColor(day.riskLevel) }}
+              className={`calendar-day ${dateInfo.isToday ? "today" : ""} ${dateInfo.isWeekend ? "weekend" : ""} ${selectedDay === day.date ? "selected" : ""} ${day.isMock ? "mock-data" : ""}`}
+              onClick={() =>
+                setSelectedDay(selectedDay === day.date ? null : day.date)
+              }
+              style={{ "--risk-color": getRiskColor(day.riskLevel) }}
             >
               {/* 예상 데이터 표시 */}
-              {day.isMock && <span className="mock-badge" title="예상 데이터">예상</span>}
+              {day.isMock && (
+                <span className="mock-badge" title="예상 데이터">
+                  예상
+                </span>
+              )}
 
               {/* 날짜 헤더 */}
               <div className="day-header">
-                <span className={`day-weekday ${dateInfo.isWeekend ? 'weekend' : ''}`}>
+                <span
+                  className={`day-weekday ${dateInfo.isWeekend ? "weekend" : ""}`}
+                >
                   {dateInfo.weekday}
                 </span>
                 <span className="day-date">
@@ -505,9 +536,7 @@ function WeeklyClimateCalendar({ regionName, climateData }) {
               </div>
 
               {/* 강수확률 */}
-              {day.maxPop > 0 && (
-                <div className="day-pop">💧{day.maxPop}%</div>
-              )}
+              {day.maxPop > 0 && <div className="day-pop">💧{day.maxPop}%</div>}
 
               {/* 위험등급 배지 */}
               <div
@@ -525,7 +554,7 @@ function WeeklyClimateCalendar({ regionName, climateData }) {
       {selectedDay && (
         <div className="day-detail">
           {(() => {
-            const day = forecasts.find(f => f.date === selectedDay);
+            const day = forecasts.find((f) => f.date === selectedDay);
             if (!day) return null;
             const dateInfo = formatDate(day.date);
 
@@ -549,11 +578,15 @@ function WeeklyClimateCalendar({ regionName, climateData }) {
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">최고</span>
-                    <span className="detail-value temp-high">{day.maxTemp}°C</span>
+                    <span className="detail-value temp-high">
+                      {day.maxTemp}°C
+                    </span>
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">최저</span>
-                    <span className="detail-value temp-low">{day.minTemp}°C</span>
+                    <span className="detail-value temp-low">
+                      {day.minTemp}°C
+                    </span>
                   </div>
                   {day.maxPop > 0 && (
                     <div className="detail-item">
@@ -571,16 +604,32 @@ function WeeklyClimateCalendar({ regionName, climateData }) {
       {/* 범례 */}
       <div className="calendar-legend">
         <span className="legend-item">
-          <span className="legend-dot" style={{ backgroundColor: '#4CAF50' }}></span>좋음
+          <span
+            className="legend-dot"
+            style={{ backgroundColor: "#4CAF50" }}
+          ></span>
+          좋음
         </span>
         <span className="legend-item">
-          <span className="legend-dot" style={{ backgroundColor: '#FFEB3B' }}></span>주의
+          <span
+            className="legend-dot"
+            style={{ backgroundColor: "#FFEB3B" }}
+          ></span>
+          주의
         </span>
         <span className="legend-item">
-          <span className="legend-dot" style={{ backgroundColor: '#FF9800' }}></span>경고
+          <span
+            className="legend-dot"
+            style={{ backgroundColor: "#FF9800" }}
+          ></span>
+          경고
         </span>
         <span className="legend-item">
-          <span className="legend-dot" style={{ backgroundColor: '#F44336' }}></span>위험
+          <span
+            className="legend-dot"
+            style={{ backgroundColor: "#F44336" }}
+          ></span>
+          위험
         </span>
       </div>
     </div>

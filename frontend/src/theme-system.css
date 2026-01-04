@@ -4,7 +4,8 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* 기본 테마 - 안전 (연한 파랑/흰색) */
-:root, [data-theme="safe"] {
+:root,
+[data-theme="safe"] {
   --theme-bg-primary: #f0f4f8;
   --theme-bg-secondary: #ffffff;
   --theme-bg-tertiary: #e8eef4;
@@ -16,7 +17,12 @@
   --theme-accent-light: rgba(59, 130, 246, 0.1);
   --theme-border: rgba(0, 0, 0, 0.08);
   --theme-shadow: rgba(0, 0, 0, 0.1);
-  --theme-gradient: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 50%, #ffffff 100%);
+  --theme-gradient: linear-gradient(
+    135deg,
+    #e0f2fe 0%,
+    #f0f9ff 50%,
+    #ffffff 100%
+  );
 }
 
 /* 좋음 테마 - 초록/상쾌 */
@@ -32,7 +38,12 @@
   --theme-accent-light: rgba(16, 185, 129, 0.1);
   --theme-border: rgba(16, 185, 129, 0.15);
   --theme-shadow: rgba(16, 185, 129, 0.1);
-  --theme-gradient: linear-gradient(135deg, #d1fae5 0%, #ecfdf5 50%, #ffffff 100%);
+  --theme-gradient: linear-gradient(
+    135deg,
+    #d1fae5 0%,
+    #ecfdf5 50%,
+    #ffffff 100%
+  );
 }
 
 /* 주의 테마 - 주황/따뜻 */
@@ -48,7 +59,12 @@
   --theme-accent-light: rgba(245, 158, 11, 0.1);
   --theme-border: rgba(245, 158, 11, 0.2);
   --theme-shadow: rgba(245, 158, 11, 0.1);
-  --theme-gradient: linear-gradient(135deg, #fef3c7 0%, #fffbeb 50%, #ffffff 100%);
+  --theme-gradient: linear-gradient(
+    135deg,
+    #fef3c7 0%,
+    #fffbeb 50%,
+    #ffffff 100%
+  );
 }
 
 /* 경고 테마 - 주황빨강 */
@@ -64,7 +80,12 @@
   --theme-accent-light: rgba(249, 115, 22, 0.1);
   --theme-border: rgba(249, 115, 22, 0.2);
   --theme-shadow: rgba(249, 115, 22, 0.1);
-  --theme-gradient: linear-gradient(135deg, #ffedd5 0%, #fff7ed 50%, #ffffff 100%);
+  --theme-gradient: linear-gradient(
+    135deg,
+    #ffedd5 0%,
+    #fff7ed 50%,
+    #ffffff 100%
+  );
 }
 
 /* 위험 테마 - 갈색/빨강 */
@@ -80,7 +101,12 @@
   --theme-accent-light: rgba(239, 68, 68, 0.1);
   --theme-border: rgba(239, 68, 68, 0.15);
   --theme-shadow: rgba(239, 68, 68, 0.1);
-  --theme-gradient: linear-gradient(135deg, #fee2e2 0%, #fef2f2 50%, #ffffff 100%);
+  --theme-gradient: linear-gradient(
+    135deg,
+    #fee2e2 0%,
+    #fef2f2 50%,
+    #ffffff 100%
+  );
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -89,7 +115,9 @@
 body {
   background: var(--theme-gradient) !important;
   color: var(--theme-text-primary) !important;
-  transition: background 0.5s ease, color 0.3s ease;
+  transition:
+    background 0.5s ease,
+    color 0.3s ease;
 }
 
 body::before {
@@ -111,7 +139,12 @@ body::after {
 }
 
 .sidebar::before {
-  background: linear-gradient(180deg, transparent, var(--theme-accent), transparent) !important;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    var(--theme-accent),
+    transparent
+  ) !important;
   opacity: 0.3 !important;
 }
 
@@ -122,23 +155,30 @@ body::after {
 
 .sidebar-header h1,
 .header-title h1 {
-  background: linear-gradient(135deg, var(--theme-text-primary), var(--theme-text-secondary)) !important;
+  background: linear-gradient(
+    135deg,
+    var(--theme-text-primary),
+    var(--theme-text-secondary)
+  ) !important;
   -webkit-background-clip: text !important;
   -webkit-text-fill-color: transparent !important;
 }
 
-.target-btn, .target-chip {
+.target-btn,
+.target-chip {
   background: var(--theme-bg-elevated) !important;
   border-color: var(--theme-border) !important;
   color: var(--theme-text-secondary) !important;
 }
 
-.target-btn:hover, .target-chip:hover {
+.target-btn:hover,
+.target-chip:hover {
   border-color: var(--theme-accent) !important;
   color: var(--theme-accent) !important;
 }
 
-.target-btn.active, .target-chip.active {
+.target-btn.active,
+.target-chip.active {
   background: var(--theme-accent) !important;
   border-color: var(--theme-accent) !important;
   color: white !important;
@@ -177,16 +217,19 @@ body::after {
   background: var(--theme-bg-secondary) !important;
 }
 
-.region-card, .region-card-compact {
+.region-card,
+.region-card-compact {
   background: var(--theme-bg-elevated) !important;
   border-color: var(--theme-border) !important;
 }
 
-.climate-grid-compact, .data-grid {
+.climate-grid-compact,
+.data-grid {
   background: var(--theme-bg-tertiary) !important;
 }
 
-.climate-item, .data-item {
+.climate-item,
+.data-item {
   background: var(--theme-bg-elevated) !important;
   border-color: var(--theme-border) !important;
   color: var(--theme-text-primary) !important;
@@ -196,11 +239,13 @@ body::after {
   color: var(--theme-text-primary) !important;
 }
 
-.climate-item .label, .data-label {
+.climate-item .label,
+.data-label {
   color: var(--theme-text-tertiary) !important;
 }
 
-.ai-section, .ai-explanation {
+.ai-section,
+.ai-explanation {
   border-top-color: var(--theme-border) !important;
 }
 
@@ -208,7 +253,8 @@ body::after {
   color: var(--theme-text-secondary) !important;
 }
 
-.ai-explanation-compact p, .explanation-text {
+.ai-explanation-compact p,
+.explanation-text {
   color: var(--theme-text-secondary) !important;
   background: var(--theme-bg-tertiary) !important;
   border-left-color: var(--theme-accent) !important;
@@ -266,7 +312,8 @@ body::after {
   color: var(--theme-text-primary) !important;
 }
 
-.rank-temp, .rank-sentiment {
+.rank-temp,
+.rank-sentiment {
   color: var(--theme-text-tertiary) !important;
 }
 
@@ -285,7 +332,8 @@ body::after {
   color: var(--theme-text-secondary) !important;
 }
 
-.modal-content, .air-quality-modal {
+.modal-content,
+.air-quality-modal {
   background: var(--theme-bg-secondary) !important;
   border-color: var(--theme-border) !important;
 }
@@ -298,19 +346,22 @@ body::after {
   color: var(--theme-text-secondary) !important;
 }
 
-.modal-input, .comment-input-inline {
+.modal-input,
+.comment-input-inline {
   background: var(--theme-bg-tertiary) !important;
   border-color: var(--theme-border) !important;
   color: var(--theme-text-primary) !important;
 }
 
-.chip, .comment-chip {
+.chip,
+.comment-chip {
   background: var(--theme-bg-tertiary) !important;
   border-color: var(--theme-border) !important;
   color: var(--theme-text-secondary) !important;
 }
 
-.chip.selected, .comment-chip.selected {
+.chip.selected,
+.comment-chip.selected {
   background: var(--theme-accent) !important;
   border-color: var(--theme-accent) !important;
   color: white !important;
@@ -330,7 +381,9 @@ body::after {
   background: var(--theme-accent-light) !important;
 }
 
-.generate-btn-large, .submit-btn-large, .modal-btn {
+.generate-btn-large,
+.submit-btn-large,
+.modal-btn {
   background: var(--theme-accent) !important;
 }
 
@@ -501,15 +554,18 @@ body::after {
     padding: 10px 20px !important;
   }
 
-  .region-card h2, .region-title h2 {
+  .region-card h2,
+  .region-title h2 {
     font-size: 1.6rem !important;
   }
 
-  .score-value, .score-badge .score {
+  .score-value,
+  .score-badge .score {
     font-size: 3rem !important;
   }
 
-  .climate-item .value, .data-value {
+  .climate-item .value,
+  .data-value {
     font-size: 1.1rem !important;
   }
 
@@ -517,11 +573,13 @@ body::after {
     font-size: 1.4rem !important;
   }
 
-  .climate-item .label, .data-label {
+  .climate-item .label,
+  .data-label {
     font-size: 0.85rem !important;
   }
 
-  .ai-explanation-compact p, .explanation-text {
+  .ai-explanation-compact p,
+  .explanation-text {
     font-size: 1.05rem !important;
     line-height: 1.8 !important;
   }

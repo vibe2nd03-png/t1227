@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '../supabase';
+import React, { useState, useEffect } from "react";
+import { supabase } from "../supabase";
 
 function RegionRanking({ regions, onRegionClick }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [reportStats, setReportStats] = useState({});
-  const [activeTab, setActiveTab] = useState('best'); // best, cool, reports
+  const [activeTab, setActiveTab] = useState("best"); // best, cool, reports
   const [isRiskLevelVisible, setIsRiskLevelVisible] = useState(false);
 
   // 제보 통계 로드
@@ -17,9 +17,12 @@ function RegionRanking({ regions, onRegionClick }) {
   const loadReportStats = async () => {
     try {
       const { data, error } = await supabase
-        .from('user_reports')
-        .select('region, sentiment_score, temp_adjustment, emoji')
-        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+        .from("user_reports")
+        .select("region, sentiment_score, temp_adjustment, emoji")
+        .gte(
+          "created_at",
+          new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+        );
 
       if (!error && data) {
         const stats = data.reduce((acc, report) => {
@@ -33,7 +36,8 @@ function RegionRanking({ regions, onRegionClick }) {
           }
           acc[report.region].count++;
           acc[report.region].totalSentiment += report.sentiment_score;
-          acc[report.region].totalTempAdj += parseFloat(report.temp_adjustment) || 0;
+          acc[report.region].totalTempAdj +=
+            parseFloat(report.temp_adjustment) || 0;
           acc[report.region].emojis.push(report.emoji);
           return acc;
         }, {});
@@ -49,7 +53,7 @@ function RegionRanking({ regions, onRegionClick }) {
         setReportStats(stats);
       }
     } catch (error) {
-      console.error('통계 로드 실패:', error);
+      console.error("통계 로드 실패:", error);
     }
   };
 
@@ -58,7 +62,7 @@ function RegionRanking({ regions, onRegionClick }) {
       acc[val] = (acc[val] || 0) + 1;
       return acc;
     }, {});
-    return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || '🌡️';
+    return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || "🌡️";
   };
 
   // 현재 월 기준으로 계절 판단 (6~10월: 여름/가을, 11~5월: 겨울/봄)
@@ -74,9 +78,11 @@ function RegionRanking({ regions, onRegionClick }) {
       reportCount: reportStats[r.region]?.count || 0,
       topEmoji: reportStats[r.region]?.topEmoji || null,
     }))
-    .sort((a, b) => isSummerSeason
-      ? b.temperature - a.temperature  // 여름: 높은 온도순 (가장 더운)
-      : a.temperature - b.temperature  // 겨울: 낮은 온도순 (가장 추운)
+    .sort(
+      (a, b) =>
+        isSummerSeason
+          ? b.temperature - a.temperature // 여름: 높은 온도순 (가장 더운)
+          : a.temperature - b.temperature, // 겨울: 낮은 온도순 (가장 추운)
     )
     .slice(0, 5);
 
@@ -97,7 +103,7 @@ function RegionRanking({ regions, onRegionClick }) {
     .filter(([_, stats]) => stats.count > 0)
     .map(([regionName, stats]) => {
       // regions에서 해당 지역 정보 찾기
-      const regionData = regions.find(r => r.region === regionName) || {};
+      const regionData = regions.find((r) => r.region === regionName) || {};
       return {
         region: regionName,
         ...regionData,
@@ -112,14 +118,14 @@ function RegionRanking({ regions, onRegionClick }) {
   // 위험 등급별 지역 분류
   const riskLevelOrder = { danger: 0, warning: 1, caution: 2, safe: 3 };
   const riskLevelLabels = {
-    danger: { label: '위험', icon: '🔴', color: '#ef4444' },
-    warning: { label: '경고', icon: '🟠', color: '#f97316' },
-    caution: { label: '주의', icon: '🟡', color: '#eab308' },
-    safe: { label: '안전', icon: '🟢', color: '#22c55e' },
+    danger: { label: "위험", icon: "🔴", color: "#ef4444" },
+    warning: { label: "경고", icon: "🟠", color: "#f97316" },
+    caution: { label: "주의", icon: "🟡", color: "#eab308" },
+    safe: { label: "안전", icon: "🟢", color: "#22c55e" },
   };
 
   const regionsByRisk = regions.reduce((acc, r) => {
-    const level = r.risk_level || 'safe';
+    const level = r.risk_level || "safe";
     if (!acc[level]) acc[level] = [];
     acc[level].push(r);
     return acc;
@@ -139,7 +145,13 @@ function RegionRanking({ regions, onRegionClick }) {
             onClick={() => onRegionClick && onRegionClick(region)}
           >
             <span className="rank-number">
-              {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}`}
+              {idx === 0
+                ? "🥇"
+                : idx === 1
+                  ? "🥈"
+                  : idx === 2
+                    ? "🥉"
+                    : `${idx + 1}`}
             </span>
             <div className="rank-info">
               <span className="rank-region">{region.region}</span>
@@ -148,9 +160,12 @@ function RegionRanking({ regions, onRegionClick }) {
               )}
             </div>
             <div className="rank-stats">
-              {(type === 'best' || type === 'cool') && (
+              {(type === "best" || type === "cool") && (
                 <>
-                  <span className="rank-score" style={{ color: region.risk_color }}>
+                  <span
+                    className="rank-score"
+                    style={{ color: region.risk_color }}
+                  >
                     {Math.round(region.adjustedScore)}점
                   </span>
                   <span className="rank-temp">
@@ -158,11 +173,15 @@ function RegionRanking({ regions, onRegionClick }) {
                   </span>
                 </>
               )}
-              {type === 'reports' && (
+              {type === "reports" && (
                 <>
                   <span className="rank-count">{region.reportCount}건</span>
                   <span className="rank-sentiment">
-                    {region.avgSentiment < -1 ? '🔥 더움' : region.avgSentiment > 1 ? '❄️ 쌀쌀' : '😊 보통'}
+                    {region.avgSentiment < -1
+                      ? "🔥 더움"
+                      : region.avgSentiment > 1
+                        ? "❄️ 쌀쌀"
+                        : "😊 보통"}
                   </span>
                 </>
               )}
@@ -174,14 +193,14 @@ function RegionRanking({ regions, onRegionClick }) {
   };
 
   return (
-    <div className={`region-ranking ${isExpanded ? 'expanded' : ''}`}>
+    <div className={`region-ranking ${isExpanded ? "expanded" : ""}`}>
       <button
         className="ranking-toggle"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <span className="toggle-icon">🏆</span>
         <span>체감 랭킹</span>
-        <span className="toggle-arrow">{isExpanded ? '▼' : '▲'}</span>
+        <span className="toggle-arrow">{isExpanded ? "▼" : "▲"}</span>
       </button>
 
       {isExpanded && (
@@ -189,20 +208,20 @@ function RegionRanking({ regions, onRegionClick }) {
           {/* 탭 메뉴 */}
           <div className="ranking-tabs">
             <button
-              className={`tab-btn ${activeTab === 'best' ? 'active' : ''}`}
-              onClick={() => setActiveTab('best')}
+              className={`tab-btn ${activeTab === "best" ? "active" : ""}`}
+              onClick={() => setActiveTab("best")}
             >
-              {isSummerSeason ? '🥵 최고 더운' : '🥶 최고 추운'}
+              {isSummerSeason ? "🥵 최고 더운" : "🥶 최고 추운"}
             </button>
             <button
-              className={`tab-btn ${activeTab === 'cool' ? 'active' : ''}`}
-              onClick={() => setActiveTab('cool')}
+              className={`tab-btn ${activeTab === "cool" ? "active" : ""}`}
+              onClick={() => setActiveTab("cool")}
             >
               😎 쾌적한 동네
             </button>
             <button
-              className={`tab-btn ${activeTab === 'reports' ? 'active' : ''}`}
-              onClick={() => setActiveTab('reports')}
+              className={`tab-btn ${activeTab === "reports" ? "active" : ""}`}
+              onClick={() => setActiveTab("reports")}
             >
               📢 제보 핫플
             </button>
@@ -210,9 +229,10 @@ function RegionRanking({ regions, onRegionClick }) {
 
           {/* 랭킹 리스트 */}
           <div className="ranking-list-container">
-            {activeTab === 'best' && renderRankList(bestRegions, 'best')}
-            {activeTab === 'cool' && renderRankList(coolestRegions, 'cool')}
-            {activeTab === 'reports' && renderRankList(mostReportedRegions, 'reports')}
+            {activeTab === "best" && renderRankList(bestRegions, "best")}
+            {activeTab === "cool" && renderRankList(coolestRegions, "cool")}
+            {activeTab === "reports" &&
+              renderRankList(mostReportedRegions, "reports")}
           </div>
 
           {/* 보정 체감 온도 설명 */}
@@ -238,7 +258,7 @@ function RegionRanking({ regions, onRegionClick }) {
             </button>
           </div>
           <div className="risk-level-grid">
-            {['danger', 'warning', 'caution', 'safe'].map((level) => {
+            {["danger", "warning", "caution", "safe"].map((level) => {
               const info = riskLevelLabels[level];
               const count = regionsByRisk[level]?.length || 0;
               return (
@@ -249,7 +269,9 @@ function RegionRanking({ regions, onRegionClick }) {
                 >
                   <span className="risk-icon">{info.icon}</span>
                   <span className="risk-label">{info.label}</span>
-                  <span className="risk-count" style={{ color: info.color }}>{count}개</span>
+                  <span className="risk-count" style={{ color: info.color }}>
+                    {count}개
+                  </span>
                 </div>
               );
             })}
@@ -258,7 +280,7 @@ function RegionRanking({ regions, onRegionClick }) {
             <div className="danger-regions">
               <span className="danger-title">🔴 위험 지역:</span>
               <span className="danger-list">
-                {regionsByRisk.danger.map(r => r.region).join(', ')}
+                {regionsByRisk.danger.map((r) => r.region).join(", ")}
               </span>
             </div>
           )}

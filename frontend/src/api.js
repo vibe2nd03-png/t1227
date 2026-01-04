@@ -1,6 +1,6 @@
-import axios from 'axios';
+import axios from "axios";
 
-const API_BASE = '/api';
+const API_BASE = "/api";
 
 export const climateApi = {
   // 모든 지역 기후 데이터 조회
@@ -13,15 +13,18 @@ export const climateApi = {
   // 특정 지역 기후 데이터 조회
   getRegion: async (region, target = null) => {
     const params = target ? { target } : {};
-    const response = await axios.get(`${API_BASE}/climate/${encodeURIComponent(region)}`, { params });
+    const response = await axios.get(
+      `${API_BASE}/climate/${encodeURIComponent(region)}`,
+      { params },
+    );
     return response.data;
   },
 
   // AI 설명 조회
-  getExplanation: async (region, target = 'general') => {
+  getExplanation: async (region, target = "general") => {
     const response = await axios.get(
       `${API_BASE}/climate/${encodeURIComponent(region)}/explain`,
-      { params: { target } }
+      { params: { target } },
     );
     return response.data;
   },
@@ -30,5 +33,5 @@ export const climateApi = {
   getRegionList: async () => {
     const response = await axios.get(`${API_BASE}/regions`);
     return response.data;
-  }
+  },
 };

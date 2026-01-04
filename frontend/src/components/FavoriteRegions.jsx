@@ -1,6 +1,6 @@
-import React from 'react';
-import { useFavorites } from '../hooks/useFavorites';
-import { useAuth } from '../contexts/AuthContext';
+import React from "react";
+import { useFavorites } from "../hooks/useFavorites";
+import { useAuth } from "../contexts/AuthContext";
 
 /**
  * 즐겨찾기 지역 빠른 접근 컴포넌트
@@ -25,7 +25,7 @@ function FavoriteRegions({ allRegions, onRegionSelect, selectedRegion }) {
 
   // 즐겨찾기 지역의 전체 데이터 찾기
   const favoriteRegions = favorites
-    .map(regionName => allRegions.find(r => r.region === regionName))
+    .map((regionName) => allRegions.find((r) => r.region === regionName))
     .filter(Boolean);
 
   return (
@@ -36,20 +36,17 @@ function FavoriteRegions({ allRegions, onRegionSelect, selectedRegion }) {
       </div>
       <div className="favorite-list">
         {favoriteRegions.map((region) => {
-          const riskColor = region.risk_color || '#22c55e';
+          const riskColor = region.risk_color || "#22c55e";
           return (
             <div
               key={region.region}
-              className={`favorite-item ${selectedRegion?.region === region.region ? 'selected' : ''}`}
+              className={`favorite-item ${selectedRegion?.region === region.region ? "selected" : ""}`}
               onClick={() => onRegionSelect(region)}
             >
               <div className="favorite-info">
                 <span className="favorite-name">{region.region}</span>
-                <span
-                  className="favorite-temp"
-                  style={{ color: riskColor }}
-                >
-                  {region.climate_data?.apparent_temperature ?? '-'}°
+                <span className="favorite-temp" style={{ color: riskColor }}>
+                  {region.climate_data?.apparent_temperature ?? "-"}°
                 </span>
               </div>
               <div className="favorite-status">
@@ -57,7 +54,7 @@ function FavoriteRegions({ allRegions, onRegionSelect, selectedRegion }) {
                   className="favorite-risk"
                   style={{ backgroundColor: riskColor }}
                 >
-                  {region.risk_label || '안전'}
+                  {region.risk_label || "안전"}
                 </span>
                 <button
                   className="favorite-remove-btn"

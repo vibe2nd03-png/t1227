@@ -1,15 +1,19 @@
-import { createClient } from '@supabase/supabase-js';
-import { createLogger } from './utils/logger';
+import { createClient } from "@supabase/supabase-js";
+import { createLogger } from "./utils/logger";
 
-const log = createLogger('Supabase');
+const log = createLogger("Supabase");
 
 // 환경 변수에서 Supabase 설정 로드 (폴백 포함)
-export const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://pcdmrofcfqtyywtzyrfo.supabase.co';
-export const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q';
+export const SUPABASE_URL =
+  import.meta.env.VITE_SUPABASE_URL ||
+  "https://pcdmrofcfqtyywtzyrfo.supabase.co";
+export const SUPABASE_ANON_KEY =
+  import.meta.env.VITE_SUPABASE_ANON_KEY ||
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q";
 
 // 디버깅용 로그
-if (typeof window !== 'undefined') {
-  console.log('Supabase URL loaded:', SUPABASE_URL ? '✓' : '✗');
+if (typeof window !== "undefined") {
+  console.log("Supabase URL loaded:", SUPABASE_URL ? "✓" : "✗");
 }
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -20,12 +24,12 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   },
   global: {
     headers: {
-      'x-client-info': 'gyeonggi-climate-map',
+      "x-client-info": "gyeonggi-climate-map",
     },
   },
   // 재시도 설정
   db: {
-    schema: 'public',
+    schema: "public",
   },
 });
 
@@ -34,12 +38,12 @@ export const climateService = {
   // 모든 지역 데이터 조회
   async getAllRegions() {
     const { data, error } = await supabase
-      .from('climate_data')
-      .select('*')
-      .order('region');
+      .from("climate_data")
+      .select("*")
+      .order("region");
 
     if (error) {
-      log.error('데이터 조회 오류', error);
+      log.error("데이터 조회 오류", error);
       return null;
     }
     return data;
@@ -48,13 +52,13 @@ export const climateService = {
   // 특정 지역 데이터 조회
   async getRegion(regionName) {
     const { data, error } = await supabase
-      .from('climate_data')
-      .select('*')
-      .eq('region', regionName)
+      .from("climate_data")
+      .select("*")
+      .eq("region", regionName)
       .single();
 
     if (error) {
-      log.error('지역 조회 오류', error);
+      log.error("지역 조회 오류", error);
       return null;
     }
     return data;
@@ -63,13 +67,13 @@ export const climateService = {
   // 기후 데이터 업데이트
   async updateClimateData(regionName, climateData) {
     const { data, error } = await supabase
-      .from('climate_data')
+      .from("climate_data")
       .update(climateData)
-      .eq('region', regionName)
+      .eq("region", regionName)
       .select();
 
     if (error) {
-      log.error('데이터 업데이트 오류', error);
+      log.error("데이터 업데이트 오류", error);
       return null;
     }
     return data;
@@ -78,17 +82,17 @@ export const climateService = {
   // AI 설명 저장
   async saveExplanation(regionName, target, explanation) {
     const { data, error } = await supabase
-      .from('ai_explanations')
+      .from("ai_explanations")
       .upsert({
         region: regionName,
         target: target,
         explanation: explanation,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .select();
 
     if (error) {
-      log.error('설명 저장 오류', error);
+      log.error("설명 저장 오류", error);
       return null;
     }
     return data;
@@ -97,16 +101,16 @@ export const climateService = {
   // AI 설명 조회
   async getExplanation(regionName, target) {
     const { data, error } = await supabase
-      .from('ai_explanations')
-      .select('*')
-      .eq('region', regionName)
-      .eq('target', target)
+      .from("ai_explanations")
+      .select("*")
+      .eq("region", regionName)
+      .eq("target", target)
       .single();
 
-    if (error && error.code !== 'PGRST116') {
-      log.error('설명 조회 오류', error);
+    if (error && error.code !== "PGRST116") {
+      log.error("설명 조회 오류", error);
       return null;
     }
     return data;
-  }
+  },
 };

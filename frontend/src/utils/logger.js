@@ -25,7 +25,7 @@ const getTimestamp = () => {
  */
 const formatMessage = (level, module, message, data) => {
   const timestamp = getTimestamp();
-  const dataStr = data ? ` | ${JSON.stringify(data)}` : '';
+  const dataStr = data ? ` | ${JSON.stringify(data)}` : "";
   return `[${timestamp}] [${level}] [${module}] ${message}${dataStr}`;
 };
 
@@ -37,42 +37,46 @@ export const createLogger = (module) => {
   return {
     debug: (message, data = null) => {
       if (LOG_LEVELS.DEBUG >= MIN_LOG_LEVEL) {
-        console.debug(formatMessage('DEBUG', module, message, data));
+        console.debug(formatMessage("DEBUG", module, message, data));
       }
     },
 
     info: (message, data = null) => {
       if (LOG_LEVELS.INFO >= MIN_LOG_LEVEL) {
-        console.info(formatMessage('INFO', module, message, data));
+        console.info(formatMessage("INFO", module, message, data));
       }
     },
 
     warn: (message, data = null) => {
       if (LOG_LEVELS.WARN >= MIN_LOG_LEVEL) {
-        console.warn(formatMessage('WARN', module, message, data));
+        console.warn(formatMessage("WARN", module, message, data));
       }
     },
 
     error: (message, error = null, data = null) => {
       if (LOG_LEVELS.ERROR >= MIN_LOG_LEVEL) {
-        const errorInfo = error ? {
-          name: error.name,
-          message: error.message,
-          stack: error.stack,
-          ...data
-        } : data;
-        console.error(formatMessage('ERROR', module, message, errorInfo));
+        const errorInfo = error
+          ? {
+              name: error.name,
+              message: error.message,
+              stack: error.stack,
+              ...data,
+            }
+          : data;
+        console.error(formatMessage("ERROR", module, message, errorInfo));
       }
     },
 
     // API 호출 로깅
     api: (method, url, status, duration) => {
       if (LOG_LEVELS.INFO >= MIN_LOG_LEVEL) {
-        const statusEmoji = status >= 400 ? '❌' : status >= 300 ? '⚠️' : '✅';
-        console.info(formatMessage('API', module, `${statusEmoji} ${method} ${url}`, {
-          status,
-          duration: `${duration}ms`
-        }));
+        const statusEmoji = status >= 400 ? "❌" : status >= 300 ? "⚠️" : "✅";
+        console.info(
+          formatMessage("API", module, `${statusEmoji} ${method} ${url}`, {
+            status,
+            duration: `${duration}ms`,
+          }),
+        );
       }
     },
 
@@ -92,6 +96,6 @@ export const createLogger = (module) => {
 };
 
 // 기본 로거
-export const logger = createLogger('App');
+export const logger = createLogger("App");
 
 export default logger;
