@@ -3410,8 +3410,14 @@ body::after {
 }
 
 /* 설정 섹션 */
+.settings-section {
+  display: block !important;
+  padding: 0;
+}
+
 .settings-section .setting-item {
   margin-bottom: 20px;
+  display: block !important;
 }
 
 .settings-section .setting-item > label {
