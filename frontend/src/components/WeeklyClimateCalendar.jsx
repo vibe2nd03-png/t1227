@@ -9,13 +9,15 @@ function WeeklyClimateCalendar({ regionName, climateData }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedDay, setSelectedDay] = useState(null);
+  const [startDate, setStartDate] = useState(new Date()); // 시작 날짜
+  const [showDatePicker, setShowDatePicker] = useState(false); // 날짜 선택기 표시
 
   // 예보 데이터 로드
   useEffect(() => {
     if (regionName) {
       loadForecast();
     }
-  }, [regionName]);
+  }, [regionName, startDate]);
 
   const loadForecast = async () => {
     setLoading(true);
@@ -137,10 +139,10 @@ function WeeklyClimateCalendar({ regionName, climateData }) {
   // Mock 주간 데이터 생성
   const generateMockWeekly = () => {
     const days = [];
-    const today = new Date();
+    const baseDate = new Date(startDate);
 
     for (let i = 0; i < 7; i++) {
-      const date = new Date(today);
+      const date = new Date(baseDate);
       date.setDate(date.getDate() + i);
 
       const minTemp = Math.floor(Math.random() * 5) - 8;
@@ -223,6 +225,62 @@ function WeeklyClimateCalendar({ regionName, climateData }) {
     }
   };
 
+  // 이전 주로 이동
+  const goToPrevWeek = () => {
+    const newDate = new Date(startDate);
+    newDate.setDate(newDate.getDate() - 7);
+    setStartDate(newDate);
+    setSelectedDay(null);
+  };
+
+  // 다음 주로 이동
+  const goToNextWeek = () => {
+    const newDate = new Date(startDate);
+    newDate.setDate(newDate.getDate() + 7);
+    setStartDate(newDate);
+    setSelectedDay(null);
+  };
+
+  // 오늘로 이동
+  const goToToday = () => {
+    setStartDate(new Date());
+    setSelectedDay(null);
+  };
+
+  // 특정 날짜로 이동
+  const goToDate = (dateString) => {
+    const date = new Date(dateString);
+    if (!isNaN(date.getTime())) {
+      setStartDate(date);
+      setSelectedDay(null);
+      setShowDatePicker(false);
+    }
+  };
+
+  // 현재 주 범위 표시 텍스트
+  const getWeekRangeText = () => {
+    const start = new Date(startDate);
+    const end = new Date(startDate);
+    end.setDate(end.getDate() + 6);
+
+    const formatShort = (d) => `${d.getMonth() + 1}/${d.getDate()}`;
+    return `${formatShort(start)} ~ ${formatShort(end)}`;
+  };
+
+  // 오늘이 현재 표시 범위에 포함되는지 확인
+  const isTodayInRange = () => {
+    const today = new Date();
+    const start = new Date(startDate);
+    const end = new Date(startDate);
+    end.setDate(end.getDate() + 6);
+
+    today.setHours(0, 0, 0, 0);
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+
+    return today >= start && today <= end;
+  };
+
   // 최적의 날 찾기
   const getBestDay = () => {
     if (forecasts.length === 0) return null;
@@ -262,6 +320,48 @@ function WeeklyClimateCalendar({ regionName, climateData }) {
         <h4>📅 주간 기후 캘린더</h4>
         <span className="calendar-region">{regionName}</span>
       </div>
+
+      {/* 날짜 탐색 */}
+      <div className="calendar-nav">
+        <button className="nav-btn" onClick={goToPrevWeek} title="이전 주">
+          ◀
+        </button>
+        <div className="nav-center">
+          <span
+            className="week-range"
+            onClick={() => setShowDatePicker(!showDatePicker)}
+            title="날짜 선택"
+          >
+            📆 {getWeekRangeText()}
+          </span>
+          {!isTodayInRange() && (
+            <button className="today-btn" onClick={goToToday} title="오늘로 이동">
+              오늘
+            </button>
+          )}
+        </div>
+        <button className="nav-btn" onClick={goToNextWeek} title="다음 주">
+          ▶
+        </button>
+      </div>
+
+      {/* 날짜 선택기 */}
+      {showDatePicker && (
+        <div className="date-picker-popup">
+          <input
+            type="date"
+            value={startDate.toISOString().split('T')[0]}
+            onChange={(e) => goToDate(e.target.value)}
+            className="date-input"
+          />
+          <button
+            className="date-picker-close"
+            onClick={() => setShowDatePicker(false)}
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {error && (
         <div className="calendar-error">
