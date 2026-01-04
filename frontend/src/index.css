@@ -1247,7 +1247,7 @@ body::after {
    ───────────────────────────────────────────────────────────────────────────── */
 .region-ranking {
   position: absolute;
-  top: var(--space-lg);
+  bottom: var(--space-lg);
   right: var(--space-lg);
   background: var(--glass-bg);
   backdrop-filter: blur(20px);
