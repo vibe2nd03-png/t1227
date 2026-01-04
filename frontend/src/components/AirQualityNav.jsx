@@ -265,7 +265,7 @@ function AirQualityNav({ climateData, onRegionSelect, isModal = false }) {
             <div className="tab-content clean-zones">
               <h4>🌳 오늘의 청정 구역 TOP 5</h4>
               <div className="zone-list">
-                {cleanZoneRanking.slice(0, 5).map((zone, idx) => (
+                {(cleanZoneRanking || []).slice(0, 5).map((zone, idx) => (
                   <div
                     key={zone.region}
                     className={`zone-item ${zone.grade || 'normal'}`}
@@ -288,7 +288,7 @@ function AirQualityNav({ climateData, onRegionSelect, isModal = false }) {
               {/* 피해야 할 지역 */}
               <h4 className="avoid-title">⚠️ 오늘은 피하세요</h4>
               <div className="zone-list avoid">
-                {cleanZoneRanking
+                {(cleanZoneRanking || [])
                   .filter((z) => z.grade === 'bad' || z.grade === 'veryBad')
                   .slice(0, 3)
                   .map((zone) => (

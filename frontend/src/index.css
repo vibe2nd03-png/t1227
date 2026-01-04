@@ -1099,6 +1099,41 @@ body::after {
   font-weight: 500;
 }
 
+/* 외출 추천 버튼 영역 */
+.speech-actions {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px dashed rgba(232, 163, 23, 0.3);
+}
+
+.outing-recommend-btn {
+  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  border: none;
+  border-radius: 12px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  justify-content: center;
+}
+
+.outing-recommend-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+  background: linear-gradient(135deg, #5cb860 0%, #4CAF50 100%);
+}
+
+.outing-recommend-btn:active {
+  transform: translateY(0);
+}
+
 /* 봉공이 토글 버튼 */
 .bonggongi-toggle {
   position: absolute;

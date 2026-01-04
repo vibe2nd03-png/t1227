@@ -245,7 +245,7 @@ function AnimatedMarker({ region, isSelected, onSelect, getMarkerRadius, isGyeon
 function ClimateMap({ regions, selectedRegion, onRegionSelect, onMapClick }) {
   const [previousRegion, setPreviousRegion] = useState(null);
   const [showReports, setShowReports] = useState(true);
-  const [legendCollapsed, setLegendCollapsed] = useState(false);
+  const [legendCollapsed, setLegendCollapsed] = useState(true);
   const [nearbyRegions, setNearbyRegions] = useState([]);
   // 구리시 중심, 동두천시(상단)~오산시(하단) 모두 표시
   const gyeonggiCenter = [37.52, 127.05];

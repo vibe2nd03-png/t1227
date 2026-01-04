@@ -167,6 +167,17 @@ function WeeklyClimateCalendar({ regionName, climateData }) {
 
   // 날짜 포맷팅
   const formatDate = (dateStr) => {
+    if (!dateStr || typeof dateStr !== 'string') {
+      const today = new Date();
+      return {
+        month: today.getMonth() + 1,
+        day: today.getDate(),
+        weekday: ['일', '월', '화', '수', '목', '금', '토'][today.getDay()],
+        isToday: true,
+        isWeekend: today.getDay() === 0 || today.getDay() === 6,
+      };
+    }
+
     const year = parseInt(dateStr.slice(0, 4));
     const month = parseInt(dateStr.slice(4, 6));
     const day = parseInt(dateStr.slice(6, 8));
@@ -184,6 +195,7 @@ function WeeklyClimateCalendar({ regionName, climateData }) {
 
   // 오늘인지 확인
   const isToday = (dateStr) => {
+    if (!dateStr) return false;
     const today = new Date();
     const todayStr = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
     return dateStr === todayStr;

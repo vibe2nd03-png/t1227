@@ -26,7 +26,11 @@ function HourlyForecast({ region }) {
 
       if (data.success && data.forecasts) {
         setForecasts(data.forecasts);
-        setBaseTime(`${data.baseDate.slice(4, 6)}/${data.baseDate.slice(6, 8)} ${data.baseTime.slice(0, 2)}시 발표`);
+        if (data.baseDate && data.baseTime) {
+          setBaseTime(`${data.baseDate.slice(4, 6)}/${data.baseDate.slice(6, 8)} ${data.baseTime.slice(0, 2)}시 발표`);
+        } else {
+          setBaseTime('예보');
+        }
       } else {
         throw new Error(data.error || '예보 데이터를 가져올 수 없습니다');
       }
@@ -145,7 +149,7 @@ function HourlyForecast({ region }) {
         <div className="forecast-scroll" ref={scrollRef}>
           {forecasts.map((forecast, index) => (
             <React.Fragment key={`${forecast.date}-${forecast.time}`}>
-              {isNewDay(forecast, index) && (
+              {isNewDay(forecast, index) && forecast.date && (
                 <div className="day-divider">
                   <span>{forecast.date.slice(4, 6)}/{forecast.date.slice(6, 8)}</span>
                 </div>

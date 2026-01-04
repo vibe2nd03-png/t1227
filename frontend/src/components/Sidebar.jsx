@@ -367,36 +367,38 @@ function AirQualityNavButton({ climateData, onRegionSelect }) {
           ) : (
             <>
               {/* 1위 하이라이트 */}
-              <div style={{
-                background: 'linear-gradient(135deg, rgba(34,197,94,0.25), rgba(16,185,129,0.15))',
-                border: '2px solid rgba(34,197,94,0.4)',
-                borderRadius: '12px',
-                padding: '16px',
-                marginBottom: '16px',
-                cursor: 'pointer',
-              }}
-              onClick={() => {
-                onRegionSelect(cleanZoneRanking[0]);
-                setIsOpen(false);
-              }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <span style={{ fontSize: '2.5rem' }}>🏆</span>
-                  <div>
-                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>가장 깨끗한 곳</p>
-                    <h3 style={{ margin: '4px 0', fontSize: '1.3rem', color: '#22c55e', fontWeight: 700 }}>
-                      {cleanZoneRanking[0].region}
-                    </h3>
-                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#cbd5e1' }}>
-                      PM10: {cleanZoneRanking[0].climate_data?.pm10 || '-'} · PM2.5: {cleanZoneRanking[0].climate_data?.pm25 || '-'}
-                    </p>
+              {cleanZoneRanking[0] && (
+                <div style={{
+                  background: 'linear-gradient(135deg, rgba(34,197,94,0.25), rgba(16,185,129,0.15))',
+                  border: '2px solid rgba(34,197,94,0.4)',
+                  borderRadius: '12px',
+                  padding: '16px',
+                  marginBottom: '16px',
+                  cursor: 'pointer',
+                }}
+                onClick={() => {
+                  onRegionSelect(cleanZoneRanking[0]);
+                  setIsOpen(false);
+                }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <span style={{ fontSize: '2.5rem' }}>🏆</span>
+                    <div>
+                      <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8' }}>가장 깨끗한 곳</p>
+                      <h3 style={{ margin: '4px 0', fontSize: '1.3rem', color: '#22c55e', fontWeight: 700 }}>
+                        {cleanZoneRanking[0].region}
+                      </h3>
+                      <p style={{ margin: 0, fontSize: '0.75rem', color: '#cbd5e1' }}>
+                        PM10: {cleanZoneRanking[0].climate_data?.pm10 || '-'} · PM2.5: {cleanZoneRanking[0].climate_data?.pm25 || '-'}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* TOP 5 목록 */}
               <h4 style={{ margin: '0 0 12px 0', fontSize: '0.9rem', color: '#e2e8f0', fontWeight: 600 }}>🌳 청정 구역 순위</h4>
-              {cleanZoneRanking.slice(0, 5).map((zone, idx) => (
+              {(cleanZoneRanking || []).slice(0, 5).map((zone, idx) => (
                 <div
                   key={zone.region}
                   style={{
