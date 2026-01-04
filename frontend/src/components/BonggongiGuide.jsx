@@ -7,8 +7,12 @@ const speakMessage = (text, onEnd) => {
   // 이전 음성 중단
   window.speechSynthesis.cancel();
 
-  // 이모지 및 특수문자 제거
-  const cleanText = text.replace(/[🐝❄️🌬️😷🌤️⚠️👆👨‍👩‍👧‍👦🏆🧤🥶🌟📊]/g, '').trim();
+  // 이모지 및 특수문자, 문장부호 제거 (문자만 읽기)
+  const cleanText = text
+    .replace(/[🐝❄️🌬️😷🌤️⚠️👆👨‍👩‍👧‍👦🏆🧤🥶🌟📊]/g, '')  // 이모지 제거
+    .replace(/[!~.?,;:'"()[\]{}@#$%^&*+=<>\/\\|`_-]/g, ' ')  // 문장부호 → 공백
+    .replace(/\s+/g, ' ')  // 연속 공백 정리
+    .trim();
   if (!cleanText) return;
 
   const utterance = new SpeechSynthesisUtterance(cleanText);
