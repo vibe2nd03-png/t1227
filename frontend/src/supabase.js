@@ -3,9 +3,14 @@ import { createLogger } from './utils/logger';
 
 const log = createLogger('Supabase');
 
-// 환경 변수에서 Supabase 설정 로드
-export const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-export const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// 환경 변수에서 Supabase 설정 로드 (폴백 포함)
+export const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://pcdmrofcfqtyywtzyrfo.supabase.co';
+export const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU1MzU0NTcsImV4cCI6MjA1MTExMTQ1N30.S2CxS2OVOgNQtI1MCTDL-_9lbD_t7K7I24_7XqCXVKI';
+
+// 디버깅용 로그
+if (typeof window !== 'undefined') {
+  console.log('Supabase URL loaded:', SUPABASE_URL ? '✓' : '✗');
+}
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
