@@ -2,6 +2,52 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 
+// 음성 합성 (TTS) 유틸리티 - 어린 남자아이 목소리
+const speakMessage = (text, onEnd) => {
+  // 이전 음성 중단
+  window.speechSynthesis.cancel();
+
+  // 이모지 및 특수문자 제거
+  const cleanText = text.replace(/[🐝❄️🌬️😷🌤️⚠️👆👨‍👩‍👧‍👦🏆🧤🥶🌟📊]/g, '').trim();
+  if (!cleanText) return;
+
+  const utterance = new SpeechSynthesisUtterance(cleanText);
+
+  // 한국어 음성 찾기
+  const voices = window.speechSynthesis.getVoices();
+  const koreanVoice = voices.find(v => v.lang.includes('ko')) || voices[0];
+
+  if (koreanVoice) {
+    utterance.voice = koreanVoice;
+  }
+
+  // 어린 남자아이 목소리 설정 (높은 피치, 빠른 속도)
+  utterance.lang = 'ko-KR';
+  utterance.pitch = 1.5;  // 높은 피치 (어린이 목소리)
+  utterance.rate = 1.1;   // 약간 빠른 속도
+  utterance.volume = 0.8; // 볼륨
+
+  if (onEnd) {
+    utterance.onend = onEnd;
+  }
+
+  window.speechSynthesis.speak(utterance);
+};
+
+// 음성 합성 초기화 (voices 로드 대기)
+const initVoices = () => {
+  return new Promise((resolve) => {
+    const voices = window.speechSynthesis.getVoices();
+    if (voices.length > 0) {
+      resolve(voices);
+    } else {
+      window.speechSynthesis.onvoiceschanged = () => {
+        resolve(window.speechSynthesis.getVoices());
+      };
+    }
+  });
+};
+
 // 첫 인사 메시지
 const GREETING_MESSAGE = { type: 'greeting', message: '안녕하세요! 저는 AI반디예요 🐝' };
 
@@ -86,6 +132,49 @@ function BonggongiGuide({ regions, selectedRegion }) {
   const [isVisible, setIsVisible] = useState(true);
   const [patrolIndex, setPatrolIndex] = useState(0);
   const [hasGreeted, setHasGreeted] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [voicesReady, setVoicesReady] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const hasSpokenGreeting = useRef(false);
+
+  // 음성 합성 초기화
+  useEffect(() => {
+    if ('speechSynthesis' in window) {
+      initVoices().then(() => {
+        setVoicesReady(true);
+      });
+    }
+
+    // 컴포넌트 언마운트 시 음성 중단
+    return () => {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
+
+  // 메시지가 변경되면 음성으로 읽기 (음소거 아닐 때만)
+  useEffect(() => {
+    if (!voicesReady || !isVisible || isMuted) return;
+
+    // 첫 인사는 한 번만
+    if (currentMessage.type === 'greeting') {
+      if (hasSpokenGreeting.current) return;
+      hasSpokenGreeting.current = true;
+    }
+
+    // 사용자 상호작용 후에만 음성 재생 (브라우저 정책)
+    const playVoice = () => {
+      setIsSpeaking(true);
+      speakMessage(currentMessage.message, () => {
+        setIsSpeaking(false);
+      });
+    };
+
+    // 약간의 딜레이 후 재생
+    const timer = setTimeout(playVoice, 300);
+    return () => clearTimeout(timer);
+  }, [currentMessage, voicesReady, isVisible, isMuted]);
 
   // 말풍선 자동 열기
   useEffect(() => {
@@ -200,15 +289,36 @@ function BonggongiGuide({ regions, selectedRegion }) {
           <div className="bonggongi-speech">
             <div className="speech-header">
               <span className="bonggongi-name">🐝 AI반디</span>
-              <button
-                className="close-guide-btn"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsVisible(false);
-                }}
-              >
-                ✕
-              </button>
+              <div className="speech-controls">
+                {/* 음성 토글 버튼 */}
+                <button
+                  className={`voice-toggle-btn ${isSpeaking ? 'speaking' : ''}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (isMuted) {
+                      setIsMuted(false);
+                      // 음소거 해제 시 현재 메시지 읽기
+                      speakMessage(currentMessage.message);
+                    } else {
+                      setIsMuted(true);
+                      window.speechSynthesis.cancel();
+                    }
+                  }}
+                  title={isMuted ? '음성 켜기' : '음성 끄기'}
+                >
+                  {isMuted ? '🔇' : (isSpeaking ? '🔊' : '🔈')}
+                </button>
+                <button
+                  className="close-guide-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.speechSynthesis.cancel();
+                    setIsVisible(false);
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
             </div>
             <p className="speech-text">{currentMessage.message}</p>
           </div>
