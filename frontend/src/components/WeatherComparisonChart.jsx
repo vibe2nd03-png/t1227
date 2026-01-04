@@ -14,7 +14,7 @@ import {
 import { Line, Bar } from 'react-chartjs-2';
 import { getSurfaceDataPeriod, GYEONGGI_STATIONS } from '../services/kmaApi';
 
-// Chart.js 등록
+// Chart.js 컴포넌트 등록
 ChartJS.register(
   CategoryScale,
   LinearScale,

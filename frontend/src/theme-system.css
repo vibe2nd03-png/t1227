@@ -1,9 +1,9 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   DYNAMIC WEATHER THEME SYSTEM
-   Themes: safe (white/blue), good (green), caution (orange), danger (brown/red)
+   동적 날씨 테마 시스템
+   테마: 안전 (흰색/파랑), 좋음 (초록), 주의 (주황), 위험 (갈색/빨강)
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* DEFAULT THEME - Safe (Light Blue/White) */
+/* 기본 테마 - 안전 (연한 파랑/흰색) */
 :root, [data-theme="safe"] {
   --theme-bg-primary: #f0f4f8;
   --theme-bg-secondary: #ffffff;
@@ -19,7 +19,7 @@
   --theme-gradient: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 50%, #ffffff 100%);
 }
 
-/* GOOD THEME - Green/Fresh */
+/* 좋음 테마 - 초록/상쾌 */
 [data-theme="good"] {
   --theme-bg-primary: #ecfdf5;
   --theme-bg-secondary: #ffffff;
@@ -35,7 +35,7 @@
   --theme-gradient: linear-gradient(135deg, #d1fae5 0%, #ecfdf5 50%, #ffffff 100%);
 }
 
-/* CAUTION THEME - Orange/Warm */
+/* 주의 테마 - 주황/따뜻 */
 [data-theme="caution"] {
   --theme-bg-primary: #fffbeb;
   --theme-bg-secondary: #ffffff;
@@ -51,7 +51,7 @@
   --theme-gradient: linear-gradient(135deg, #fef3c7 0%, #fffbeb 50%, #ffffff 100%);
 }
 
-/* WARNING THEME - Orange-Red */
+/* 경고 테마 - 주황빨강 */
 [data-theme="warning"] {
   --theme-bg-primary: #fff7ed;
   --theme-bg-secondary: #ffffff;
@@ -67,7 +67,7 @@
   --theme-gradient: linear-gradient(135deg, #ffedd5 0%, #fff7ed 50%, #ffffff 100%);
 }
 
-/* DANGER THEME - Brown/Red */
+/* 위험 테마 - 갈색/빨강 */
 [data-theme="danger"] {
   --theme-bg-primary: #fef2f2;
   --theme-bg-secondary: #ffffff;
@@ -84,7 +84,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   APPLY THEME TO ELEMENTS
+   요소에 테마 적용
    ═══════════════════════════════════════════════════════════════════════════ */
 body {
   background: var(--theme-gradient) !important;
@@ -350,7 +350,7 @@ body::after {
   background: var(--theme-text-tertiary) !important;
 }
 
-/* Report inline */
+/* 제보 인라인 스타일 */
 .report-header-inline h3 {
   color: var(--theme-text-primary) !important;
 }
@@ -383,7 +383,7 @@ body::after {
   color: var(--theme-text-tertiary) !important;
 }
 
-/* OOTD */
+/* OOTD 스타일링 */
 .ootd-header-inline h3 {
   color: var(--theme-text-primary) !important;
 }
@@ -423,7 +423,7 @@ body::after {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   FAVORITE REGIONS THEME STYLES
+   즐겨찾기 지역 테마 스타일
    ═══════════════════════════════════════════════════════════════════════════ */
 .favorite-regions {
   background: var(--theme-bg-tertiary) !important;

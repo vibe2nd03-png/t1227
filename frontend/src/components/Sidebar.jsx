@@ -4,7 +4,7 @@ import HourlyForecast from './HourlyForecast';
 import FavoriteRegions from './FavoriteRegions';
 import { useAuth } from '../contexts/AuthContext';
 import { useFavorites } from '../hooks/useFavorites';
-import { supabase } from '../supabase';
+import { supabase, SUPABASE_URL, SUPABASE_ANON_KEY } from '../supabase';
 import {
   getWeatherType,
   getRandomMessage,
@@ -14,7 +14,7 @@ import {
   CLOTHING_MESSAGES
 } from '../data/clothingRecommendations';
 
-// Lazy load heavy components (탭/모달별 분리)
+// 무거운 컴포넌트 지연 로딩 (탭/모달별 분리)
 const UserProfile = lazy(() => import('./UserProfile'));
 const NotificationManager = lazy(() => import('./NotificationManager'));
 const WeatherComparisonChart = lazy(() => import('./WeatherComparisonChart'));
@@ -825,12 +825,12 @@ function UserReportPanelInline({ selectedRegion, onReportSubmit }) {
   const loadRecentReports = async () => {
     try {
       const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-      const url = `https://pcdmrofcfqtyywtzyrfo.supabase.co/rest/v1/user_reports?region=eq.${encodeURIComponent(selectedRegion.region)}&created_at=gte.${since}&order=created_at.desc&limit=5`;
+      const url = `${SUPABASE_URL}/rest/v1/user_reports?region=eq.${encodeURIComponent(selectedRegion.region)}&created_at=gte.${since}&order=created_at.desc&limit=5`;
 
       const response = await fetch(url, {
         headers: {
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q',
-          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q'
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
         }
       });
 
@@ -874,11 +874,11 @@ function UserReportPanelInline({ selectedRegion, onReportSubmit }) {
       console.log('Supabase URL:', supabase?.supabaseUrl);
 
       // fetch로 직접 요청
-      const response = await fetch('https://pcdmrofcfqtyywtzyrfo.supabase.co/rest/v1/user_reports', {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/user_reports`, {
         method: 'POST',
         headers: {
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q',
-          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q',
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
           'Content-Type': 'application/json',
           'Prefer': 'return=representation'
         },

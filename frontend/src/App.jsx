@@ -5,7 +5,7 @@ import WeatherAlertBanner from './components/WeatherAlertBanner';
 import { getGyeonggiRealtimeWeather } from './services/kmaApi';
 import { useAuth } from './contexts/AuthContext';
 
-// Lazy load AuthModal
+// AuthModal 지연 로딩
 const AuthModal = lazy(() => import('./components/AuthModal'));
 import {
   TARGET_MULTIPLIERS,

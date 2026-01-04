@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import { supabase } from '../supabase';
+import { supabase, SUPABASE_URL, SUPABASE_ANON_KEY } from '../supabase';
 
 // 떠다니는 제보를 위한 커스텀 아이콘 생성
 const createFloatingIcon = (emoji, comment) => {
@@ -66,13 +66,13 @@ function FloatingReports({ visible }) {
     console.log('FloatingReports: 제보 로드 시작');
     try {
       const since = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
-      const url = `https://pcdmrofcfqtyywtzyrfo.supabase.co/rest/v1/user_reports?created_at=gte.${since}&order=created_at.desc&limit=30`;
+      const url = `${SUPABASE_URL}/rest/v1/user_reports?created_at=gte.${since}&order=created_at.desc&limit=30`;
 
       console.log('FloatingReports: fetch URL:', url);
       const response = await fetch(url, {
         headers: {
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q',
-          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q'
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
         }
       });
 

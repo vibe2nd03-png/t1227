@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../supabase';
 
-const ADMIN_EMAIL = 'kwpark0047@gmail.com';
-const SUPABASE_URL = 'https://pcdmrofcfqtyywtzyrfo.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q';
+export const ADMIN_EMAIL = 'kwpark0047@gmail.com';
 
 function AdminDashboard({ isOpen, onClose }) {
   const { user } = useAuth();
@@ -294,4 +293,3 @@ function AdminDashboard({ isOpen, onClose }) {
 }
 
 export default AdminDashboard;
-export { ADMIN_EMAIL };

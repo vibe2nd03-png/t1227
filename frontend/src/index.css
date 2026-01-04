@@ -1,36 +1,36 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   GYEONGGI CLIMATE MAP - "Atmospheric Noir" Design System
-   A distinctive, production-grade interface avoiding generic AI aesthetics
+   경기 기후 체감 맵 - "분위기 있는 다크" 디자인 시스템
+   일반적인 AI 스타일을 피한 독특하고 완성도 높은 인터페이스
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   FONTS
+   폰트
    ───────────────────────────────────────────────────────────────────────────── */
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css");
 @import url("https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap");
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   CSS VARIABLES - Design Tokens
+   CSS 변수 - 디자인 토큰
    ───────────────────────────────────────────────────────────────────────────── */
 :root {
-  /* Base Colors - Deep atmospheric palette */
+  /* 기본 색상 - 깊은 분위기의 팔레트 */
   --bg-primary: #0a0a0f;
   --bg-secondary: #12121a;
   --bg-tertiary: #1a1a25;
   --bg-elevated: #222230;
 
-  /* Glass effect backgrounds */
+  /* 글라스 효과 배경 */
   --glass-bg: rgba(18, 18, 26, 0.85);
   --glass-border: rgba(255, 255, 255, 0.06);
   --glass-highlight: rgba(255, 255, 255, 0.03);
 
-  /* Text hierarchy */
+  /* 텍스트 계층 구조 */
   --text-primary: #f4f4f6;
   --text-secondary: #a0a0b0;
   --text-tertiary: #666680;
   --text-muted: #444455;
 
-  /* Risk Level Colors - Distinctive palette */
+  /* 위험도 색상 - 차별화된 팔레트 */
   --risk-safe: #22d3a0;
   --risk-safe-glow: rgba(34, 211, 160, 0.15);
   --risk-safe-bg: linear-gradient(135deg, #0d3d30 0%, #1a4a3a 100%);
@@ -47,17 +47,17 @@
   --risk-danger-glow: rgba(255, 68, 102, 0.2);
   --risk-danger-bg: linear-gradient(135deg, #3d1020 0%, #4a1828 100%);
 
-  /* Accent colors */
+  /* 강조 색상 */
   --accent-primary: #6366f1;
   --accent-secondary: #8b5cf6;
   --accent-glow: rgba(99, 102, 241, 0.3);
 
-  /* Typography */
+  /* 타이포그래피 */
   --font-display: "DM Sans", "Pretendard Variable", sans-serif;
   --font-body: "Pretendard Variable", -apple-system, sans-serif;
   --font-mono: "Space Mono", monospace;
 
-  /* Spacing scale */
+  /* 간격 스케일 */
   --space-xs: 4px;
   --space-sm: 8px;
   --space-md: 16px;
@@ -65,20 +65,20 @@
   --space-xl: 32px;
   --space-2xl: 48px;
 
-  /* Border radius */
+  /* 테두리 반경 */
   --radius-sm: 6px;
   --radius-md: 12px;
   --radius-lg: 20px;
   --radius-xl: 28px;
   --radius-full: 9999px;
 
-  /* Shadows */
+  /* 그림자 */
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
   --shadow-glow: 0 0 40px rgba(99, 102, 241, 0.15);
 
-  /* Transitions */
+  /* 전환 효과 */
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -86,7 +86,7 @@
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   RESET & BASE
+   리셋 & 기본 스타일
    ───────────────────────────────────────────────────────────────────────────── */
 *, *::before, *::after {
   margin: 0;
@@ -108,7 +108,7 @@ body {
   overflow-x: hidden;
 }
 
-/* Noise texture overlay */
+/* 노이즈 텍스처 오버레이 */
 body::before {
   content: "";
   position: fixed;
@@ -122,7 +122,7 @@ body::before {
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
 }
 
-/* Atmospheric gradient background */
+/* 분위기 있는 그라데이션 배경 */
 body::after {
   content: "";
   position: fixed;
@@ -276,7 +276,7 @@ body::after {
   position: relative;
 }
 
-/* Sidebar ambient glow */
+/* 사이드바 은은한 빛 효과 */
 .sidebar::before {
   content: "";
   position: absolute;
@@ -302,7 +302,7 @@ body::after {
   overflow: hidden;
 }
 
-/* Header decorative element */
+/* 헤더 장식 요소 */
 .sidebar-header::before {
   content: "";
   position: absolute;
@@ -720,12 +720,12 @@ body::after {
   background: var(--bg-primary);
 }
 
-/* Custom map tiles - dark theme */
+/* 커스텀 맵 타일 - 다크 테마 */
 .leaflet-tile-pane {
   filter: brightness(0.7) contrast(1.1) saturate(0.8);
 }
 
-/* Map controls */
+/* 맵 컨트롤 */
 .leaflet-control-zoom {
   border: none !important;
   box-shadow: var(--shadow-md) !important;
@@ -756,7 +756,7 @@ body::after {
   border-radius: 0 0 var(--radius-md) var(--radius-md) !important;
 }
 
-/* Map attribution */
+/* 맵 저작권 표시 */
 .leaflet-control-attribution {
   background: var(--glass-bg) !important;
   backdrop-filter: blur(10px);
@@ -781,12 +781,12 @@ body::after {
   filter: drop-shadow(0 4px 10px rgba(0,0,0,0.35)) brightness(1.1);
 }
 
-/* Premium marker glow effect */
+/* 프리미엄 마커 발광 효과 */
 .selected-marker {
   filter: drop-shadow(0 0 20px currentColor) drop-shadow(0 8px 16px rgba(0,0,0,0.5)) !important;
 }
 
-/* Pulse animation for selected markers */
+/* 선택된 마커 펄스 애니메이션 */
 @keyframes marker-pulse {
   0%, 100% {
     filter: drop-shadow(0 0 15px currentColor) drop-shadow(0 4px 8px rgba(0,0,0,0.3));
@@ -800,7 +800,7 @@ body::after {
   animation: marker-pulse 2s ease-in-out infinite;
 }
 
-/* Popup styling - Theme aware */
+/* 팝업 스타일 - 테마 인식 */
 .leaflet-popup-content-wrapper {
   background: var(--theme-bg-secondary, #ffffff) !important;
   backdrop-filter: blur(20px);
@@ -847,7 +847,7 @@ body::after {
   border-radius: 50%;
 }
 
-/* Custom popup content */
+/* 커스텀 팝업 콘텐츠 */
 .popup-content {
   padding: var(--space-md);
   min-width: 180px;
@@ -945,7 +945,7 @@ body::after {
   border-color: var(--theme-accent, #3b82f6);
 }
 
-/* Selected region badge */
+/* 선택된 지역 배지 */
 .selected-region-badge {
   position: absolute;
   top: 20px;
@@ -1780,7 +1780,7 @@ body::after {
   transform: rotate(90deg);
 }
 
-/* Hero Section */
+/* 히어로 섹션 */
 .auth-hero {
   text-align: center;
   padding: 40px 24px 24px;
@@ -1817,12 +1817,12 @@ body::after {
   opacity: 0.9;
 }
 
-/* Content Area */
+/* 콘텐츠 영역 */
 .auth-modal-content {
   padding: 24px;
 }
 
-/* Select Method Screen */
+/* 로그인 방식 선택 화면 */
 .auth-select-area {
   display: flex;
   flex-direction: column;
@@ -1891,7 +1891,7 @@ body::after {
   color: #667eea;
 }
 
-/* Form Area */
+/* 폼 영역 */
 .auth-form-area {
   display: flex;
   flex-direction: column;
@@ -1950,7 +1950,7 @@ body::after {
   padding-left: 4px;
 }
 
-/* OTP Section */
+/* OTP 섹션 */
 .otp-sent-info {
   background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
   border-radius: 12px;
@@ -2036,7 +2036,7 @@ body::after {
   text-decoration: underline;
 }
 
-/* Toggle Tabs */
+/* 토글 탭 */
 .auth-toggle-tabs {
   display: flex;
   position: relative;
@@ -2085,7 +2085,7 @@ body::after {
   left: 4px;
 }
 
-/* Submit Button */
+/* 제출 버튼 */
 .auth-submit-btn {
   display: flex;
   align-items: center;
@@ -2131,7 +2131,7 @@ body::after {
   to { transform: rotate(360deg); }
 }
 
-/* Back Button */
+/* 뒤로가기 버튼 */
 .auth-back-btn {
   display: flex;
   align-items: center;
@@ -2155,7 +2155,7 @@ body::after {
   font-size: 1.1rem;
 }
 
-/* Signup Notice */
+/* 회원가입 안내 */
 .signup-notice {
   text-align: center;
   font-size: 0.85rem;
@@ -2163,7 +2163,7 @@ body::after {
   margin: 0;
 }
 
-/* Toast Message */
+/* 토스트 메시지 */
 .auth-toast {
   display: flex;
   align-items: center;
@@ -2215,7 +2215,7 @@ body::after {
   font-weight: 500;
 }
 
-/* Footer */
+/* 푸터 */
 .auth-footer {
   text-align: center;
   padding: 16px 24px 24px;
@@ -3960,7 +3960,7 @@ body::after {
     overflow: hidden;
   }
 
-  /* Map fills the screen */
+  /* 맵이 화면 전체를 채움 */
   .map-container {
     position: absolute;
     top: 0;
@@ -3970,7 +3970,7 @@ body::after {
     z-index: 1;
   }
 
-  /* Sidebar becomes bottom sheet */
+  /* 사이드바가 바텀 시트로 변환 */
   .sidebar {
     position: absolute;
     bottom: 0;
@@ -3994,7 +3994,7 @@ body::after {
     display: none;
   }
 
-  /* Drag handle */
+  /* 드래그 핸들 */
   .sidebar::after {
     content: "";
     position: absolute;
@@ -4036,7 +4036,7 @@ body::after {
     padding: var(--space-md);
   }
 
-  /* Ranking - top center, collapsible */
+  /* 랭킹 - 상단 중앙, 접기 가능 */
   .region-ranking {
     position: fixed;
     left: 50%;
@@ -4123,7 +4123,7 @@ body::after {
     padding: 4px 6px;
   }
 
-  /* Data source badge */
+  /* 데이터 출처 배지 */
   .data-source-badge {
     bottom: auto;
     top: var(--space-md);
@@ -4133,7 +4133,7 @@ body::after {
     opacity: 0.8;
   }
 
-  /* Feeling grid */
+  /* 체감 그리드 */
   .feeling-grid {
     grid-template-columns: repeat(4, 1fr);
     gap: var(--space-xs);
@@ -4151,7 +4151,7 @@ body::after {
     font-size: 0.6rem;
   }
 
-  /* Alert banner */
+  /* 알림 배너 */
   .weather-alert-banner {
     padding: var(--space-xs) var(--space-sm);
   }
@@ -4185,7 +4185,7 @@ body::after {
     font-size: 0.8rem;
   }
 
-  /* Score display */
+  /* 점수 표시 */
   .score-circle {
     width: 100px;
     height: 100px;
@@ -4195,7 +4195,7 @@ body::after {
     font-size: 2rem;
   }
 
-  /* Data grid */
+  /* 데이터 그리드 */
   .data-grid {
     grid-template-columns: 1fr 1fr;
   }
@@ -4212,13 +4212,13 @@ body::after {
     font-size: 0.8rem;
   }
 
-  /* Modal */
+  /* 모달 */
   .modal-content {
     padding: var(--space-xl);
     margin: var(--space-md);
   }
 
-  /* Chart */
+  /* 차트 */
   .chart-container {
     padding: var(--space-md);
   }
@@ -4264,7 +4264,7 @@ body::after {
   }
 }
 
-/* Focus states */
+/* 포커스 상태 */
 button:focus-visible,
 input:focus-visible,
 a:focus-visible {
@@ -4272,7 +4272,7 @@ a:focus-visible {
   outline-offset: 2px;
 }
 
-/* High contrast mode support */
+/* 고대비 모드 지원 */
 @media (prefers-contrast: high) {
   :root {
     --glass-border: rgba(255, 255, 255, 0.3);
@@ -4281,10 +4281,10 @@ a:focus-visible {
   }
 }
 /* ─────────────────────────────────────────────────────────────────────────────
-   SIDEBAR COMPACT COMPONENTS (Mobile-optimized)
+   사이드바 컴팩트 컴포넌트 (모바일 최적화)
    ───────────────────────────────────────────────────────────────────────────── */
 
-/* Header top row */
+/* 헤더 상단 행 */
 .header-top {
   display: flex;
   justify-content: space-between;
@@ -4302,7 +4302,7 @@ a:focus-visible {
   background-clip: text;
 }
 
-/* User section */
+/* 사용자 섹션 */
 .user-section {
   display: flex;
   gap: var(--space-sm);
@@ -4375,7 +4375,7 @@ a:focus-visible {
   50% { opacity: 0.8; transform: scale(1.1); }
 }
 
-/* Target selector compact */
+/* 대상 선택기 컴팩트 */
 .target-selector-compact {
   display: flex;
   gap: var(--space-xs);
@@ -4416,7 +4416,7 @@ a:focus-visible {
   }
 }
 
-/* Quick actions bar */
+/* 빠른 액션 바 */
 .quick-actions {
   display: flex;
   gap: var(--space-sm);
@@ -4455,7 +4455,7 @@ a:focus-visible {
   color: var(--risk-safe);
 }
 
-/* Main tabs */
+/* 메인 탭 */
 .main-tabs {
   display: flex;
   background: var(--bg-secondary);
@@ -4492,7 +4492,7 @@ a:focus-visible {
   border-bottom-color: var(--accent-primary);
 }
 
-/* Tab content area */
+/* 탭 콘텐츠 영역 */
 .tab-content-area {
   flex: 1;
   overflow-y: auto;
@@ -4503,7 +4503,7 @@ a:focus-visible {
   animation: fadeIn 0.2s ease-out;
 }
 
-/* No selection state */
+/* 선택 없음 상태 */
 .no-selection {
   display: flex;
   flex-direction: column;
@@ -4534,7 +4534,7 @@ a:focus-visible {
   font-size: 0.8rem;
 }
 
-/* Region card compact */
+/* 지역 카드 컴팩트 */
 .region-card-compact {
   background: var(--bg-tertiary);
   border-radius: var(--radius-lg);
@@ -4579,7 +4579,7 @@ a:focus-visible {
   opacity: 0.8;
 }
 
-/* Climate grid compact */
+/* 기후 그리드 컴팩트 */
 .climate-grid-compact {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -4865,7 +4865,7 @@ a:focus-visible {
   }
 }
 
-/* AI section */
+/* AI 섹션 */
 .ai-section {
   padding: var(--space-md);
   border-top: 1px solid var(--glass-border);
@@ -4898,7 +4898,7 @@ a:focus-visible {
   color: var(--text-secondary);
 }
 
-/* OOTD Inline */
+/* OOTD 인라인 */
 .ootd-inline {
   padding: var(--space-sm);
 }
@@ -5060,7 +5060,7 @@ a:focus-visible {
   color: var(--text-secondary);
 }
 
-/* Report Inline */
+/* 제보 인라인 */
 .report-inline {
   padding: var(--space-sm);
 }
@@ -5243,7 +5243,7 @@ a:focus-visible {
   color: var(--text-muted);
 }
 
-/* Modal overlay */
+/* 모달 오버레이 */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -5689,7 +5689,7 @@ a:focus-visible {
   line-height: 1.5;
 }
 
-/* Lazy loading state */
+/* 지연 로딩 상태 */
 .lazy-loading {
   display: flex;
   align-items: center;
@@ -5698,7 +5698,7 @@ a:focus-visible {
   color: var(--text-tertiary);
 }
 
-/* Error message */
+/* 에러 메시지 */
 .error-msg {
   padding: var(--space-sm);
   background: var(--risk-danger-glow);
@@ -5718,7 +5718,7 @@ a:focus-visible {
     font-size: 20px; /* 16px * 1.25 for readability */
   }
   
-  /* Header */
+  /* 헤더 */
   .header-title h1 {
     font-size: 1.4rem;
   }
@@ -5727,13 +5727,13 @@ a:focus-visible {
     font-size: 1.4rem;
   }
   
-  /* Target chips */
+  /* 대상 칩 */
   .target-chip {
     font-size: 0.9rem;
     padding: 8px 12px;
   }
   
-  /* Quick actions */
+  /* 빠른 액션 */
   .quick-action-btn {
     font-size: 0.8rem;
     padding: 10px;
@@ -5743,7 +5743,7 @@ a:focus-visible {
     font-size: 1.4rem;
   }
   
-  /* Main tabs */
+  /* 메인 탭 */
   .main-tab {
     font-size: 0.8rem;
     padding: 10px 6px;
@@ -5753,7 +5753,7 @@ a:focus-visible {
     font-size: 1.4rem;
   }
   
-  /* No selection */
+  /* 선택 없음 */
   .no-selection h3 {
     font-size: 1.2rem;
   }
@@ -5766,7 +5766,7 @@ a:focus-visible {
     font-size: 4rem;
   }
   
-  /* Region card */
+  /* 지역 카드 */
   .region-title h2 {
     font-size: 1.5rem;
   }
@@ -5784,7 +5784,7 @@ a:focus-visible {
     font-size: 1rem;
   }
   
-  /* Climate grid */
+  /* 기후 그리드 */
   .climate-item .icon {
     font-size: 1.3rem;
   }
@@ -5797,7 +5797,7 @@ a:focus-visible {
     font-size: 0.75rem;
   }
   
-  /* AI section */
+  /* AI 섹션 */
   .ai-explanation-compact h4 {
     font-size: 0.95rem;
   }
@@ -5812,7 +5812,7 @@ a:focus-visible {
     padding: 6px 10px;
   }
   
-  /* OOTD */
+  /* OOTD 스타일 */
   .ootd-header-inline h3 {
     font-size: 1.2rem;
   }
@@ -5862,7 +5862,7 @@ a:focus-visible {
     padding: 6px 10px;
   }
   
-  /* Report */
+  /* 제보 */
   .report-header-inline h3 {
     font-size: 1.2rem;
   }
@@ -5923,7 +5923,7 @@ a:focus-visible {
     font-size: 0.75rem;
   }
   
-  /* Ranking */
+  /* 랭킹 */
   .ranking-toggle {
     font-size: 1rem;
     padding: 12px 16px;
@@ -5958,13 +5958,13 @@ a:focus-visible {
     font-size: 0.8rem;
   }
   
-  /* Data source badge */
+  /* 데이터 출처 배지 */
   .data-source-badge {
     font-size: 0.75rem;
     padding: 6px 12px;
   }
   
-  /* Loading */
+  /* 로딩 */
   .loading {
     font-size: 1.1rem;
   }
@@ -5979,14 +5979,14 @@ a:focus-visible {
    MOBILE LAYOUT FIX - Prevent overlap
    ───────────────────────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
-  /* Sidebar header - contains title and target selector */
+  /* 사이드바 헤더 - 제목과 대상 선택기 포함 */
   .sidebar-header {
     padding: 20px 16px 12px;
     position: relative;
     z-index: 1;
   }
   
-  /* Target selector should have its own row - single line */
+  /* 대상 선택기는 별도 행으로 - 한 줄 */
   .target-selector-compact {
     display: flex;
     gap: 4px;
@@ -6007,7 +6007,7 @@ a:focus-visible {
     display: inline;
   }
   
-  /* Quick actions bar - should be separate section below header */
+  /* 빠른 액션 바 - 헤더 아래 별도 섹션 */
   .quick-actions {
     display: flex;
     gap: 6px;
@@ -6033,18 +6033,18 @@ a:focus-visible {
     font-size: 1rem;
   }
   
-  /* Ensure sidebar content flows correctly */
+  /* 사이드바 콘텐츠 흐름 보장 */
   .sidebar {
     display: flex;
     flex-direction: column;
   }
   
-  /* Main tabs after quick actions */
+  /* 빠른 액션 후 메인 탭 */
   .main-tabs {
     flex-shrink: 0;
   }
   
-  /* Tab content scrolls */
+  /* 탭 콘텐츠 스크롤 */
   .tab-content-area {
     flex: 1;
     overflow-y: auto;
@@ -6103,7 +6103,7 @@ a:focus-visible {
    MOBILE OVERLAP COMPLETE FIX
    ───────────────────────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
-  /* Reset all positioning */
+  /* 모든 위치 리셋 */
   .sidebar {
     display: flex !important;
     flex-direction: column !important;
@@ -6113,7 +6113,7 @@ a:focus-visible {
     right: 0;
   }
   
-  /* Header section - title and target buttons */
+  /* 헤더 섹션 - 제목과 대상 버튼 */
   .sidebar-header {
     position: relative !important;
     z-index: 10 !important;
@@ -6155,7 +6155,7 @@ a:focus-visible {
     font-size: 0.7rem !important;
   }
   
-  /* Quick actions - MUST be separate block, no overlap */
+  /* 빠른 액션 - 반드시 별도 블록, 겹침 없음 */
   .quick-actions {
     position: relative !important;
     z-index: 5 !important;
@@ -6173,14 +6173,14 @@ a:focus-visible {
     min-width: 0 !important;
   }
   
-  /* Main tabs */
+  /* 메인 탭 */
   .main-tabs {
     position: relative !important;
     z-index: 5 !important;
     flex-shrink: 0 !important;
   }
   
-  /* Content area */
+  /* 콘텐츠 영역 */
   .tab-content-area {
     position: relative !important;
     z-index: 1 !important;
@@ -6194,7 +6194,7 @@ a:focus-visible {
    Themes: safe (white/blue), good (green), caution (orange), danger (brown/red)
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* DEFAULT THEME - Safe (Light Blue/White) */
+/* 기본 테마 - 안전 (연한 파랑/흰색) */
 :root, [data-theme="safe"] {
   --theme-bg-primary: #f0f4f8;
   --theme-bg-secondary: #ffffff;
@@ -6210,7 +6210,7 @@ a:focus-visible {
   --theme-gradient: linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 50%, #ffffff 100%);
 }
 
-/* GOOD THEME - Green/Fresh */
+/* 좋음 테마 - 초록/상쾌 */
 [data-theme="good"] {
   --theme-bg-primary: #ecfdf5;
   --theme-bg-secondary: #ffffff;
@@ -6226,7 +6226,7 @@ a:focus-visible {
   --theme-gradient: linear-gradient(135deg, #d1fae5 0%, #ecfdf5 50%, #ffffff 100%);
 }
 
-/* CAUTION THEME - Orange/Warm */
+/* 주의 테마 - 주황/따뜻 */
 [data-theme="caution"] {
   --theme-bg-primary: #fffbeb;
   --theme-bg-secondary: #ffffff;
@@ -6242,7 +6242,7 @@ a:focus-visible {
   --theme-gradient: linear-gradient(135deg, #fef3c7 0%, #fffbeb 50%, #ffffff 100%);
 }
 
-/* WARNING THEME - Orange-Red */
+/* 경고 테마 - 주황빨강 */
 [data-theme="warning"] {
   --theme-bg-primary: #fff7ed;
   --theme-bg-secondary: #ffffff;
@@ -6258,7 +6258,7 @@ a:focus-visible {
   --theme-gradient: linear-gradient(135deg, #ffedd5 0%, #fff7ed 50%, #ffffff 100%);
 }
 
-/* DANGER THEME - Brown/Red */
+/* 위험 테마 - 갈색/빨강 */
 [data-theme="danger"] {
   --theme-bg-primary: #fef2f2;
   --theme-bg-secondary: #ffffff;
@@ -6541,7 +6541,7 @@ body::after {
   background: var(--theme-text-tertiary) !important;
 }
 
-/* Report inline */
+/* 제보 인라인 스타일 */
 .report-header-inline h3 {
   color: var(--theme-text-primary) !important;
 }
@@ -6574,7 +6574,7 @@ body::after {
   color: var(--theme-text-tertiary) !important;
 }
 
-/* OOTD */
+/* OOTD 스타일링 */
 .ootd-header-inline h3 {
   color: var(--theme-text-primary) !important;
 }
@@ -7258,7 +7258,7 @@ body::after {
 }
 
 
-/* Sidebar Scroll Fix */
+/* 사이드바 스크롤 수정 */
 .sidebar {
   height: 100vh !important;
   overflow-y: auto !important;
@@ -7266,7 +7266,7 @@ body::after {
 }
 
 
-/* Legend Collapsible */
+/* 범례 접기 가능 */
 .map-legend .legend-header {
   display: flex;
   justify-content: space-between;
@@ -7301,7 +7301,7 @@ body::after {
   font-size: 16px;
 }
 
-/* OOTD Profile Badge */
+/* OOTD 프로필 배지 */
 .profile-badge {
   display: inline-block;
   padding: 4px 10px;

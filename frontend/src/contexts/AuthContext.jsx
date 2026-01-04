@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '../supabase';
+import { supabase, SUPABASE_URL, SUPABASE_ANON_KEY } from '../supabase';
 import { createLogger } from '../utils/logger';
 
 const log = createLogger('Auth');
@@ -59,11 +59,11 @@ export function AuthProvider({ children }) {
   const fetchProfile = async (userId, token = null) => {
     try {
       const authToken = token || accessToken;
-      const url = `https://pcdmrofcfqtyywtzyrfo.supabase.co/rest/v1/user_profiles?id=eq.${userId}&select=*`;
+      const url = `${SUPABASE_URL}/rest/v1/user_profiles?id=eq.${userId}&select=*`;
       const response = await fetch(url, {
         headers: {
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q',
-          'Authorization': `Bearer ${authToken || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q'}`
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${authToken || SUPABASE_ANON_KEY}`
         }
       });
 
@@ -89,10 +89,10 @@ export function AuthProvider({ children }) {
 
     try {
       // 1. 실제 제보 건수 조회
-      const countUrl = `https://pcdmrofcfqtyywtzyrfo.supabase.co/rest/v1/user_reports?user_id=eq.${userId}&select=id`;
+      const countUrl = `${SUPABASE_URL}/rest/v1/user_reports?user_id=eq.${userId}&select=id`;
       const countRes = await fetch(countUrl, {
         headers: {
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q',
+          'apikey': SUPABASE_ANON_KEY,
           'Authorization': `Bearer ${token}`
         }
       });
@@ -102,10 +102,10 @@ export function AuthProvider({ children }) {
       const totalReports = countData?.length || 0;
 
       // 2. 총 좋아요 수 조회
-      const likesUrl = `https://pcdmrofcfqtyywtzyrfo.supabase.co/rest/v1/user_reports?user_id=eq.${userId}&select=likes`;
+      const likesUrl = `${SUPABASE_URL}/rest/v1/user_reports?user_id=eq.${userId}&select=likes`;
       const likesRes = await fetch(likesUrl, {
         headers: {
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q',
+          'apikey': SUPABASE_ANON_KEY,
           'Authorization': `Bearer ${token}`
         }
       });
@@ -122,11 +122,11 @@ export function AuthProvider({ children }) {
       console.log('제보 통계 동기화:', { totalReports, totalLikes, reputationScore });
 
       // 4. 프로필 업데이트
-      const patchUrl = `https://pcdmrofcfqtyywtzyrfo.supabase.co/rest/v1/user_profiles?id=eq.${userId}`;
+      const patchUrl = `${SUPABASE_URL}/rest/v1/user_profiles?id=eq.${userId}`;
       const patchRes = await fetch(patchUrl, {
         method: 'PATCH',
         headers: {
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q',
+          'apikey': SUPABASE_ANON_KEY,
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
           'Prefer': 'return=representation'
@@ -206,7 +206,7 @@ export function AuthProvider({ children }) {
 
     try {
       console.log('Supabase 로그인 호출 시작');
-      console.log('Supabase URL:', 'https://pcdmrofcfqtyywtzyrfo.supabase.co');
+      console.log('Supabase URL:', '${SUPABASE_URL}');
 
       // 타임아웃 추가 (15초)
       const timeoutPromise = new Promise((_, reject) => {
@@ -321,13 +321,13 @@ export function AuthProvider({ children }) {
       };
 
       // 먼저 PATCH로 업데이트 시도
-      const patchUrl = `https://pcdmrofcfqtyywtzyrfo.supabase.co/rest/v1/user_profiles?id=eq.${user.id}`;
+      const patchUrl = `${SUPABASE_URL}/rest/v1/user_profiles?id=eq.${user.id}`;
       console.log('PATCH 시도:', patchUrl);
 
       const patchResponse = await fetch(patchUrl, {
         method: 'PATCH',
         headers: {
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q',
+          'apikey': SUPABASE_ANON_KEY,
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
           'Prefer': 'return=representation'
@@ -371,10 +371,10 @@ export function AuthProvider({ children }) {
       updated_at: new Date().toISOString()
     };
 
-    const postResponse = await fetch('https://pcdmrofcfqtyywtzyrfo.supabase.co/rest/v1/user_profiles', {
+    const postResponse = await fetch('${SUPABASE_URL}/rest/v1/user_profiles', {
       method: 'POST',
       headers: {
-        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q',
+        'apikey': SUPABASE_ANON_KEY,
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
         'Prefer': 'return=representation'
@@ -407,10 +407,10 @@ export function AuthProvider({ children }) {
       const token = getUserToken();
       if (!token) return { success: false, error: '인증 토큰이 없습니다' };
 
-      const response = await fetch('https://pcdmrofcfqtyywtzyrfo.supabase.co/rest/v1/user_favorite_regions', {
+      const response = await fetch('${SUPABASE_URL}/rest/v1/user_favorite_regions', {
         method: 'POST',
         headers: {
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q',
+          'apikey': SUPABASE_ANON_KEY,
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
           'Prefer': 'return=representation'
@@ -441,11 +441,11 @@ export function AuthProvider({ children }) {
       const token = getUserToken();
       if (!token) return { success: false, error: '인증 토큰이 없습니다' };
 
-      const url = `https://pcdmrofcfqtyywtzyrfo.supabase.co/rest/v1/user_favorite_regions?user_id=eq.${user.id}&region=eq.${encodeURIComponent(region)}`;
+      const url = `${SUPABASE_URL}/rest/v1/user_favorite_regions?user_id=eq.${user.id}&region=eq.${encodeURIComponent(region)}`;
       const response = await fetch(url, {
         method: 'DELETE',
         headers: {
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q',
+          'apikey': SUPABASE_ANON_KEY,
           'Authorization': `Bearer ${token}`
         }
       });
@@ -469,11 +469,11 @@ export function AuthProvider({ children }) {
 
     try {
       const token = getUserToken();
-      const url = `https://pcdmrofcfqtyywtzyrfo.supabase.co/rest/v1/user_favorite_regions?user_id=eq.${user.id}&select=region`;
+      const url = `${SUPABASE_URL}/rest/v1/user_favorite_regions?user_id=eq.${user.id}&select=region`;
       const response = await fetch(url, {
         headers: {
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q',
-          'Authorization': `Bearer ${token || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q'}`
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${token || SUPABASE_ANON_KEY}`
         }
       });
 
@@ -497,11 +497,11 @@ export function AuthProvider({ children }) {
 
     try {
       const token = getUserToken();
-      const url = `https://pcdmrofcfqtyywtzyrfo.supabase.co/rest/v1/user_reports?user_id=eq.${user.id}&order=created_at.desc&limit=20`;
+      const url = `${SUPABASE_URL}/rest/v1/user_reports?user_id=eq.${user.id}&order=created_at.desc&limit=20`;
       const response = await fetch(url, {
         headers: {
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q',
-          'Authorization': `Bearer ${token || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q'}`
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${token || SUPABASE_ANON_KEY}`
         }
       });
 
@@ -527,11 +527,11 @@ export function AuthProvider({ children }) {
       const token = getUserToken();
       if (!token) return { success: false, error: '인증 토큰이 없습니다' };
 
-      const url = `https://pcdmrofcfqtyywtzyrfo.supabase.co/rest/v1/user_reports?id=eq.${reportId}&user_id=eq.${user.id}`;
+      const url = `${SUPABASE_URL}/rest/v1/user_reports?id=eq.${reportId}&user_id=eq.${user.id}`;
       const response = await fetch(url, {
         method: 'DELETE',
         headers: {
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q',
+          'apikey': SUPABASE_ANON_KEY,
           'Authorization': `Bearer ${token}`
         }
       });
@@ -557,11 +557,11 @@ export function AuthProvider({ children }) {
       const token = getUserToken();
 
       // 1. 실제 제보 건수 조회
-      const countUrl = `https://pcdmrofcfqtyywtzyrfo.supabase.co/rest/v1/user_reports?user_id=eq.${user.id}&select=id`;
+      const countUrl = `${SUPABASE_URL}/rest/v1/user_reports?user_id=eq.${user.id}&select=id`;
       const countRes = await fetch(countUrl, {
         headers: {
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q',
-          'Authorization': `Bearer ${token || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q'}`
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${token || SUPABASE_ANON_KEY}`
         }
       });
 
@@ -570,11 +570,11 @@ export function AuthProvider({ children }) {
       const totalReports = countData?.length || 0;
 
       // 2. 총 좋아요 수 조회
-      const likesUrl = `https://pcdmrofcfqtyywtzyrfo.supabase.co/rest/v1/user_reports?user_id=eq.${user.id}&select=likes`;
+      const likesUrl = `${SUPABASE_URL}/rest/v1/user_reports?user_id=eq.${user.id}&select=likes`;
       const likesRes = await fetch(likesUrl, {
         headers: {
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q',
-          'Authorization': `Bearer ${token || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q'}`
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${token || SUPABASE_ANON_KEY}`
         }
       });
 
@@ -591,11 +591,11 @@ export function AuthProvider({ children }) {
 
       // 4. 프로필 업데이트
       if (token) {
-        const patchUrl = `https://pcdmrofcfqtyywtzyrfo.supabase.co/rest/v1/user_profiles?id=eq.${user.id}`;
+        const patchUrl = `${SUPABASE_URL}/rest/v1/user_profiles?id=eq.${user.id}`;
         const patchRes = await fetch(patchUrl, {
           method: 'PATCH',
           headers: {
-            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q',
+            'apikey': SUPABASE_ANON_KEY,
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
             'Prefer': 'return=representation'

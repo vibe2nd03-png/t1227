@@ -1,10 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../supabase';
 
 const STORAGE_KEY = 'favorite_regions';
 const MAX_FAVORITES = 5;
-const SUPABASE_URL = 'https://pcdmrofcfqtyywtzyrfo.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjZG1yb2ZjZnF0eXl3dHp5cmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MDk1NTMsImV4cCI6MjA4MjM4NTU1M30.8Fzw28TSZMmT1bJabUaHDcuB7QtivV-KxFBNbP1wh9Q';
 
 /**
  * 즐겨찾기 지역 관리 훅
