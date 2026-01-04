@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef } from "react";
 import { supabase, SUPABASE_URL, SUPABASE_ANON_KEY } from "../supabase";
 import { useAuth } from "../contexts/AuthContext";
 
+// 로컬 스토리지 키
+const COMMENTS_STORAGE_KEY = "region_comments";
+
 // 익명 닉네임 생성
 const generateAnonymousName = () => {
   const adjectives = ["행복한", "따뜻한", "시원한", "쾌적한", "활기찬", "상쾌한", "평화로운", "즐거운"];
@@ -11,12 +14,45 @@ const generateAnonymousName = () => {
   return `${adj} ${noun}`;
 };
 
+// 로컬 스토리지에서 댓글 가져오기
+const getLocalComments = (region) => {
+  try {
+    const stored = localStorage.getItem(COMMENTS_STORAGE_KEY);
+    const all = stored ? JSON.parse(stored) : [];
+    const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
+    // 24시간 이내 해당 지역 댓글만 필터링
+    return all.filter(
+      (c) => c.region === region && new Date(c.created_at).getTime() > dayAgo
+    );
+  } catch {
+    return [];
+  }
+};
+
+// 로컬 스토리지에 댓글 저장
+const saveLocalComment = (comment) => {
+  try {
+    const stored = localStorage.getItem(COMMENTS_STORAGE_KEY);
+    const all = stored ? JSON.parse(stored) : [];
+    all.push(comment);
+    // 최대 500개, 24시간 이내만 유지
+    const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
+    const filtered = all
+      .filter((c) => new Date(c.created_at).getTime() > dayAgo)
+      .slice(-500);
+    localStorage.setItem(COMMENTS_STORAGE_KEY, JSON.stringify(filtered));
+  } catch (e) {
+    console.error("로컬 저장 실패:", e);
+  }
+};
+
 function RegionComments({ region, isOpen, onClose }) {
   const { user, profile } = useAuth();
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [useLocalOnly, setUseLocalOnly] = useState(false);
   const commentsEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -24,34 +60,13 @@ function RegionComments({ region, isOpen, onClose }) {
   useEffect(() => {
     if (isOpen && region) {
       loadComments();
-      // 실시간 구독
-      const subscription = supabase
-        .channel(`comments-${region}`)
-        .on(
-          "postgres_changes",
-          {
-            event: "INSERT",
-            schema: "public",
-            table: "region_comments",
-            filter: `region=eq.${region}`,
-          },
-          (payload) => {
-            setComments((prev) => [...prev, payload.new]);
-            scrollToBottom();
-          }
-        )
-        .subscribe();
-
-      return () => {
-        subscription.unsubscribe();
-      };
     }
   }, [isOpen, region]);
 
   const loadComments = async () => {
     setLoading(true);
     try {
-      // 24시간 이내 댓글
+      // 먼저 Supabase 시도
       const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
       const url = `${SUPABASE_URL}/rest/v1/region_comments?region=eq.${encodeURIComponent(region)}&created_at=gte.${since}&order=created_at.asc&limit=100`;
 
@@ -64,14 +79,34 @@ function RegionComments({ region, isOpen, onClose }) {
 
       if (response.ok) {
         const data = await response.json();
-        setComments(data);
-        setTimeout(scrollToBottom, 100);
+        // 로컬 댓글과 병합
+        const localComments = getLocalComments(region);
+        const merged = mergeComments(data, localComments);
+        setComments(merged);
+        setUseLocalOnly(false);
+      } else {
+        // Supabase 실패 시 로컬만 사용
+        console.warn("Supabase 로드 실패, 로컬 사용");
+        setComments(getLocalComments(region));
+        setUseLocalOnly(true);
       }
     } catch (error) {
       console.error("댓글 로드 실패:", error);
+      setComments(getLocalComments(region));
+      setUseLocalOnly(true);
     } finally {
       setLoading(false);
+      setTimeout(scrollToBottom, 100);
     }
+  };
+
+  // 댓글 병합 (중복 제거)
+  const mergeComments = (serverComments, localComments) => {
+    const serverIds = new Set(serverComments.map((c) => c.id));
+    const uniqueLocal = localComments.filter((c) => !serverIds.has(c.id));
+    return [...serverComments, ...uniqueLocal].sort(
+      (a, b) => new Date(a.created_at) - new Date(b.created_at)
+    );
   };
 
   const scrollToBottom = () => {
@@ -86,32 +121,41 @@ function RegionComments({ region, isOpen, onClose }) {
     const commentText = newComment.trim();
     setNewComment("");
 
-    try {
-      const commentData = {
-        region: region,
-        content: commentText,
-        nickname: profile?.nickname || generateAnonymousName(),
-        user_id: user?.id || null,
-        created_at: new Date().toISOString(),
-      };
+    const commentData = {
+      id: Date.now(),
+      region: region,
+      content: commentText,
+      nickname: profile?.nickname || generateAnonymousName(),
+      user_id: user?.id || null,
+      created_at: new Date().toISOString(),
+    };
 
-      // Supabase에 저장
-      const { error } = await supabase
-        .from("region_comments")
-        .insert([commentData]);
+    // 즉시 로컬에 표시
+    setComments((prev) => [...prev, commentData]);
+    saveLocalComment(commentData);
+    setTimeout(scrollToBottom, 100);
 
-      if (error) {
-        console.error("댓글 저장 실패:", error);
-        // 실패해도 로컬에서 표시
-        setComments((prev) => [...prev, { ...commentData, id: Date.now() }]);
+    // 백그라운드에서 Supabase 저장 시도
+    if (!useLocalOnly) {
+      try {
+        const { error } = await supabase
+          .from("region_comments")
+          .insert([{
+            region: commentData.region,
+            content: commentData.content,
+            nickname: commentData.nickname,
+            user_id: commentData.user_id,
+          }]);
+
+        if (error) {
+          console.warn("Supabase 저장 실패:", error.message);
+        }
+      } catch (error) {
+        console.warn("Supabase 전송 실패:", error);
       }
-
-      setTimeout(scrollToBottom, 100);
-    } catch (error) {
-      console.error("댓글 전송 실패:", error);
-    } finally {
-      setSending(false);
     }
+
+    setSending(false);
   };
 
   const formatTime = (dateString) => {
@@ -137,7 +181,9 @@ function RegionComments({ region, isOpen, onClose }) {
             <span className="header-icon">💬</span>
             <div>
               <h3>{region} 주민 대화방</h3>
-              <span className="header-subtitle">24시간 동안 유지됩니다</span>
+              <span className="header-subtitle">
+                {useLocalOnly ? "로컬 저장 모드" : "24시간 동안 유지됩니다"}
+              </span>
             </div>
           </div>
           <button className="close-btn" onClick={onClose}>✕</button>
