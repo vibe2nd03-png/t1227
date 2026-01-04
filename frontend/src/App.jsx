@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef, lazy, Suspense } from "react";
 import ClimateMap from "./components/ClimateMap";
 import Sidebar from "./components/Sidebar";
 import WeatherAlertBanner from "./components/WeatherAlertBanner";
+import LocationDetector from "./components/LocationDetector";
+import RegionComments from "./components/RegionComments";
+import PWAInstallBanner from "./components/PWAInstallBanner";
 import { getGyeonggiRealtimeWeather } from "./services/kmaApi";
 import { useAuth } from "./contexts/AuthContext";
 
@@ -37,6 +40,7 @@ function App() {
   const [lastUpdated, setLastUpdated] = useState(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isMobileCollapsed, setIsMobileCollapsed] = useState(true);
+  const [showComments, setShowComments] = useState(false);
   const preferredRegionApplied = useRef(false);
 
   // 테마 변경 효과 (선택된 지역 또는 평균 점수 기반)
@@ -805,6 +809,23 @@ function App() {
         )}
       </div>
 
+      {/* 위치 감지 & 커뮤니티 버튼 */}
+      <div className="top-action-bar">
+        <LocationDetector
+          onLocationDetected={handleRegionSelect}
+          regions={regions}
+        />
+        {selectedRegion && (
+          <button
+            className="community-btn"
+            onClick={() => setShowComments(true)}
+          >
+            <span>💬</span>
+            <span>{selectedRegion.region} 대화방</span>
+          </button>
+        )}
+      </div>
+
       <div className="main-content">
         <Sidebar
           selectedRegion={selectedRegion}
@@ -826,7 +847,7 @@ function App() {
         />
       </div>
 
-      {/* 로그인 모달 - 루트 레벨에서 렌더링 (모바일 transform 이슈 해결) */}
+      {/* 로그인 모달 */}
       {showAuthModal && (
         <Suspense fallback={null}>
           <AuthModal
@@ -835,6 +856,16 @@ function App() {
           />
         </Suspense>
       )}
+
+      {/* 지역별 댓글 모달 */}
+      <RegionComments
+        region={selectedRegion?.region}
+        isOpen={showComments}
+        onClose={() => setShowComments(false)}
+      />
+
+      {/* PWA 설치 배너 */}
+      <PWAInstallBanner />
     </div>
   );
 }

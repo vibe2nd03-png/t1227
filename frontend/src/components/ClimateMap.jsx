@@ -8,6 +8,7 @@ import {
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import FloatingReports from "./FloatingReports";
+import ReportMapOverlay from "./ReportMapOverlay";
 import RegionRanking from "./RegionRanking";
 import BonggongiGuide from "./BonggongiGuide";
 import { getNearbyRealtimeWeather } from "../services/kmaApi";
@@ -440,8 +441,8 @@ function ClimateMap({ regions, selectedRegion, onRegionSelect, onMapClick }) {
           />
         ))}
 
-        {/* 떠다니는 시민 제보 마커 */}
-        <FloatingReports visible={showReports} />
+        {/* 실시간 제보 지도 마커 (새 버전) */}
+        <ReportMapOverlay visible={showReports} />
 
         {/* AI 도우미 봉공이 */}
         <BonggongiGuide regions={regions} selectedRegion={selectedRegion} />
