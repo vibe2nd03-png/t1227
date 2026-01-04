@@ -7691,3 +7691,371 @@ body::after {
     display: none;
   }
 }
+
+/* ========================================
+   주간 기후 캘린더 스타일
+   ======================================== */
+
+.weekly-calendar {
+  background: var(--glass-bg);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+  margin-top: var(--space-md);
+  border: 1px solid var(--glass-border);
+}
+
+.weekly-calendar.loading {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.calendar-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  color: var(--text-secondary);
+}
+
+.calendar-loading .loading-spinner {
+  font-size: 2rem;
+  animation: calendar-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes calendar-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.7; }
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.calendar-header h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.calendar-region {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  background: var(--bg-elevated);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.calendar-error {
+  background: rgba(244, 67, 54, 0.1);
+  color: #F44336;
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  margin-bottom: var(--space-sm);
+}
+
+/* 베스트 데이 배너 */
+.best-day-banner {
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.15), rgba(139, 195, 74, 0.15));
+  border: 1px solid rgba(76, 175, 80, 0.3);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-md);
+  margin-bottom: var(--space-md);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.best-icon {
+  font-size: 1.2rem;
+}
+
+.best-text {
+  font-size: 0.85rem;
+  color: var(--text-primary);
+}
+
+.best-text strong {
+  color: #4CAF50;
+}
+
+.best-temp {
+  margin-left: var(--space-sm);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  background: rgba(76, 175, 80, 0.2);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+}
+
+/* 캘린더 그리드 */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--space-xs);
+  margin-bottom: var(--space-md);
+}
+
+.calendar-day {
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm);
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+  position: relative;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.calendar-day:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.calendar-day.today {
+  border-color: var(--accent-primary);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(99, 102, 241, 0.1));
+}
+
+.calendar-day.selected {
+  border-color: var(--risk-color);
+  box-shadow: 0 0 0 3px rgba(var(--risk-color), 0.2);
+}
+
+.calendar-day.weekend .day-weekday {
+  color: #EF5350;
+}
+
+/* 날짜 헤더 */
+.day-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.day-weekday {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.day-date {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+}
+
+.today-badge {
+  font-size: 0.6rem;
+  background: var(--accent-primary);
+  color: white;
+  padding: 1px 4px;
+  border-radius: var(--radius-sm);
+  margin-top: 2px;
+}
+
+/* 날씨 아이콘 */
+.day-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+  margin: 4px 0;
+}
+
+/* 기온 */
+.day-temps {
+  display: flex;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.temp-max {
+  color: #EF5350;
+}
+
+.temp-min {
+  color: #42A5F5;
+}
+
+/* 강수확률 */
+.day-pop {
+  font-size: 0.65rem;
+  color: #42A5F5;
+  background: rgba(66, 165, 245, 0.1);
+  padding: 1px 4px;
+  border-radius: var(--radius-sm);
+}
+
+/* 위험등급 배지 */
+.day-risk-badge {
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: white;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  margin-top: auto;
+}
+
+/* 상세 정보 패널 */
+.day-detail {
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  margin-bottom: var(--space-md);
+  border-left: 4px solid var(--accent-primary);
+}
+
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-sm);
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.detail-date {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.detail-risk {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.detail-content {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.detail-icon {
+  font-size: 1.2rem;
+}
+
+.detail-label {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+}
+
+.detail-value {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.detail-value.temp-high {
+  color: #EF5350;
+}
+
+.detail-value.temp-low {
+  color: #42A5F5;
+}
+
+/* 범례 */
+.calendar-legend {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-md);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--glass-border);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+/* 모바일 반응형 */
+@media (max-width: 768px) {
+  .calendar-grid {
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+  }
+
+  .calendar-day {
+    padding: var(--space-xs);
+    min-height: 90px;
+  }
+
+  .day-weekday {
+    font-size: 0.6rem;
+  }
+
+  .day-date {
+    font-size: 0.65rem;
+  }
+
+  .day-icon {
+    font-size: 1.2rem;
+  }
+
+  .day-temps {
+    font-size: 0.7rem;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .day-pop {
+    font-size: 0.55rem;
+  }
+
+  .day-risk-badge {
+    font-size: 0.5rem;
+    padding: 1px 3px;
+  }
+
+  .best-day-banner {
+    flex-direction: column;
+    text-align: center;
+    gap: var(--space-xs);
+  }
+
+  .best-text {
+    font-size: 0.8rem;
+  }
+
+  .calendar-legend {
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+  }
+}
+
+/* 매우 작은 화면 */
+@media (max-width: 400px) {
+  .calendar-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .calendar-day:nth-child(n+5) {
+    grid-column: span 1;
+  }
+}

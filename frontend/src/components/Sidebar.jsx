@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import HourlyForecast from './HourlyForecast';
+import WeeklyClimateCalendar from './WeeklyClimateCalendar';
 import FavoriteRegions from './FavoriteRegions';
 import { useAuth } from '../contexts/AuthContext';
 import { useFavorites } from '../hooks/useFavorites';
@@ -1075,6 +1076,12 @@ function RegionCard({ region, explanation, isFavorite, onToggleFavorite }) {
 
       {/* 시간대별 예보 */}
       <HourlyForecast region={region.region} />
+
+      {/* 주간 기후 캘린더 */}
+      <WeeklyClimateCalendar
+        regionName={region.region}
+        climateData={region.climate_data}
+      />
 
       {/* AI 설명 */}
       {explanation && (
