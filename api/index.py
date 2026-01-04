@@ -115,38 +115,184 @@ RISK_COLORS = {"safe": "#2196F3", "caution": "#FFEB3B", "warning": "#FF9800", "d
 RISK_LABELS = {"safe": "안전", "caution": "주의", "warning": "경고", "danger": "위험"}
 
 
-def get_mock_forecast(region_name):
-    """시간대별 예보 데이터 생성"""
+# 경기도 지역 격자 좌표 (기상청 단기예보용)
+GRID_COORDS = {
+    '수원시': {'nx': 60, 'ny': 121},
+    '성남시': {'nx': 63, 'ny': 124},
+    '고양시': {'nx': 57, 'ny': 128},
+    '용인시': {'nx': 64, 'ny': 119},
+    '부천시': {'nx': 56, 'ny': 125},
+    '안산시': {'nx': 53, 'ny': 121},
+    '안양시': {'nx': 59, 'ny': 123},
+    '남양주시': {'nx': 64, 'ny': 128},
+    '화성시': {'nx': 57, 'ny': 119},
+    '평택시': {'nx': 62, 'ny': 114},
+    '의정부시': {'nx': 61, 'ny': 130},
+    '시흥시': {'nx': 55, 'ny': 122},
+    '파주시': {'nx': 56, 'ny': 131},
+    '김포시': {'nx': 55, 'ny': 128},
+    '광명시': {'nx': 58, 'ny': 125},
+    '광주시': {'nx': 65, 'ny': 123},
+    '군포시': {'nx': 59, 'ny': 122},
+    '하남시': {'nx': 64, 'ny': 126},
+    '오산시': {'nx': 62, 'ny': 118},
+    '이천시': {'nx': 68, 'ny': 121},
+    '안성시': {'nx': 65, 'ny': 115},
+    '의왕시': {'nx': 60, 'ny': 122},
+    '양주시': {'nx': 61, 'ny': 131},
+    '포천시': {'nx': 64, 'ny': 134},
+    '여주시': {'nx': 71, 'ny': 121},
+    '동두천시': {'nx': 61, 'ny': 134},
+    '과천시': {'nx': 60, 'ny': 124},
+    '구리시': {'nx': 62, 'ny': 127},
+    '연천군': {'nx': 61, 'ny': 138},
+    '가평군': {'nx': 69, 'ny': 133},
+    '양평군': {'nx': 69, 'ny': 125},
+}
+
+# 하늘상태 코드
+SKY_CODES = {
+    '1': {'text': '맑음', 'icon': '☀️'},
+    '3': {'text': '구름많음', 'icon': '⛅'},
+    '4': {'text': '흐림', 'icon': '☁️'},
+}
+
+# 강수형태 코드
+PTY_CODES = {
+    '0': {'text': '', 'icon': ''},
+    '1': {'text': '비', 'icon': '🌧️'},
+    '2': {'text': '비/눈', 'icon': '🌨️'},
+    '3': {'text': '눈', 'icon': '❄️'},
+    '4': {'text': '소나기', 'icon': '🌦️'},
+}
+
+
+def get_base_datetime():
+    """가장 가까운 발표시각 계산 (단기예보는 02, 05, 08, 11, 14, 17, 20, 23시)"""
+    from datetime import timedelta
     now = datetime.now()
+    # UTC to KST
+    kst = now + timedelta(hours=9)
+
+    hours = kst.hour
+    minutes = kst.minute
+
+    base_times = [2, 5, 8, 11, 14, 17, 20, 23]
+
+    # API 제공 시간 고려 (발표 후 약 10분 소요)
+    current_hour = hours
+    if minutes < 10:
+        current_hour = hours - 1
+        if current_hour < 0:
+            current_hour = 23
+
+    # 가장 가까운 과거 발표 시각 찾기
+    base_time = base_times[0]
+    for i in range(len(base_times) - 1, -1, -1):
+        if base_times[i] <= current_hour:
+            base_time = base_times[i]
+            break
+
+    # 0시~2시 사이면 전날 23시 발표 사용
+    if current_hour < 2:
+        base_time = 23
+        kst = kst - timedelta(days=1)
+
+    base_date = kst.strftime("%Y%m%d")
+    base_time_str = f"{base_time:02d}00"
+
+    return base_date, base_time_str
+
+
+def fetch_kma_forecast(nx, ny, base_date, base_time):
+    """기상청 단기예보 API 호출"""
+    try:
+        url = f"https://apihub.kma.go.kr/api/typ02/openApi/VilageFcstInfoService_2.0/getVilageFcst?pageNo=1&numOfRows=1000&dataType=JSON&base_date={base_date}&base_time={base_time}&nx={nx}&ny={ny}&authKey={KMA_AUTH_KEY}"
+
+        with urlopen(url, timeout=30) as response:
+            text = response.read().decode('utf-8')
+            data = json.loads(text)
+
+            if data.get('response', {}).get('body', {}).get('items', {}).get('item'):
+                return data['response']['body']['items']['item']
+    except Exception as e:
+        print(f"KMA Forecast API Error: {e}")
+
+    return None
+
+
+def parse_forecast_data(items):
+    """예보 데이터 파싱"""
+    forecasts = {}
+
+    for item in items:
+        key = f"{item['fcstDate']}_{item['fcstTime']}"
+        if key not in forecasts:
+            forecasts[key] = {
+                'date': item['fcstDate'],
+                'time': item['fcstTime'],
+                'hour': int(item['fcstTime'][:2]),
+            }
+
+        category = item['category']
+        value = item['fcstValue']
+
+        if category == 'TMP':
+            forecasts[key]['temperature'] = float(value)
+        elif category == 'SKY':
+            forecasts[key]['sky'] = value
+            sky_info = SKY_CODES.get(value, {'text': '알수없음', 'icon': '❓'})
+            forecasts[key]['skyText'] = sky_info['text']
+            forecasts[key]['skyIcon'] = sky_info['icon']
+        elif category == 'PTY':
+            forecasts[key]['pty'] = value
+            pty_info = PTY_CODES.get(value, {'text': '', 'icon': ''})
+            forecasts[key]['ptyText'] = pty_info['text']
+            forecasts[key]['ptyIcon'] = pty_info['icon']
+        elif category == 'POP':
+            forecasts[key]['pop'] = int(value)
+        elif category == 'REH':
+            forecasts[key]['humidity'] = int(value)
+        elif category == 'WSD':
+            forecasts[key]['windSpeed'] = float(value)
+
+    # 시간순 정렬 및 아이콘 설정
+    result = []
+    for f in sorted(forecasts.values(), key=lambda x: (x['date'], x['time'])):
+        f['icon'] = f.get('ptyIcon') or f.get('skyIcon', '☀️')
+        f['condition'] = f.get('ptyText') or f.get('skyText', '맑음')
+        result.append(f)
+
+    return result
+
+
+def get_mock_forecast(region_name):
+    """Mock 예보 데이터 생성 (API 실패시 폴백)"""
+    from datetime import timedelta
+    now = datetime.now() + timedelta(hours=9)  # KST
     forecasts = []
 
     for i in range(24):
-        forecast_time = datetime(now.year, now.month, now.day, now.hour)
         hour = (now.hour + i) % 24
         day_offset = (now.hour + i) // 24
 
-        # 시간대별 기온 변화 (새벽 최저, 오후 최고)
-        if 6 <= hour <= 14:
-            temp_mod = (hour - 6) * 0.8
-        elif hour > 14:
-            temp_mod = (14 - 6) * 0.8 - (hour - 14) * 0.5
+        # 시간대별 기온 변화
+        if hour >= 13 and hour <= 15:
+            base_temp = 3
+        elif hour >= 5 and hour <= 7:
+            base_temp = -5
+        elif hour >= 8 and hour <= 12:
+            base_temp = -2 + (hour - 8)
+        elif hour >= 16 and hour <= 18:
+            base_temp = 2 - (hour - 16)
         else:
-            temp_mod = -2
+            base_temp = -3
 
-        base_temp = -3 + random.uniform(-2, 2)
-        temp = round(base_temp + temp_mod, 1)
-
-        # 날씨 아이콘
-        if hour >= 6 and hour < 18:
-            icon = "☀️" if random.random() > 0.3 else "⛅"
-        else:
-            icon = "🌙" if random.random() > 0.3 else "☁️"
-
-        pop = random.randint(0, 30) if random.random() > 0.7 else 0
+        temp = base_temp + random.randint(-1, 2)
+        is_night = hour >= 19 or hour < 6
 
         forecast_date = now.replace(hour=0, minute=0, second=0, microsecond=0)
         if day_offset > 0:
-            from datetime import timedelta
             forecast_date = forecast_date + timedelta(days=day_offset)
 
         forecasts.append({
@@ -154,16 +300,63 @@ def get_mock_forecast(region_name):
             "time": f"{hour:02d}00",
             "hour": hour,
             "temperature": temp,
-            "icon": icon,
-            "pop": pop,
-            "sky": "맑음" if "☀️" in icon or "🌙" in icon else "구름많음"
+            "icon": "🌙" if is_night else ("☀️" if temp > 0 else "⛅"),
+            "skyIcon": "🌙" if is_night else "☀️",
+            "condition": "맑음",
+            "skyText": "맑음",
+            "pop": 10,
+            "humidity": 50 + random.randint(0, 20),
+            "windSpeed": 2 + random.randint(0, 3),
         })
 
+    return forecasts
+
+
+def get_real_forecast(region_name):
+    """실제 기상청 예보 데이터 조회"""
+    coords = GRID_COORDS.get(region_name)
+    if not coords:
+        coords = {'nx': 60, 'ny': 121}  # 기본값: 수원시
+
+    base_date, base_time = get_base_datetime()
+
+    # 기상청 API 호출
+    items = fetch_kma_forecast(coords['nx'], coords['ny'], base_date, base_time)
+
+    if items:
+        forecasts = parse_forecast_data(items)
+        if forecasts:
+            return {
+                "success": True,
+                "region": region_name,
+                "baseTime": f"{base_date[4:6]}/{base_date[6:8]} {base_time[:2]}:00 기준",
+                "forecasts": forecasts[:24],
+                "isMock": False
+            }
+
+    # API 실패시 이전 발표시각으로 재시도
+    prev_base_time = f"{(int(base_time[:2]) - 3 + 24) % 24:02d}00"
+    items = fetch_kma_forecast(coords['nx'], coords['ny'], base_date, prev_base_time)
+
+    if items:
+        forecasts = parse_forecast_data(items)
+        if forecasts:
+            return {
+                "success": True,
+                "region": region_name,
+                "baseTime": f"{base_date[4:6]}/{base_date[6:8]} {prev_base_time[:2]}:00 기준",
+                "forecasts": forecasts[:24],
+                "isMock": False
+            }
+
+    # 최종 폴백: Mock 데이터
+    now = datetime.now()
     return {
         "success": True,
         "region": region_name,
-        "baseTime": now.strftime("%m/%d %H:00 기준"),
-        "forecasts": forecasts
+        "baseTime": now.strftime("%m/%d %H:00 기준 (예상치)"),
+        "forecasts": get_mock_forecast(region_name),
+        "isMock": True
     }
 
 
@@ -416,7 +609,7 @@ class handler(BaseHTTPRequestHandler):
             from urllib.parse import unquote
             region = query_params.get('region', ['수원시'])[0]
             region = unquote(region)
-            response = get_mock_forecast(region)
+            response = get_real_forecast(region)
         elif path == '/api/kma-alerts':
             response = get_weather_alerts()
         elif path == '/api/climate/all':
