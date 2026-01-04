@@ -19,18 +19,52 @@ function WeeklyClimateCalendar({ regionName, climateData }) {
     }
   }, [regionName, startDate]);
 
+  // 날짜를 YYYYMMDD 형식으로 변환
+  const formatDateStr = (date) => {
+    const d = new Date(date);
+    return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
+  };
+
+  // 선택한 날짜 범위 계산
+  const getDateRange = () => {
+    const start = new Date(startDate);
+    const end = new Date(startDate);
+    end.setDate(end.getDate() + 6);
+    return {
+      startStr: formatDateStr(start),
+      endStr: formatDateStr(end),
+      start,
+      end
+    };
+  };
+
   const loadForecast = async () => {
     setLoading(true);
     setError(null);
 
+    const { startStr, endStr } = getDateRange();
+
     try {
-      const response = await fetch(`/api/kma-forecast?region=${encodeURIComponent(regionName)}`);
+      // 날짜 범위 파라미터 추가
+      const response = await fetch(`/api/kma-forecast?region=${encodeURIComponent(regionName)}&startDate=${startStr}&endDate=${endStr}`);
       const data = await response.json();
 
       if (data.success && data.forecasts) {
-        // 일별로 그룹화
-        const dailyForecasts = groupByDate(data.forecasts);
-        setForecasts(dailyForecasts);
+        // 선택한 날짜 범위로 필터링 후 그룹화
+        const filteredForecasts = filterByDateRange(data.forecasts);
+        const dailyForecasts = groupByDate(filteredForecasts);
+
+        // API 데이터가 선택 범위에 없으면 Mock 데이터로 보완
+        if (dailyForecasts.length === 0) {
+          setForecasts(generateMockWeekly());
+          setError('선택한 기간의 예보 데이터가 없습니다');
+        } else if (dailyForecasts.length < 7) {
+          // 부족한 날짜는 Mock으로 보완
+          const supplemented = supplementWithMock(dailyForecasts);
+          setForecasts(supplemented);
+        } else {
+          setForecasts(dailyForecasts);
+        }
       } else {
         throw new Error(data.error || '예보 데이터를 가져올 수 없습니다');
       }
@@ -42,6 +76,58 @@ function WeeklyClimateCalendar({ regionName, climateData }) {
     } finally {
       setLoading(false);
     }
+  };
+
+  // 선택한 날짜 범위로 필터링
+  const filterByDateRange = (forecastList) => {
+    const { startStr, endStr } = getDateRange();
+    return forecastList.filter(f => {
+      const dateStr = f.date;
+      return dateStr >= startStr && dateStr <= endStr;
+    });
+  };
+
+  // Mock 데이터로 부족한 날짜 보완
+  const supplementWithMock = (existingForecasts) => {
+    const { start } = getDateRange();
+    const existingDates = new Set(existingForecasts.map(f => f.date));
+    const result = [...existingForecasts];
+
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(start);
+      date.setDate(date.getDate() + i);
+      const dateStr = formatDateStr(date);
+
+      if (!existingDates.has(dateStr)) {
+        // Mock 데이터 생성
+        const mockDay = generateMockDay(date);
+        result.push(mockDay);
+      }
+    }
+
+    return result.sort((a, b) => a.date.localeCompare(b.date));
+  };
+
+  // 단일 날짜 Mock 데이터 생성
+  const generateMockDay = (date) => {
+    const minTemp = Math.floor(Math.random() * 5) - 8;
+    const maxTemp = minTemp + Math.floor(Math.random() * 8) + 5;
+    const pop = Math.random() > 0.7 ? Math.floor(Math.random() * 60) + 20 : 0;
+
+    const icons = ['☀️', '🌤️', '⛅', '☁️', '🌧️', '❄️'];
+    const conditions = ['맑음', '구름조금', '구름많음', '흐림', '비', '눈'];
+    const idx = Math.floor(Math.random() * icons.length);
+
+    return {
+      date: formatDateStr(date),
+      minTemp,
+      maxTemp,
+      mainIcon: icons[idx],
+      mainCondition: conditions[idx],
+      maxPop: pop,
+      riskLevel: calculateDayRisk({ minTemp, maxTemp, maxPop }, climateData),
+      isMock: true, // Mock 데이터 표시
+    };
   };
 
   // 날짜별로 그룹화
@@ -388,10 +474,13 @@ function WeeklyClimateCalendar({ regionName, climateData }) {
           return (
             <div
               key={day.date}
-              className={`calendar-day ${dateInfo.isToday ? 'today' : ''} ${dateInfo.isWeekend ? 'weekend' : ''} ${selectedDay === day.date ? 'selected' : ''}`}
+              className={`calendar-day ${dateInfo.isToday ? 'today' : ''} ${dateInfo.isWeekend ? 'weekend' : ''} ${selectedDay === day.date ? 'selected' : ''} ${day.isMock ? 'mock-data' : ''}`}
               onClick={() => setSelectedDay(selectedDay === day.date ? null : day.date)}
               style={{ '--risk-color': getRiskColor(day.riskLevel) }}
             >
+              {/* 예상 데이터 표시 */}
+              {day.isMock && <span className="mock-badge" title="예상 데이터">예상</span>}
+
               {/* 날짜 헤더 */}
               <div className="day-header">
                 <span className={`day-weekday ${dateInfo.isWeekend ? 'weekend' : ''}`}>
