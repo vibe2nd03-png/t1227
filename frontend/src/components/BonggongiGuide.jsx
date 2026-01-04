@@ -21,11 +21,11 @@ const speakMessage = (text, onEnd) => {
     utterance.voice = koreanVoice;
   }
 
-  // 어린 남자아이 목소리 설정 (높은 피치, 빠른 속도)
+  // 5살 남자아이 목소리 설정 (매우 높은 피치, 귀여운 톤)
   utterance.lang = 'ko-KR';
-  utterance.pitch = 1.5;  // 높은 피치 (어린이 목소리)
-  utterance.rate = 1.1;   // 약간 빠른 속도
-  utterance.volume = 0.8; // 볼륨
+  utterance.pitch = 1.9;  // 매우 높은 피치 (5살 아이 목소리)
+  utterance.rate = 0.95;  // 약간 느린 속도 (어린아이 말투)
+  utterance.volume = 0.85; // 볼륨
 
   if (onEnd) {
     utterance.onend = onEnd;
