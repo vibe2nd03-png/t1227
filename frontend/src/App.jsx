@@ -831,9 +831,7 @@ function App() {
         <div className="mobile-header-left">
           <h1 className="mobile-title">경기기후체감맵</h1>
           {selectedRegion && (
-            <span className="mobile-region-badge">
-              {selectedRegion.region}
-            </span>
+            <span className="mobile-region-badge">{selectedRegion.region}</span>
           )}
         </div>
         <div className="mobile-header-right">
@@ -852,9 +850,11 @@ function App() {
           )}
           <button
             className="mobile-user-btn"
-            onClick={() => user ? setShowProfileModal(true) : setShowAuthModal(true)}
+            onClick={() =>
+              user ? setShowProfileModal(true) : setShowAuthModal(true)
+            }
           >
-            {user ? (profile?.display_name?.charAt(0) || "👤") : "로그인"}
+            {user ? profile?.display_name?.charAt(0) || "👤" : "로그인"}
           </button>
         </div>
       </header>

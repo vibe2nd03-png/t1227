@@ -7,7 +7,16 @@ const COMMENTS_STORAGE_KEY = "region_comments";
 
 // 익명 닉네임 생성
 const generateAnonymousName = () => {
-  const adjectives = ["행복한", "따뜻한", "시원한", "쾌적한", "활기찬", "상쾌한", "평화로운", "즐거운"];
+  const adjectives = [
+    "행복한",
+    "따뜻한",
+    "시원한",
+    "쾌적한",
+    "활기찬",
+    "상쾌한",
+    "평화로운",
+    "즐거운",
+  ];
   const nouns = ["시민", "주민", "이웃", "친구", "동네사람", "경기도민"];
   const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
   const noun = nouns[Math.floor(Math.random() * nouns.length)];
@@ -22,7 +31,7 @@ const getLocalComments = (region) => {
     const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
     // 24시간 이내 해당 지역 댓글만 필터링
     return all.filter(
-      (c) => c.region === region && new Date(c.created_at).getTime() > dayAgo
+      (c) => c.region === region && new Date(c.created_at).getTime() > dayAgo,
     );
   } catch {
     return [];
@@ -105,7 +114,7 @@ function RegionComments({ region, isOpen, onClose }) {
     const serverIds = new Set(serverComments.map((c) => c.id));
     const uniqueLocal = localComments.filter((c) => !serverIds.has(c.id));
     return [...serverComments, ...uniqueLocal].sort(
-      (a, b) => new Date(a.created_at) - new Date(b.created_at)
+      (a, b) => new Date(a.created_at) - new Date(b.created_at),
     );
   };
 
@@ -138,14 +147,14 @@ function RegionComments({ region, isOpen, onClose }) {
     // 백그라운드에서 Supabase 저장 시도
     if (!useLocalOnly) {
       try {
-        const { error } = await supabase
-          .from("region_comments")
-          .insert([{
+        const { error } = await supabase.from("region_comments").insert([
+          {
             region: commentData.region,
             content: commentData.content,
             nickname: commentData.nickname,
             user_id: commentData.user_id,
-          }]);
+          },
+        ]);
 
         if (error) {
           console.warn("Supabase 저장 실패:", error.message);
@@ -167,14 +176,20 @@ function RegionComments({ region, isOpen, onClose }) {
     if (diffMins < 60) return `${diffMins}분 전`;
     const diffHours = Math.floor(diffMins / 60);
     if (diffHours < 24) return `${diffHours}시간 전`;
-    return date.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
+    return date.toLocaleTimeString("ko-KR", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   if (!isOpen) return null;
 
   return (
     <div className="region-comments-overlay" onClick={onClose}>
-      <div className="region-comments-panel" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="region-comments-panel"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* 헤더 */}
         <div className="comments-header">
           <div className="header-info">
@@ -186,7 +201,9 @@ function RegionComments({ region, isOpen, onClose }) {
               </span>
             </div>
           </div>
-          <button className="close-btn" onClick={onClose}>✕</button>
+          <button className="close-btn" onClick={onClose}>
+            ✕
+          </button>
         </div>
 
         {/* 댓글 목록 */}
@@ -213,10 +230,14 @@ function RegionComments({ region, isOpen, onClose }) {
                   >
                     <div className="comment-bubble">
                       {!isOwn && (
-                        <span className="comment-author">{comment.nickname}</span>
+                        <span className="comment-author">
+                          {comment.nickname}
+                        </span>
                       )}
                       <p className="comment-content">{comment.content}</p>
-                      <span className="comment-time">{formatTime(comment.created_at)}</span>
+                      <span className="comment-time">
+                        {formatTime(comment.created_at)}
+                      </span>
                     </div>
                   </div>
                 );

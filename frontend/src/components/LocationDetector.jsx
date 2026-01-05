@@ -3,21 +3,21 @@ import React, { useState, useEffect } from "react";
 // 경기도 31개 시군 좌표
 const GYEONGGI_COORDINATES = [
   { region: "수원시", lat: 37.2636, lng: 127.0286 },
-  { region: "성남시", lat: 37.4200, lng: 127.1267 },
+  { region: "성남시", lat: 37.42, lng: 127.1267 },
   { region: "고양시", lat: 37.6584, lng: 126.832 },
   { region: "용인시", lat: 37.2411, lng: 127.1776 },
-  { region: "부천시", lat: 37.5034, lng: 126.7660 },
+  { region: "부천시", lat: 37.5034, lng: 126.766 },
   { region: "안산시", lat: 37.3219, lng: 126.8309 },
   { region: "안양시", lat: 37.3943, lng: 126.9568 },
-  { region: "남양주시", lat: 37.6360, lng: 127.2165 },
+  { region: "남양주시", lat: 37.636, lng: 127.2165 },
   { region: "화성시", lat: 37.1995, lng: 126.8312 },
   { region: "평택시", lat: 36.9921, lng: 127.0857 },
   { region: "의정부시", lat: 37.7381, lng: 127.0337 },
-  { region: "시흥시", lat: 37.3800, lng: 126.8031 },
+  { region: "시흥시", lat: 37.38, lng: 126.8031 },
   { region: "파주시", lat: 37.7126, lng: 126.7618 },
   { region: "김포시", lat: 37.6153, lng: 126.7156 },
   { region: "광명시", lat: 37.4786, lng: 126.8644 },
-  { region: "광주시", lat: 37.4095, lng: 127.2550 },
+  { region: "광주시", lat: 37.4095, lng: 127.255 },
   { region: "군포시", lat: 37.3617, lng: 126.9353 },
   { region: "하남시", lat: 37.5393, lng: 127.2148 },
   { region: "오산시", lat: 37.1499, lng: 127.0773 },
@@ -94,7 +94,9 @@ function LocationDetector({ onLocationDetected, regions, compact = false }) {
             setDetectedRegion(nearest);
 
             // regions에서 해당 지역 데이터 찾기
-            const regionData = regions?.find((r) => r.region === nearest.region);
+            const regionData = regions?.find(
+              (r) => r.region === nearest.region,
+            );
             if (regionData && onLocationDetected) {
               onLocationDetected(regionData);
             } else if (onLocationDetected) {
@@ -113,7 +115,9 @@ function LocationDetector({ onLocationDetected, regions, compact = false }) {
             }, 3000);
           } else {
             setStatus("outside");
-            setErrorMessage(`현재 위치는 경기도에서 ${Math.round(nearest.distance)}km 떨어져 있습니다`);
+            setErrorMessage(
+              `현재 위치는 경기도에서 ${Math.round(nearest.distance)}km 떨어져 있습니다`,
+            );
           }
         }
       },
@@ -137,7 +141,7 @@ function LocationDetector({ onLocationDetected, regions, compact = false }) {
         enableHighAccuracy: true,
         timeout: 10000,
         maximumAge: 300000, // 5분 캐시
-      }
+      },
     );
   };
 
@@ -206,7 +210,10 @@ function LocationDetector({ onLocationDetected, regions, compact = false }) {
       {status === "success" && detectedRegion && (
         <div className="location-message success">
           <span>📍</span>
-          <span>{detectedRegion.region} ({Math.round(detectedRegion.distance)}km 이내)</span>
+          <span>
+            {detectedRegion.region} ({Math.round(detectedRegion.distance)}km
+            이내)
+          </span>
         </div>
       )}
     </div>

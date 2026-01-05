@@ -113,7 +113,8 @@ function WeeklyClimateCalendar({ regionName, climateData }) {
   const generateMockDay = (date) => {
     const minTemp = Math.floor(Math.random() * 5) - 8;
     const maxTemp = minTemp + Math.floor(Math.random() * 8) + 5;
-    const maxPop = Math.random() > 0.7 ? Math.floor(Math.random() * 60) + 20 : 0;
+    const maxPop =
+      Math.random() > 0.7 ? Math.floor(Math.random() * 60) + 20 : 0;
 
     const icons = ["☀️", "🌤️", "⛅", "☁️", "🌧️", "❄️"];
     const conditions = ["맑음", "구름조금", "구름많음", "흐림", "비", "눈"];

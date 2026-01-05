@@ -53,7 +53,9 @@ function RegionRanking({ regions, onRegionClick }) {
               acc[val] = (acc[val] || 0) + 1;
               return acc;
             }, {});
-            return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || "🌡️";
+            return (
+              Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || "🌡️"
+            );
           };
 
           Object.keys(stats).forEach((region) => {

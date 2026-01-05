@@ -74,10 +74,11 @@ function ReportMapOverlay({ visible, onReportClick }) {
         const data = await response.json();
 
         // 제보에 타입 추가
-        const typedReports = data.map(report => ({
+        const typedReports = data.map((report) => ({
           ...report,
           type: getReportType(report.emoji, report.sentiment_score),
-          isRecent: Date.now() - new Date(report.created_at).getTime() < 30 * 60 * 1000, // 30분 이내
+          isRecent:
+            Date.now() - new Date(report.created_at).getTime() < 30 * 60 * 1000, // 30분 이내
         }));
 
         setReports(typedReports);
@@ -99,9 +100,8 @@ function ReportMapOverlay({ visible, onReportClick }) {
   };
 
   // 필터링된 제보
-  const filteredReports = filter === "all"
-    ? reports
-    : reports.filter(r => r.type === filter);
+  const filteredReports =
+    filter === "all" ? reports : reports.filter((r) => r.type === filter);
 
   // 타입별 카운트
   const typeCounts = reports.reduce((acc, r) => {
@@ -139,7 +139,9 @@ function ReportMapOverlay({ visible, onReportClick }) {
                   <span className="popup-emoji-large">{report.emoji}</span>
                   <div className="popup-info">
                     <span className="popup-region-name">{report.region}</span>
-                    <span className="popup-time">{formatTimeAgo(report.created_at)}</span>
+                    <span className="popup-time">
+                      {formatTimeAgo(report.created_at)}
+                    </span>
                   </div>
                 </div>
                 <p className="popup-comment-text">
@@ -147,7 +149,8 @@ function ReportMapOverlay({ visible, onReportClick }) {
                 </p>
                 {report.temp_adjustment !== 0 && (
                   <div className="popup-temp-badge">
-                    체감 {report.temp_adjustment > 0 ? "+" : ""}{report.temp_adjustment}°C
+                    체감 {report.temp_adjustment > 0 ? "+" : ""}
+                    {report.temp_adjustment}°C
                   </div>
                 )}
               </div>
@@ -177,19 +180,20 @@ function ReportMapOverlay({ visible, onReportClick }) {
               <span>전체</span>
               <span className="item-count">{reports.length}</span>
             </button>
-            {Object.entries(REPORT_TYPES).map(([key, config]) => (
-              typeCounts[key] > 0 && (
-                <button
-                  key={key}
-                  className={`filter-item ${filter === key ? "active" : ""}`}
-                  onClick={() => setFilter(key)}
-                >
-                  <span>{config.emoji}</span>
-                  <span>{config.label}</span>
-                  <span className="item-count">{typeCounts[key]}</span>
-                </button>
-              )
-            ))}
+            {Object.entries(REPORT_TYPES).map(
+              ([key, config]) =>
+                typeCounts[key] > 0 && (
+                  <button
+                    key={key}
+                    className={`filter-item ${filter === key ? "active" : ""}`}
+                    onClick={() => setFilter(key)}
+                  >
+                    <span>{config.emoji}</span>
+                    <span>{config.label}</span>
+                    <span className="item-count">{typeCounts[key]}</span>
+                  </button>
+                ),
+            )}
           </div>
         )}
       </div>

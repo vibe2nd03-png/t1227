@@ -8,11 +8,13 @@ function PWAInstallBanner() {
 
   useEffect(() => {
     // iOS 체크
-    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isIOSDevice =
+      /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     setIsIOS(isIOSDevice);
 
     // 이미 앱으로 실행 중인지 체크
-    const standalone = window.matchMedia("(display-mode: standalone)").matches ||
+    const standalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
       window.navigator.standalone === true;
     setIsStandalone(standalone);
 
@@ -38,7 +40,9 @@ function PWAInstallBanner() {
 
     // iOS: Safari에서 실행 중이면 배너 표시
     if (isIOSDevice && !standalone) {
-      const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+      const isSafari = /^((?!chrome|android).)*safari/i.test(
+        navigator.userAgent,
+      );
       if (isSafari) {
         setTimeout(() => setShowBanner(true), 3000);
       }

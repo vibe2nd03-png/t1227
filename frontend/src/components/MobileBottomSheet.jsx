@@ -7,7 +7,7 @@ function MobileBottomSheet({
   initialSnap = 1,
   children,
   title,
-  showHandle = true
+  showHandle = true,
 }) {
   const [currentSnap, setCurrentSnap] = useState(initialSnap);
   const [isDragging, setIsDragging] = useState(false);
@@ -82,7 +82,9 @@ function MobileBottomSheet({
         className={`mobile-bottom-sheet ${isDragging ? "dragging" : ""}`}
         style={{
           height: `${Math.max(0, adjustedHeight)}px`,
-          transition: isDragging ? "none" : "height 0.3s cubic-bezier(0.32, 0.72, 0, 1)"
+          transition: isDragging
+            ? "none"
+            : "height 0.3s cubic-bezier(0.32, 0.72, 0, 1)",
         }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -95,9 +97,7 @@ function MobileBottomSheet({
         </div>
 
         {/* 콘텐츠 */}
-        <div className="sheet-content">
-          {children}
-        </div>
+        <div className="sheet-content">{children}</div>
       </div>
     </>
   );

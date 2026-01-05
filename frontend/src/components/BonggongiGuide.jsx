@@ -29,11 +29,12 @@ const speakMessage = (text, onEnd) => {
   const koreanVoices = voices.filter((v) => v.lang.includes("ko"));
 
   // 남성 음성 우선 (name에 male, 남성, 민수 등 포함)
-  const maleVoice = koreanVoices.find((v) =>
-    v.name.toLowerCase().includes("male") ||
-    v.name.includes("남성") ||
-    v.name.includes("민수") ||
-    v.name.includes("준서")
+  const maleVoice = koreanVoices.find(
+    (v) =>
+      v.name.toLowerCase().includes("male") ||
+      v.name.includes("남성") ||
+      v.name.includes("민수") ||
+      v.name.includes("준서"),
   );
 
   const koreanVoice = maleVoice || koreanVoices[0] || voices[0];
