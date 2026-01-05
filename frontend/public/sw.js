@@ -17,7 +17,7 @@ self.addEventListener("install", (event) => {
     caches.open(CACHE_NAME).then((cache) => {
       console.log("정적 자산 캐싱 중...");
       return cache.addAll(STATIC_ASSETS);
-    })
+    }),
   );
   self.skipWaiting();
 });
@@ -30,9 +30,9 @@ self.addEventListener("activate", (event) => {
       return Promise.all(
         cacheNames
           .filter((name) => name !== CACHE_NAME)
-          .map((name) => caches.delete(name))
+          .map((name) => caches.delete(name)),
       );
-    })
+    }),
   );
   event.waitUntil(clients.claim());
 });
@@ -43,7 +43,10 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
 
   // API 요청은 네트워크 우선
-  if (url.pathname.startsWith("/api/") || url.hostname !== self.location.hostname) {
+  if (
+    url.pathname.startsWith("/api/") ||
+    url.hostname !== self.location.hostname
+  ) {
     event.respondWith(
       fetch(request)
         .then((response) => {
@@ -59,7 +62,7 @@ self.addEventListener("fetch", (event) => {
         .catch(() => {
           // 오프라인시 캐시된 응답 반환
           return caches.match(request);
-        })
+        }),
     );
     return;
   }
@@ -80,25 +83,27 @@ self.addEventListener("fetch", (event) => {
       }
 
       // 캐시에 없으면 네트워크에서 가져오고 캐싱
-      return fetch(request).then((networkResponse) => {
-        if (networkResponse && networkResponse.status === 200) {
-          const responseClone = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, responseClone);
+      return fetch(request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseClone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(request, responseClone);
+            });
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          // 오프라인이고 캐시에 없으면 기본 페이지 반환
+          if (request.mode === "navigate") {
+            return caches.match("/index.html");
+          }
+          return new Response("오프라인 상태입니다", {
+            status: 503,
+            statusText: "Service Unavailable",
           });
-        }
-        return networkResponse;
-      }).catch(() => {
-        // 오프라인이고 캐시에 없으면 기본 페이지 반환
-        if (request.mode === "navigate") {
-          return caches.match("/index.html");
-        }
-        return new Response("오프라인 상태입니다", {
-          status: 503,
-          statusText: "Service Unavailable",
         });
-      });
-    })
+    }),
   );
 });
 

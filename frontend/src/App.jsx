@@ -7,7 +7,9 @@ const ClimateMap = lazy(() => import("./components/ClimateMap"));
 const Sidebar = lazy(() => import("./components/Sidebar"));
 
 // 부가 컴포넌트 지연 로딩
-const WeatherAlertBanner = lazy(() => import("./components/WeatherAlertBanner"));
+const WeatherAlertBanner = lazy(
+  () => import("./components/WeatherAlertBanner"),
+);
 const LocationDetector = lazy(() => import("./components/LocationDetector"));
 const RegionComments = lazy(() => import("./components/RegionComments"));
 const PWAInstallBanner = lazy(() => import("./components/PWAInstallBanner"));
@@ -19,14 +21,35 @@ const UserProfile = lazy(() => import("./components/UserProfile"));
 // 로딩 스켈레톤 컴포넌트
 const MapSkeleton = () => (
   <div className="map-skeleton">
-    <div className="skeleton-pulse" style={{ width: '100%', height: '100%', background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite' }} />
+    <div
+      className="skeleton-pulse"
+      style={{
+        width: "100%",
+        height: "100%",
+        background:
+          "linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)",
+        backgroundSize: "200% 100%",
+        animation: "shimmer 1.5s infinite",
+      }}
+    />
   </div>
 );
 
 const SidebarSkeleton = () => (
   <div className="sidebar-skeleton">
-    <div className="skeleton-header" style={{ height: '60px', background: '#f0f0f0', marginBottom: '16px', borderRadius: '8px' }} />
-    <div className="skeleton-content" style={{ height: '200px', background: '#f0f0f0', borderRadius: '8px' }} />
+    <div
+      className="skeleton-header"
+      style={{
+        height: "60px",
+        background: "#f0f0f0",
+        marginBottom: "16px",
+        borderRadius: "8px",
+      }}
+    />
+    <div
+      className="skeleton-content"
+      style={{ height: "200px", background: "#f0f0f0", borderRadius: "8px" }}
+    />
   </div>
 );
 import {

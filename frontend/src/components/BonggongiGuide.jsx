@@ -642,7 +642,10 @@ function BonggongiGuide({ regions, selectedRegion, targetGroup = "general" }) {
             // 접근성: 마커에 aria-label 추가
             const element = e.target.getElement();
             if (element) {
-              element.setAttribute("aria-label", "AI반디 기후 안내 도우미 - 클릭하여 정보 확인");
+              element.setAttribute(
+                "aria-label",
+                "AI반디 기후 안내 도우미 - 클릭하여 정보 확인",
+              );
             }
           },
           click: () => {
