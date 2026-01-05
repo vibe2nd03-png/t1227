@@ -14,19 +14,54 @@
       name="description"
       content="경기도 31개 시군의 기후 체감 지수 및 AI 설명 서비스"
     />
+
+    <!-- 프리커넥트: 외부 리소스 연결 최적화 -->
+    <link rel="preconnect" href="https://unpkg.com" crossorigin />
+    <link rel="preconnect" href="https://tile.openstreetmap.org" crossorigin />
+    <link rel="dns-prefetch" href="https://unpkg.com" />
+    <link rel="dns-prefetch" href="https://tile.openstreetmap.org" />
+
     <link rel="manifest" href="/manifest.json" />
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
     <title>경기 기후 체감 맵</title>
+
+    <!-- Leaflet CSS: 비동기 로딩으로 렌더 차단 방지 -->
     <link
-      rel="stylesheet"
+      rel="preload"
       href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-      crossorigin=""
+      as="style"
+      onload="this.onload=null;this.rel='stylesheet'"
     />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      />
+    </noscript>
+
+    <!-- Critical CSS: 초기 로딩 스타일 인라인 -->
+    <style>
+      *{box-sizing:border-box;margin:0;padding:0}
+      body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f5}
+      #root{min-height:100vh;display:flex;flex-direction:column}
+      .loading{display:flex;align-items:center;justify-content:center;height:100vh;font-size:1.1rem;color:#666}
+      .map-skeleton{position:absolute;inset:0;background:linear-gradient(135deg,#e8f5e9 0%,#c8e6c9 50%,#a5d6a7 100%)}
+      .sidebar-skeleton{width:380px;padding:20px;background:#fff}
+      @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+      .skeleton-pulse{animation:shimmer 1.5s infinite linear}
+      /* LCP 최적화: 초기 컨텐츠 빠른 표시 */
+      .app-container{display:flex;flex-direction:column;min-height:100vh}
+      .main-content{flex:1;display:flex;position:relative}
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <!-- 초기 LCP 힌트: 빠른 첫 컨텐츠 표시 -->
+    <div id="root">
+      <div style="display:flex;align-items:center;justify-content:center;height:100vh;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;font-size:1.5rem;font-weight:600">
+        경기 기후 체감 맵
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

@@ -1,18 +1,34 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from "react";
-import ClimateMap from "./components/ClimateMap";
-import Sidebar from "./components/Sidebar";
-import WeatherAlertBanner from "./components/WeatherAlertBanner";
-import LocationDetector from "./components/LocationDetector";
-import RegionComments from "./components/RegionComments";
-import PWAInstallBanner from "./components/PWAInstallBanner";
-import MobileBottomNav from "./components/MobileBottomNav";
-import MobileBottomSheet from "./components/MobileBottomSheet";
 import { getGyeonggiRealtimeWeather } from "./services/kmaApi";
 import { useAuth } from "./contexts/AuthContext";
 
-// AuthModal, UserProfile 지연 로딩
+// 핵심 컴포넌트 지연 로딩 (LCP 최적화)
+const ClimateMap = lazy(() => import("./components/ClimateMap"));
+const Sidebar = lazy(() => import("./components/Sidebar"));
+
+// 부가 컴포넌트 지연 로딩
+const WeatherAlertBanner = lazy(() => import("./components/WeatherAlertBanner"));
+const LocationDetector = lazy(() => import("./components/LocationDetector"));
+const RegionComments = lazy(() => import("./components/RegionComments"));
+const PWAInstallBanner = lazy(() => import("./components/PWAInstallBanner"));
+const MobileBottomNav = lazy(() => import("./components/MobileBottomNav"));
+const MobileBottomSheet = lazy(() => import("./components/MobileBottomSheet"));
 const AuthModal = lazy(() => import("./components/AuthModal"));
 const UserProfile = lazy(() => import("./components/UserProfile"));
+
+// 로딩 스켈레톤 컴포넌트
+const MapSkeleton = () => (
+  <div className="map-skeleton">
+    <div className="skeleton-pulse" style={{ width: '100%', height: '100%', background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite' }} />
+  </div>
+);
+
+const SidebarSkeleton = () => (
+  <div className="sidebar-skeleton">
+    <div className="skeleton-header" style={{ height: '60px', background: '#f0f0f0', marginBottom: '16px', borderRadius: '8px' }} />
+    <div className="skeleton-content" style={{ height: '200px', background: '#f0f0f0', borderRadius: '8px' }} />
+  </div>
+);
 import {
   TARGET_MULTIPLIERS,
   calculateRiskLevel,
@@ -823,7 +839,9 @@ function App() {
 
   return (
     <div className={`app-container ${isMobile ? "mobile" : "desktop"}`}>
-      <WeatherAlertBanner />
+      <Suspense fallback={null}>
+        <WeatherAlertBanner />
+      </Suspense>
 
       {/* 모바일 상단 헤더 - 항상 렌더링, CSS로 표시/숨김 제어 */}
       <header className="mobile-header">
@@ -834,11 +852,13 @@ function App() {
           )}
         </div>
         <div className="mobile-header-right">
-          <LocationDetector
-            onLocationDetected={handleRegionSelect}
-            regions={regions}
-            compact
-          />
+          <Suspense fallback={<span>📍</span>}>
+            <LocationDetector
+              onLocationDetected={handleRegionSelect}
+              regions={regions}
+              compact
+            />
+          </Suspense>
           {selectedRegion && (
             <button
               className="mobile-chat-btn"
@@ -880,10 +900,12 @@ function App() {
       {/* 데스크톱 위치 감지 & 커뮤니티 버튼 */}
       {!isMobile && (
         <div className="top-action-bar">
-          <LocationDetector
-            onLocationDetected={handleRegionSelect}
-            regions={regions}
-          />
+          <Suspense fallback={<span>📍 위치 감지</span>}>
+            <LocationDetector
+              onLocationDetected={handleRegionSelect}
+              regions={regions}
+            />
+          </Suspense>
           {selectedRegion && (
             <button
               className="community-btn"
@@ -899,64 +921,74 @@ function App() {
       <div className="main-content">
         {/* 데스크톱 사이드바 */}
         {!isMobile && (
-          <Sidebar
-            selectedRegion={selectedRegion}
-            explanation={explanation}
-            target={target}
-            onTargetChange={handleTargetChange}
-            loading={false}
-            allRegions={regions}
-            onRegionSelect={handleRegionSelect}
-            onOpenAuthModal={() => setShowAuthModal(true)}
-            isMobileCollapsed={isMobileCollapsed}
-            setIsMobileCollapsed={setIsMobileCollapsed}
-          />
+          <Suspense fallback={<SidebarSkeleton />}>
+            <Sidebar
+              selectedRegion={selectedRegion}
+              explanation={explanation}
+              target={target}
+              onTargetChange={handleTargetChange}
+              loading={false}
+              allRegions={regions}
+              onRegionSelect={handleRegionSelect}
+              onOpenAuthModal={() => setShowAuthModal(true)}
+              isMobileCollapsed={isMobileCollapsed}
+              setIsMobileCollapsed={setIsMobileCollapsed}
+            />
+          </Suspense>
         )}
-        <ClimateMap
-          regions={regions}
-          selectedRegion={selectedRegion}
-          onRegionSelect={handleRegionSelect}
-          onMapClick={() => {
-            if (isMobile) {
-              setShowMobileSheet(false);
-              setMobileTab("map");
-            } else {
-              setIsMobileCollapsed(true);
-            }
-          }}
-        />
+        <Suspense fallback={<MapSkeleton />}>
+          <ClimateMap
+            regions={regions}
+            selectedRegion={selectedRegion}
+            onRegionSelect={handleRegionSelect}
+            onMapClick={() => {
+              if (isMobile) {
+                setShowMobileSheet(false);
+                setMobileTab("map");
+              } else {
+                setIsMobileCollapsed(true);
+              }
+            }}
+          />
+        </Suspense>
       </div>
 
       {/* 모바일 바텀시트 - 항상 렌더링, CSS로 표시/숨김 제어 */}
-      <MobileBottomSheet
-        isOpen={showMobileSheet}
-        onClose={() => {
-          setShowMobileSheet(false);
-          setMobileTab("map");
-        }}
-        title={selectedRegion?.region || "지역 선택"}
-      >
-        <Sidebar
-          selectedRegion={selectedRegion}
-          explanation={explanation}
-          target={target}
-          onTargetChange={handleTargetChange}
-          loading={false}
-          allRegions={regions}
-          onRegionSelect={handleRegionSelect}
-          onOpenAuthModal={() => setShowAuthModal(true)}
-          isMobileCollapsed={false}
-          setIsMobileCollapsed={() => {}}
-          mobileActiveTab={mobileTab}
-        />
-      </MobileBottomSheet>
+      <Suspense fallback={null}>
+        <MobileBottomSheet
+          isOpen={showMobileSheet}
+          onClose={() => {
+            setShowMobileSheet(false);
+            setMobileTab("map");
+          }}
+          title={selectedRegion?.region || "지역 선택"}
+        >
+          <Suspense fallback={<SidebarSkeleton />}>
+            <Sidebar
+              selectedRegion={selectedRegion}
+              explanation={explanation}
+              target={target}
+              onTargetChange={handleTargetChange}
+              loading={false}
+              allRegions={regions}
+              onRegionSelect={handleRegionSelect}
+              onOpenAuthModal={() => setShowAuthModal(true)}
+              isMobileCollapsed={false}
+              setIsMobileCollapsed={() => {}}
+              mobileActiveTab={mobileTab}
+            />
+          </Suspense>
+        </MobileBottomSheet>
+      </Suspense>
 
       {/* 모바일 하단 네비게이션 - 항상 렌더링, CSS로 표시/숨김 제어 */}
-      <MobileBottomNav
-        activeTab={mobileTab}
-        onTabChange={handleMobileTabChange}
-        selectedRegion={selectedRegion}
-      />
+      <Suspense fallback={null}>
+        <MobileBottomNav
+          activeTab={mobileTab}
+          onTabChange={handleMobileTabChange}
+          selectedRegion={selectedRegion}
+        />
+      </Suspense>
 
       {/* 로그인 모달 */}
       {showAuthModal && (
@@ -979,14 +1011,18 @@ function App() {
       )}
 
       {/* 지역별 댓글 모달 */}
-      <RegionComments
-        region={selectedRegion?.region}
-        isOpen={showComments}
-        onClose={() => setShowComments(false)}
-      />
+      <Suspense fallback={null}>
+        <RegionComments
+          region={selectedRegion?.region}
+          isOpen={showComments}
+          onClose={() => setShowComments(false)}
+        />
+      </Suspense>
 
       {/* PWA 설치 배너 */}
-      <PWAInstallBanner />
+      <Suspense fallback={null}>
+        <PWAInstallBanner />
+      </Suspense>
     </div>
   );
 }
