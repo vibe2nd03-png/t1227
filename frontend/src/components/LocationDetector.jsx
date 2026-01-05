@@ -66,7 +66,7 @@ const findNearestRegion = (lat, lng) => {
   return nearest;
 };
 
-function LocationDetector({ onLocationDetected, regions }) {
+function LocationDetector({ onLocationDetected, regions, compact = false }) {
   const [status, setStatus] = useState("idle"); // idle, detecting, success, error, outside
   const [errorMessage, setErrorMessage] = useState("");
   const [detectedRegion, setDetectedRegion] = useState(null);
@@ -140,6 +140,25 @@ function LocationDetector({ onLocationDetected, regions }) {
       }
     );
   };
+
+  // 컴팩트 모드 (모바일 헤더용)
+  if (compact) {
+    return (
+      <button
+        className={`location-btn-compact ${status}`}
+        onClick={detectLocation}
+        disabled={status === "detecting"}
+      >
+        {status === "detecting" ? (
+          <span className="spinning">📍</span>
+        ) : status === "success" ? (
+          <span>✓</span>
+        ) : (
+          <span>📍</span>
+        )}
+      </button>
+    );
+  }
 
   return (
     <div className="location-detector">

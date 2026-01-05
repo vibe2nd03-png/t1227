@@ -5,6 +5,8 @@ import WeatherAlertBanner from "./components/WeatherAlertBanner";
 import LocationDetector from "./components/LocationDetector";
 import RegionComments from "./components/RegionComments";
 import PWAInstallBanner from "./components/PWAInstallBanner";
+import MobileBottomNav from "./components/MobileBottomNav";
+import MobileBottomSheet from "./components/MobileBottomSheet";
 import { getGyeonggiRealtimeWeather } from "./services/kmaApi";
 import { useAuth } from "./contexts/AuthContext";
 
@@ -41,7 +43,19 @@ function App() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isMobileCollapsed, setIsMobileCollapsed] = useState(true);
   const [showComments, setShowComments] = useState(false);
+  const [mobileTab, setMobileTab] = useState("map");
+  const [showMobileSheet, setShowMobileSheet] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const preferredRegionApplied = useRef(false);
+
+  // 화면 크기 감지
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // 테마 변경 효과 (선택된 지역 또는 평균 점수 기반)
   useEffect(() => {
@@ -716,6 +730,24 @@ function App() {
   const handleRegionSelect = (region) => {
     setSelectedRegion(region);
     setExplanation(generateMockExplanation(region, target));
+    // 모바일에서 지역 선택 시 바텀시트 열기
+    if (isMobile) {
+      setMobileTab("info");
+      setShowMobileSheet(true);
+    }
+  };
+
+  // 모바일 탭 변경 핸들러
+  const handleMobileTabChange = (tab) => {
+    setMobileTab(tab);
+    if (tab === "map") {
+      setShowMobileSheet(false);
+    } else if (tab === "more") {
+      // 더보기 메뉴 처리
+      setShowMobileSheet(true);
+    } else {
+      setShowMobileSheet(true);
+    }
   };
 
   // Mock 설명 생성 (겨울철 기준)
@@ -789,63 +821,147 @@ function App() {
   }
 
   return (
-    <div className="app-container">
+    <div className={`app-container ${isMobile ? "mobile" : "desktop"}`}>
       <WeatherAlertBanner />
 
-      {/* 데이터 출처 배지 */}
-      <div className="data-source-badge">
-        <span className={`source-indicator ${dataSource}`}></span>
-        {dataSource === "kma" ? (
-          <a
-            href="https://climate.gg.go.kr"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="source-link"
-          >
-            {formatDataSource()}
-          </a>
-        ) : (
-          <span>{formatDataSource()}</span>
-        )}
-      </div>
+      {/* 모바일 상단 헤더 */}
+      {isMobile && (
+        <header className="mobile-header">
+          <div className="mobile-header-left">
+            <h1 className="mobile-title">경기 기후</h1>
+            {selectedRegion && (
+              <span className="mobile-region-badge">
+                {selectedRegion.region}
+              </span>
+            )}
+          </div>
+          <div className="mobile-header-right">
+            <LocationDetector
+              onLocationDetected={handleRegionSelect}
+              regions={regions}
+              compact
+            />
+            {selectedRegion && (
+              <button
+                className="mobile-chat-btn"
+                onClick={() => setShowComments(true)}
+              >
+                💬
+              </button>
+            )}
+            <button
+              className="mobile-user-btn"
+              onClick={() => user ? null : setShowAuthModal(true)}
+            >
+              {user ? (profile?.display_name?.charAt(0) || "👤") : "✨"}
+            </button>
+          </div>
+        </header>
+      )}
 
-      {/* 위치 감지 & 커뮤니티 버튼 */}
-      <div className="top-action-bar">
-        <LocationDetector
-          onLocationDetected={handleRegionSelect}
-          regions={regions}
-        />
-        {selectedRegion && (
-          <button
-            className="community-btn"
-            onClick={() => setShowComments(true)}
-          >
-            <span>💬</span>
-            <span>{selectedRegion.region} 대화방</span>
-          </button>
-        )}
-      </div>
+      {/* 데스크톱 데이터 출처 배지 */}
+      {!isMobile && (
+        <div className="data-source-badge">
+          <span className={`source-indicator ${dataSource}`}></span>
+          {dataSource === "kma" ? (
+            <a
+              href="https://climate.gg.go.kr"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="source-link"
+            >
+              {formatDataSource()}
+            </a>
+          ) : (
+            <span>{formatDataSource()}</span>
+          )}
+        </div>
+      )}
+
+      {/* 데스크톱 위치 감지 & 커뮤니티 버튼 */}
+      {!isMobile && (
+        <div className="top-action-bar">
+          <LocationDetector
+            onLocationDetected={handleRegionSelect}
+            regions={regions}
+          />
+          {selectedRegion && (
+            <button
+              className="community-btn"
+              onClick={() => setShowComments(true)}
+            >
+              <span>💬</span>
+              <span>{selectedRegion.region} 대화방</span>
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="main-content">
-        <Sidebar
-          selectedRegion={selectedRegion}
-          explanation={explanation}
-          target={target}
-          onTargetChange={handleTargetChange}
-          loading={false}
-          allRegions={regions}
-          onRegionSelect={handleRegionSelect}
-          onOpenAuthModal={() => setShowAuthModal(true)}
-          isMobileCollapsed={isMobileCollapsed}
-          setIsMobileCollapsed={setIsMobileCollapsed}
-        />
+        {/* 데스크톱 사이드바 */}
+        {!isMobile && (
+          <Sidebar
+            selectedRegion={selectedRegion}
+            explanation={explanation}
+            target={target}
+            onTargetChange={handleTargetChange}
+            loading={false}
+            allRegions={regions}
+            onRegionSelect={handleRegionSelect}
+            onOpenAuthModal={() => setShowAuthModal(true)}
+            isMobileCollapsed={isMobileCollapsed}
+            setIsMobileCollapsed={setIsMobileCollapsed}
+          />
+        )}
         <ClimateMap
           regions={regions}
           selectedRegion={selectedRegion}
           onRegionSelect={handleRegionSelect}
-          onMapClick={() => setIsMobileCollapsed(true)}
+          onMapClick={() => {
+            if (isMobile) {
+              setShowMobileSheet(false);
+              setMobileTab("map");
+            } else {
+              setIsMobileCollapsed(true);
+            }
+          }}
         />
       </div>
+
+      {/* 모바일 바텀시트 */}
+      {isMobile && (
+        <MobileBottomSheet
+          isOpen={showMobileSheet}
+          onClose={() => {
+            setShowMobileSheet(false);
+            setMobileTab("map");
+          }}
+          title={selectedRegion?.region || "지역 선택"}
+        >
+          <Sidebar
+            selectedRegion={selectedRegion}
+            explanation={explanation}
+            target={target}
+            onTargetChange={handleTargetChange}
+            loading={false}
+            allRegions={regions}
+            onRegionSelect={handleRegionSelect}
+            onOpenAuthModal={() => setShowAuthModal(true)}
+            isMobileCollapsed={false}
+            setIsMobileCollapsed={() => {}}
+            mobileActiveTab={mobileTab}
+          />
+        </MobileBottomSheet>
+      )}
+
+      {/* 모바일 하단 네비게이션 */}
+      {isMobile && (
+        <MobileBottomNav
+          activeTab={mobileTab}
+          onTabChange={handleMobileTabChange}
+          selectedRegion={selectedRegion}
+        />
+      )}
 
       {/* 로그인 모달 */}
       {showAuthModal && (

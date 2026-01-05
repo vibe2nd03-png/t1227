@@ -9175,3 +9175,424 @@ body::after {
     padding: 8px 12px;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   NEW MOBILE UI SYSTEM - 네이티브 앱 스타일
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 모바일 컨테이너 */
+.app-container.mobile {
+  padding-bottom: 72px; /* 하단 네비 공간 */
+}
+
+.app-container.mobile .main-content {
+  height: calc(100dvh - 56px - 72px); /* 헤더 + 네비 제외 */
+}
+
+.app-container.mobile .sidebar {
+  display: none; /* 모바일에서 기본 사이드바 숨김 */
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   모바일 헤더
+   ───────────────────────────────────────────────────────────────────────────── */
+.mobile-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 56px;
+  background: rgba(10, 10, 15, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-md);
+  z-index: 2000;
+}
+
+.mobile-header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.mobile-title {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.mobile-region-badge {
+  background: var(--bg-elevated);
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  border: 1px solid var(--glass-border);
+}
+
+.mobile-header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.mobile-chat-btn,
+.mobile-user-btn,
+.location-btn-compact {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text-primary);
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.mobile-chat-btn:active,
+.mobile-user-btn:active,
+.location-btn-compact:active {
+  transform: scale(0.95);
+  background: var(--bg-elevated);
+}
+
+.location-btn-compact.detecting {
+  background: var(--accent-glow);
+}
+
+.location-btn-compact.success {
+  background: var(--risk-safe-glow);
+  border-color: var(--risk-safe);
+  color: var(--risk-safe);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   모바일 하단 네비게이션
+   ───────────────────────────────────────────────────────────────────────────── */
+.mobile-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 72px;
+  background: rgba(10, 10, 15, 0.98);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--glass-border);
+  display: flex;
+  align-items: stretch;
+  justify-content: space-around;
+  padding: 0 var(--space-sm);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  z-index: 2000;
+}
+
+.mobile-bottom-nav .nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: var(--space-sm);
+  background: transparent;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  position: relative;
+  transition: var(--transition-fast);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-bottom-nav .nav-item:active {
+  transform: scale(0.95);
+}
+
+.mobile-bottom-nav .nav-item.active {
+  color: var(--accent-primary);
+}
+
+.mobile-bottom-nav .nav-item.disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.mobile-bottom-nav .nav-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.mobile-bottom-nav .nav-label {
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.mobile-bottom-nav .nav-indicator {
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 3px;
+  background: var(--accent-primary);
+  border-radius: var(--radius-full);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   모바일 바텀시트
+   ───────────────────────────────────────────────────────────────────────────── */
+.sheet-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0);
+  z-index: 1500;
+  pointer-events: none;
+  transition: background 0.3s ease;
+}
+
+.sheet-backdrop.visible {
+  background: rgba(0, 0, 0, 0.5);
+  pointer-events: auto;
+}
+
+.mobile-bottom-sheet {
+  position: fixed;
+  bottom: 72px; /* 하단 네비 위 */
+  left: 0;
+  right: 0;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.5);
+  z-index: 1600;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  will-change: height;
+}
+
+.mobile-bottom-sheet.dragging {
+  cursor: grabbing;
+}
+
+.sheet-handle-area {
+  flex-shrink: 0;
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  cursor: grab;
+  touch-action: none;
+}
+
+.sheet-handle {
+  width: 40px;
+  height: 4px;
+  background: var(--text-muted);
+  border-radius: var(--radius-full);
+}
+
+.sheet-title {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.sheet-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 바텀시트 내 사이드바 스타일 오버라이드 */
+.mobile-bottom-sheet .sidebar {
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  position: relative !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.mobile-bottom-sheet .sidebar-header {
+  display: none; /* 시트에 이미 타이틀 있음 */
+}
+
+.mobile-bottom-sheet .quick-actions {
+  display: none; /* 하단 네비로 대체 */
+}
+
+.mobile-bottom-sheet .main-tabs {
+  position: sticky;
+  top: 0;
+  background: var(--bg-secondary);
+  z-index: 10;
+  padding: var(--space-sm);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.mobile-bottom-sheet .tab-content-area {
+  padding: var(--space-md);
+}
+
+.mobile-bottom-sheet .region-card-compact {
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   모바일 지도 영역 조정
+   ───────────────────────────────────────────────────────────────────────────── */
+.app-container.mobile .map-container {
+  position: fixed;
+  top: 56px;
+  left: 0;
+  right: 0;
+  bottom: 72px;
+}
+
+.app-container.mobile .map-container .leaflet-container {
+  height: 100% !important;
+}
+
+/* 모바일에서 데스크톱 전용 요소 숨김 */
+.app-container.mobile .data-source-badge,
+.app-container.mobile .top-action-bar,
+.app-container.mobile .region-ranking {
+  display: none !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   모바일 터치 최적화
+   ───────────────────────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* 터치 타겟 최소 크기 보장 */
+  button,
+  .target-chip,
+  .main-tab,
+  .feeling-btn-inline,
+  .chip {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* 폼 요소 터치 최적화 */
+  input[type="text"],
+  input[type="email"],
+  textarea {
+    font-size: 16px; /* iOS 확대 방지 */
+  }
+
+  /* 스크롤 부드럽게 */
+  * {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* 선택 방지 */
+  .mobile-header,
+  .mobile-bottom-nav,
+  .sheet-handle-area {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   모바일 애니메이션
+   ───────────────────────────────────────────────────────────────────────────── */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.mobile-bottom-sheet {
+  animation: slideUp 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* 지역 선택 시 피드백 */
+.app-container.mobile .leaflet-marker-icon:active {
+  transform: scale(1.2);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   모바일 선택 카드 스타일
+   ───────────────────────────────────────────────────────────────────────────── */
+.app-container.mobile .region-header-compact {
+  padding: var(--space-md);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.app-container.mobile .climate-grid-compact {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-sm);
+  padding: var(--space-md);
+}
+
+.app-container.mobile .climate-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--space-sm);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+}
+
+.app-container.mobile .climate-item .icon {
+  font-size: 1.2rem;
+}
+
+.app-container.mobile .climate-item .value {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.app-container.mobile .climate-item .label {
+  font-size: 0.65rem;
+  color: var(--text-tertiary);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   데스크톱 모드 - 기존 스타일 유지
+   ───────────────────────────────────────────────────────────────────────────── */
+.app-container.desktop .mobile-header,
+.app-container.desktop .mobile-bottom-nav,
+.app-container.desktop .mobile-bottom-sheet {
+  display: none !important;
+}
