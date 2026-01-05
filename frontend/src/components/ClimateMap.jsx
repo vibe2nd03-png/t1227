@@ -241,6 +241,9 @@ function AnimatedMarker({
   // 선택된 마커만 크게 (호버 애니메이션 제거로 떨림 방지)
   const radius = isSelected ? baseRadius * 1.3 : baseRadius;
 
+  // 접근성을 위한 aria-label
+  const ariaLabel = `${region.region} ${region.risk_label} ${region.adjusted_score || region.score}점`;
+
   return (
     <CircleMarker
       center={[region.lat, region.lng]}
@@ -254,6 +257,15 @@ function AnimatedMarker({
       }}
       eventHandlers={{
         click: () => onSelect(region),
+        add: (e) => {
+          // 마커가 추가될 때 접근성 속성 추가
+          const element = e.target.getElement();
+          if (element) {
+            element.setAttribute("role", "button");
+            element.setAttribute("aria-label", ariaLabel);
+            element.setAttribute("tabindex", "0");
+          }
+        },
       }}
     >
       <Tooltip
@@ -464,7 +476,7 @@ function ClimateMap({ regions, selectedRegion, onRegionSelect, onMapClick }) {
           className="legend-header"
           onClick={() => setLegendCollapsed(!legendCollapsed)}
         >
-          <h4>{legendCollapsed ? "📊" : "위험 등급"}</h4>
+          <h2>{legendCollapsed ? "📊" : "위험 등급"}</h2>
           <span className="legend-toggle">{legendCollapsed ? "▲" : "▼"}</span>
         </div>
         {!legendCollapsed && (

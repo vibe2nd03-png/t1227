@@ -7492,8 +7492,10 @@ body::after {
   border-bottom: 1px solid var(--glass-border);
 }
 
-.map-legend .legend-header h4 {
+.map-legend .legend-header h2 {
   margin: 0;
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .map-legend .legend-toggle {
