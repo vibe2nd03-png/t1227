@@ -1,6 +1,7 @@
 {
   "name": "gyeonggi-climate-map",
   "version": "1.0.0",
+  "type": "module",
   "description": "경기 기후 체감 맵 - 경기도 기후 체감 지수 및 AI 설명 서비스",
   "private": true,
   "scripts": {

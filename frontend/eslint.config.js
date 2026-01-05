@@ -63,6 +63,33 @@ export default [
       },
     },
   },
+  // Node.js scripts
+  {
+    files: ["scripts/**/*.js", "api/**/*.js"],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+        require: "readonly",
+        module: "readonly",
+        __dirname: "readonly",
+        __filename: "readonly",
+        Buffer: "readonly",
+        process: "readonly",
+      },
+    },
+  },
+  // Service Worker
+  {
+    files: ["public/sw.js"],
+    languageOptions: {
+      globals: {
+        ...globals.serviceworker,
+        clients: "readonly",
+        self: "readonly",
+        caches: "readonly",
+      },
+    },
+  },
   {
     ignores: ["dist/**", "node_modules/**", "*.config.js"],
   },
