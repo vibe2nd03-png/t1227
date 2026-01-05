@@ -1,6 +1,12 @@
 # 경기 기후 체감 맵
 
-경기도 읍·면·동 단위 기후 체감 지수 및 AI 설명 서비스
+경기도 31개 시군의 실시간 기후 체감 지수 및 AI 설명 서비스
+
+[![Deploy with Vercel](https://vercel.com/button)](https://frontend-mu-rust-96.vercel.app)
+
+## 데모
+
+**라이브 데모**: https://frontend-mu-rust-96.vercel.app
 
 ## 프로젝트 개요
 
@@ -10,17 +16,19 @@
 
 **숫자 → 점수 → 문장 → 행동 가이드**
 
-## 핵심 기능
+## 주요 기능
 
 ### 1. 기후 체감 지수 산출 (0~100점)
 - 기온, 습도, 미세먼지, 자외선, 지표면온도 등 복합 지표
 - 점수가 높을수록 위험
 
 ### 2. 지도 시각화 (Heat Map)
-- 🔵 안전 (0-29점)
-- 🟡 주의 (30-49점)
-- 🟠 경고 (50-74점)
-- 🔴 위험 (75-100점)
+| 색상 | 점수 범위 | 상태 |
+|------|----------|------|
+| 🔵 파랑 | 0-29점 | 안전 |
+| 🟡 노랑 | 30-49점 | 주의 |
+| 🟠 주황 | 50-74점 | 경고 |
+| 🔴 빨강 | 75-100점 | 위험 |
 
 ### 3. AI 기후 설명
 - 선택 지역의 기후 상태를 자연어로 요약
@@ -29,113 +37,224 @@
 ### 4. 대상별 맞춤 문구
 - 노인 / 아동 / 야외근로자 / 일반 시민
 
+### 5. PWA 지원
+- 오프라인 사용 가능
+- 홈 화면에 앱 설치 가능
+- 푸시 알림 지원
+
+### 6. 실시간 기상 데이터
+- 기상청(KMA) API 연동
+- 시간별/주간 예보 제공
+- 기상 특보 알림
+
 ## 기술 스택
 
-### Backend
-- Python FastAPI
-- climate.gg.go.kr API 연동
-- 체감지수 계산 모듈
-- OpenAI API (AI 설명 생성)
-
 ### Frontend
-- React 18
-- Leaflet (지도)
-- Vite (빌드)
+| 기술 | 버전 | 용도 |
+|------|------|------|
+| React | 18.x | UI 프레임워크 |
+| Vite | 7.x | 빌드 도구 |
+| Leaflet | 1.9.x | 지도 시각화 |
+| Chart.js | 4.x | 차트 시각화 |
+| Supabase | - | 인증 및 데이터베이스 |
+
+### Backend
+| 기술 | 용도 |
+|------|------|
+| Vercel Serverless | API 프록시 |
+| 기상청 API | 실시간 기상 데이터 |
+
+### 인프라
+| 서비스 | 용도 |
+|--------|------|
+| Vercel | 호스팅 및 배포 |
+| Supabase | PostgreSQL + Auth |
 
 ## 설치 및 실행
 
-### 1. Backend 실행
+### 1. 저장소 클론
 
 ```bash
-cd backend
-
-# 가상환경 생성 (선택)
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-
-# 의존성 설치
-pip install -r requirements.txt
-
-# 환경변수 설정 (.env 파일 수정)
-# OPENAI_API_KEY=your_api_key_here
-
-# 서버 실행
-uvicorn main:app --reload --port 8000
+git clone https://github.com/vibe2nd03-png/t1227.git
+cd t1227/frontend
 ```
 
-### 2. Frontend 실행
+### 2. 의존성 설치
 
 ```bash
-cd frontend
-
-# 의존성 설치
 npm install
+```
 
-# 개발 서버 실행
+### 3. 환경변수 설정
+
+```bash
+cp .env.example .env
+```
+
+`.env` 파일 편집:
+```env
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key-here
+```
+
+### 4. 개발 서버 실행
+
+```bash
 npm run dev
 ```
 
-### 3. 접속
+### 5. 접속
 
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:8000
-- API 문서: http://localhost:8000/docs
+- 개발 서버: http://localhost:5173
+
+## 빌드 및 배포
+
+### 프로덕션 빌드
+
+```bash
+npm run build
+```
+
+### Vercel 배포
+
+```bash
+vercel --prod
+```
 
 ## API 엔드포인트
 
 | 엔드포인트 | 설명 |
 |-----------|------|
-| `GET /api/regions` | 경기도 시군 목록 |
-| `GET /api/climate/all` | 모든 지역 기후 데이터 |
-| `GET /api/climate/{region}` | 특정 지역 기후 데이터 |
-| `GET /api/climate/{region}/explain` | AI 기후 설명 |
+| `GET /api/kma` | 기상청 실시간 관측 데이터 |
+| `GET /api/kma-period` | 기상청 기간별 데이터 |
 
-### Query Parameters
-- `target`: 대상 그룹 (`general`, `elderly`, `child`, `outdoor`)
+### KMA API 파라미터
 
-## 데이터 흐름
-
-```
-[경기 기후 API] → [데이터 정규화] → [체감지수 계산] → [AI 설명 생성] → [웹 지도 표시]
-```
-
-## 체감 지수 계산 로직
-
-가중치:
-- 체감온도: 40%
-- 미세먼지(PM10): 20%
-- 초미세먼지(PM2.5): 15%
-- 습도: 10%
-- 자외선지수: 10%
-- 지표면온도: 5%
+| 파라미터 | 필수 | 설명 |
+|---------|------|------|
+| `tm` | ✅ | 조회 시간 (YYYYMMDDHHmm) |
+| `stn` | ❌ | 관측소 번호 (기본: 0) |
 
 ## 폴더 구조
 
 ```
 gyeonggi-climate-map/
-├── backend/
-│   ├── main.py              # FastAPI 서버
-│   ├── climate_api.py       # 기후 API 연동
-│   ├── climate_index.py     # 체감지수 계산
-│   ├── ai_service.py        # AI 설명 생성
-│   ├── config.py            # 설정
-│   ├── requirements.txt
-│   └── .env
 ├── frontend/
+│   ├── api/                    # Vercel Serverless Functions
+│   │   ├── kma.js             # 기상청 API 프록시
+│   │   └── kma-period.js      # 기간별 데이터 API
+│   ├── public/
+│   │   ├── sw.js              # Service Worker (PWA)
+│   │   ├── manifest.json      # PWA 매니페스트
+│   │   ├── robots.txt         # SEO
+│   │   └── sitemap.xml        # SEO
 │   ├── src/
-│   │   ├── App.jsx
-│   │   ├── api.js
 │   │   ├── components/
-│   │   │   ├── ClimateMap.jsx
-│   │   │   └── Sidebar.jsx
+│   │   │   ├── ClimateMap.jsx      # 메인 지도
+│   │   │   ├── Sidebar.jsx         # 사이드바
+│   │   │   ├── BonggongiGuide.jsx  # AI 캐릭터 가이드
+│   │   │   ├── AuthModal.jsx       # 로그인/회원가입
+│   │   │   ├── UserProfile.jsx     # 사용자 프로필
+│   │   │   └── ...
+│   │   ├── contexts/
+│   │   │   └── AuthContext.jsx     # 인증 컨텍스트
+│   │   ├── services/
+│   │   │   └── kmaApi.js           # 기상청 API 서비스
+│   │   ├── App.jsx
+│   │   ├── main.jsx
 │   │   ├── index.css
-│   │   └── main.jsx
+│   │   └── supabase.js             # Supabase 클라이언트
 │   ├── index.html
 │   ├── package.json
-│   └── vite.config.js
+│   ├── vite.config.js
+│   └── eslint.config.js
+├── backend/                    # Python FastAPI (선택적)
+├── supabase_setup.sql         # 데이터베이스 스키마
+├── CLAUDE.md                  # 프로젝트 가이드
 └── README.md
 ```
+
+## 성능 최적화
+
+### Lighthouse 점수 목표
+| 카테고리 | 목표 점수 |
+|----------|----------|
+| Performance | 70+ |
+| Accessibility | 95+ |
+| Best Practices | 90+ |
+| SEO | 100 |
+
+### 적용된 최적화
+- **코드 분할**: React.lazy() 및 Suspense 활용
+- **프리로드**: 외부 리소스 preconnect/preload
+- **Critical CSS**: 초기 로딩 스타일 인라인화
+- **이미지 최적화**: WebP 형식 및 lazy loading
+- **캐싱**: Service Worker 오프라인 캐싱
+
+## SEO 설정
+
+- Open Graph 메타 태그
+- Twitter Card 메타 태그
+- Canonical URL
+- robots.txt
+- sitemap.xml
+
+## PWA 기능
+
+- **오프라인 지원**: Service Worker 캐싱
+- **설치 가능**: 홈 화면에 앱 추가
+- **푸시 알림**: 기상 특보 알림 (선택적)
+
+### PWA 테스트
+1. Chrome DevTools → Application → Manifest
+2. "Installability" 섹션 확인
+3. 설치 아이콘 클릭
+
+## 체감 지수 계산 로직
+
+| 요소 | 가중치 |
+|------|--------|
+| 체감온도 | 40% |
+| 미세먼지(PM10) | 20% |
+| 초미세먼지(PM2.5) | 15% |
+| 습도 | 10% |
+| 자외선지수 | 10% |
+| 지표면온도 | 5% |
+
+## 스크립트
+
+```bash
+# 개발 서버
+npm run dev
+
+# 프로덕션 빌드
+npm run build
+
+# ESLint 검사
+npm run lint
+
+# ESLint 자동 수정
+npm run lint:fix
+
+# Prettier 포맷팅
+npm run format
+
+# 포맷 검사
+npm run format:check
+```
+
+## 기여하기
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## 라이선스
 
 MIT License
+
+## 문의
+
+- GitHub Issues: [이슈 등록](https://github.com/vibe2nd03-png/t1227/issues)
