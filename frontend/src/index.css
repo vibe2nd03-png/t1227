@@ -4206,91 +4206,16 @@ body::after {
     padding: var(--space-md);
   }
 
-  /* 랭킹 - 상단 중앙, 접기 가능 */
-  .region-ranking {
-    position: fixed;
-    left: 50%;
-    transform: translateX(-50%);
-    right: auto;
-    top: 10px;
-    max-width: fit-content;
-    min-width: 140px;
-    border-radius: var(--radius-full);
-    background: var(--glass-bg);
-    backdrop-filter: blur(20px);
-    z-index: 1000;
-  }
-
-  .region-ranking.expanded {
-    left: var(--space-md);
-    right: var(--space-md);
-    transform: none;
-    max-width: none;
-    border-radius: var(--radius-lg);
-  }
-
-  .ranking-toggle {
-    padding: var(--space-sm) var(--space-md);
-    font-size: 0.8rem;
-    gap: var(--space-sm);
-  }
-
-  .ranking-content {
-    max-height: 50vh;
-  }
-
-  .rank-item {
-    padding: var(--space-sm);
-  }
-
-  .rank-region {
-    font-size: 0.8rem;
-  }
-
-  /* 위험 등급 현황 - 모바일에서 항상 표시 */
-  .region-ranking {
-    overflow: visible;
-  }
-
+  /* 랭킹 - 모바일에서 완전 숨김 (새 모바일 UI 시스템 사용) */
+  .region-ranking,
+  .region-ranking.expanded,
+  .region-ranking .risk-level-section,
   .region-ranking .risk-level-section.always-visible {
-    position: fixed;
-    bottom: 100px;
-    right: var(--space-md);
-    left: auto;
-    width: 200px;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(12px);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-lg);
-    border: 1px solid var(--glass-border);
-    padding: var(--space-sm);
-    z-index: 999;
-  }
-
-  .region-ranking .risk-level-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 4px;
-  }
-
-  .region-ranking .risk-level-item {
-    padding: 4px 2px;
-  }
-
-  .region-ranking .risk-level-item .risk-icon {
-    font-size: 0.8rem;
-  }
-
-  .region-ranking .risk-level-item .risk-label {
-    font-size: 0.6rem;
-  }
-
-  .region-ranking .risk-level-item .risk-count {
-    font-size: 0.7rem;
-  }
-
-  .region-ranking .danger-regions {
-    font-size: 0.65rem;
-    padding: 4px 6px;
+    display: none !important;
+    visibility: hidden !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
   }
 
   /* 데이터 출처 배지 */
