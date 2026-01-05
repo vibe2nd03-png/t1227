@@ -2,60 +2,81 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "../supabase";
 
 function RegionRanking({ regions, onRegionClick }) {
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [isExpanded, setIsExpanded] = useState(false);
   const [reportStats, setReportStats] = useState({});
   const [activeTab, setActiveTab] = useState("best"); // best, cool, reports
   const [isRiskLevelVisible, setIsRiskLevelVisible] = useState(false);
 
-  // 제보 통계 로드
+  // 모바일 감지
   useEffect(() => {
-    loadReportStats();
-    const interval = setInterval(loadReportStats, 60000); // 1분마다 새로고침
-    return () => clearInterval(interval);
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const loadReportStats = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("user_reports")
-        .select("region, sentiment_score, temp_adjustment, emoji")
-        .gte(
-          "created_at",
-          new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-        );
+  // 제보 통계 로드
+  useEffect(() => {
+    if (isMobile) return; // 모바일에서는 로드하지 않음
 
-      if (!error && data) {
-        const stats = data.reduce((acc, report) => {
-          if (!acc[report.region]) {
-            acc[report.region] = {
-              count: 0,
-              totalSentiment: 0,
-              totalTempAdj: 0,
-              emojis: [],
-            };
-          }
-          acc[report.region].count++;
-          acc[report.region].totalSentiment += report.sentiment_score;
-          acc[report.region].totalTempAdj +=
-            parseFloat(report.temp_adjustment) || 0;
-          acc[report.region].emojis.push(report.emoji);
-          return acc;
-        }, {});
+    const loadStats = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("user_reports")
+          .select("region, sentiment_score, temp_adjustment, emoji")
+          .gte(
+            "created_at",
+            new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+          );
 
-        // 평균 계산 및 가장 많은 이모지 찾기
-        Object.keys(stats).forEach((region) => {
-          const s = stats[region];
-          s.avgSentiment = s.totalSentiment / s.count;
-          s.avgTempAdj = s.totalTempAdj / s.count;
-          s.topEmoji = getMostFrequent(s.emojis);
-        });
+        if (!error && data) {
+          const stats = data.reduce((acc, report) => {
+            if (!acc[report.region]) {
+              acc[report.region] = {
+                count: 0,
+                totalSentiment: 0,
+                totalTempAdj: 0,
+                emojis: [],
+              };
+            }
+            acc[report.region].count++;
+            acc[report.region].totalSentiment += report.sentiment_score;
+            acc[report.region].totalTempAdj +=
+              parseFloat(report.temp_adjustment) || 0;
+            acc[report.region].emojis.push(report.emoji);
+            return acc;
+          }, {});
 
-        setReportStats(stats);
+          // 평균 계산 및 가장 많은 이모지 찾기
+          const getMostFrequentEmoji = (arr) => {
+            const counts = arr.reduce((acc, val) => {
+              acc[val] = (acc[val] || 0) + 1;
+              return acc;
+            }, {});
+            return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || "🌡️";
+          };
+
+          Object.keys(stats).forEach((region) => {
+            const s = stats[region];
+            s.avgSentiment = s.totalSentiment / s.count;
+            s.avgTempAdj = s.totalTempAdj / s.count;
+            s.topEmoji = getMostFrequentEmoji(s.emojis);
+          });
+
+          setReportStats(stats);
+        }
+      } catch (error) {
+        console.error("통계 로드 실패:", error);
       }
-    } catch (error) {
-      console.error("통계 로드 실패:", error);
-    }
-  };
+    };
+
+    loadStats();
+    const interval = setInterval(loadStats, 60000); // 1분마다 새로고침
+    return () => clearInterval(interval);
+  }, [isMobile]);
+
+  // 모바일에서는 렌더링하지 않음
+  if (isMobile) return null;
 
   const getMostFrequent = (arr) => {
     const counts = arr.reduce((acc, val) => {
