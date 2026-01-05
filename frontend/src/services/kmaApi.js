@@ -122,7 +122,7 @@ const parseKmaResponse = (text, columns) => {
     const values = line.trim().split(/\s+/);
     const record = {};
     columns.forEach((col, idx) => {
-      let value = values[idx];
+      const value = values[idx];
       // 숫자로 변환 시도
       if (
         value &&

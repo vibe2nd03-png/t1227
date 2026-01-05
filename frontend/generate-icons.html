@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PWA Icon Generator</title>
+</head>
+<body>
+  <h1>PWA 아이콘 생성기</h1>
+  <p>아래 버튼을 클릭하여 아이콘을 다운로드하세요.</p>
+
+  <canvas id="canvas192" width="192" height="192"></canvas>
+  <canvas id="canvas512" width="512" height="512"></canvas>
+
+  <br><br>
+  <button onclick="download192()">icon-192.png 다운로드</button>
+  <button onclick="download512()">icon-512.png 다운로드</button>
+
+  <script>
+    function drawIcon(canvas, size) {
+      const ctx = canvas.getContext('2d');
+
+      // 배경 그라데이션
+      const gradient = ctx.createLinearGradient(0, 0, size, size);
+      gradient.addColorStop(0, '#667eea');
+      gradient.addColorStop(1, '#764ba2');
+
+      // 둥근 사각형 배경
+      const radius = size * 0.2;
+      ctx.beginPath();
+      ctx.moveTo(radius, 0);
+      ctx.lineTo(size - radius, 0);
+      ctx.quadraticCurveTo(size, 0, size, radius);
+      ctx.lineTo(size, size - radius);
+      ctx.quadraticCurveTo(size, size, size - radius, size);
+      ctx.lineTo(radius, size);
+      ctx.quadraticCurveTo(0, size, 0, size - radius);
+      ctx.lineTo(0, radius);
+      ctx.quadraticCurveTo(0, 0, radius, 0);
+      ctx.closePath();
+      ctx.fillStyle = gradient;
+      ctx.fill();
+
+      // 온도계 이모지
+      ctx.font = `${size * 0.55}px serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🌡️', size / 2, size / 2);
+    }
+
+    // 아이콘 그리기
+    drawIcon(document.getElementById('canvas192'), 192);
+    drawIcon(document.getElementById('canvas512'), 512);
+
+    function download192() {
+      const canvas = document.getElementById('canvas192');
+      const link = document.createElement('a');
+      link.download = 'icon-192.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    function download512() {
+      const canvas = document.getElementById('canvas512');
+      const link = document.createElement('a');
+      link.download = 'icon-512.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+  </script>
+</body>
+</html>

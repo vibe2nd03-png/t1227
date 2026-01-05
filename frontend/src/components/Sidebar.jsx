@@ -622,7 +622,7 @@ function OotdGeneratorInline({ selectedRegion }) {
     const pm10 = climate.pm10 || 30;
     const uvIndex = climate.uv_index || 5;
 
-    let tips = [];
+    const tips = [];
 
     if (temp >= 33) tips.push("🌡️ 폭염! 최대한 시원하게");
     else if (temp >= 28) tips.push("☀️ 반팔/반바지 추천");

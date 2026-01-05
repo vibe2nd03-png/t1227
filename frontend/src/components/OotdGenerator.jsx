@@ -283,7 +283,7 @@ function OotdGenerator({ selectedRegion }) {
     const uvIndex = climate.uv_index || 5;
     const windSpeed = climate.wind_speed || 0;
 
-    let desc = [];
+    const desc = [];
     let recommendation = null;
 
     // 날씨 타입 및 맞춤 메시지 가져오기
