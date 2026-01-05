@@ -14,20 +14,6 @@ export function AuthProvider({ children }) {
   const [authError, setAuthError] = useState(null);
   const [accessToken, setAccessToken] = useState(null);
 
-  // 타임아웃 헬퍼 함수 (모바일 네트워크 고려하여 30초로 증가)
-  const withTimeout = (promise, ms = 30000) => {
-    return Promise.race([
-      promise,
-      new Promise((_, reject) =>
-        setTimeout(
-          () =>
-            reject(new Error("요청 시간 초과 - 네트워크 연결을 확인해주세요")),
-          ms,
-        ),
-      ),
-    ]);
-  };
-
   // 초기 세션 확인
   useEffect(() => {
     // 현재 세션 가져오기
@@ -194,11 +180,10 @@ export function AuthProvider({ children }) {
       }
 
       // 세션이 없으면 자동 로그인 시도
-      const { data: signInData, error: signInError } =
-        await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
       if (signInError) {
         return { success: true, needsConfirmation: false };

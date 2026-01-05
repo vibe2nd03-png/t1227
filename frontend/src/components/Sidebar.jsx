@@ -11,8 +11,6 @@ import {
   getRandomMessage,
   getStyleTip,
   getEmojiSet,
-  getWeatherEmoji,
-  CLOTHING_MESSAGES,
 } from "../data/clothingRecommendations";
 
 // 무거운 컴포넌트 지연 로딩 (탭/모달별 분리)
@@ -52,7 +50,7 @@ function Sidebar({
   setIsMobileCollapsed,
   mobileActiveTab,
 }) {
-  const { user, profile, isAuthenticated, refreshReportStats } = useAuth();
+  const { user, profile, isAuthenticated } = useAuth();
   const { toggleFavorite, isFavorite } = useFavorites();
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
@@ -322,7 +320,7 @@ function AirQualityNavButton({ climateData, onRegionSelect }) {
           };
         })
         .sort((a, b) => a.airScore - b.airScore);
-    } catch (e) {
+    } catch (_e) {
       return [];
     }
   }, [climateData]);
@@ -858,8 +856,6 @@ function OotdGeneratorInline({ selectedRegion }) {
 
     // 동적 이모티콘 가져오기
     const emojis = getEmojiSet(gender, age, style);
-    const weatherEmoji = getWeatherEmoji(weatherType);
-
     // 팁 생성
     const tips = generateTips(climate);
     if (personalMessage) {
@@ -1106,7 +1102,7 @@ function OotdGeneratorInline({ selectedRegion }) {
 
 // 인라인 제보 패널 (탭 내 표시용)
 function UserReportPanelInline({ selectedRegion, onReportSubmit }) {
-  const { isAuthenticated, user, profile, refreshReportStats } = useAuth();
+  const { isAuthenticated, user, refreshReportStats } = useAuth();
   const [selectedFeeling, setSelectedFeeling] = useState(null);
   const [comment, setComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);

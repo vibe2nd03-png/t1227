@@ -207,7 +207,7 @@ function UserProfile({ isOpen, onClose }) {
       } else {
         await loadFavorites();
       }
-    } catch (error) {
+    } catch (_error) {
       setMessage("즐겨찾기 변경 중 오류가 발생했습니다");
       setTimeout(() => setMessage(""), 3000);
     } finally {

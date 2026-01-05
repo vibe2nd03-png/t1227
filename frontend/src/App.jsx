@@ -15,7 +15,6 @@ const AuthModal = lazy(() => import("./components/AuthModal"));
 const UserProfile = lazy(() => import("./components/UserProfile"));
 import {
   TARGET_MULTIPLIERS,
-  TARGET_LABELS,
   calculateRiskLevel,
   getTargetLabel,
 } from "./constants/climate";

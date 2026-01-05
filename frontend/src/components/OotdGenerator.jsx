@@ -5,7 +5,6 @@ import {
   getStyleTip,
   getEmojiSet,
   getWeatherEmoji,
-  CLOTHING_MESSAGES,
 } from "../data/clothingRecommendations";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -414,7 +413,7 @@ function OotdGenerator({ selectedRegion }) {
 
     try {
       const climate = selectedRegion.climate_data;
-      const { prompt, season } = generateFashionPrompt(
+      const { season } = generateFashionPrompt(
         climate,
         gender,
         age,

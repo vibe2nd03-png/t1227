@@ -5,7 +5,7 @@ import React, {
   useRef,
   useMemo,
 } from "react";
-import { Marker, Popup, useMap } from "react-leaflet";
+import { Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -78,8 +78,8 @@ const TARGET_CONDITIONS = {
   outdoor: { minTemp: -15, maxTemp: 38, maxPop: 60, label: "야외활동" },
 };
 
-// 시간대별 활동 추천
-const TIME_ACTIVITIES = {
+// 시간대별 활동 추천 (향후 사용 예정)
+const _TIME_ACTIVITIES = {
   morning: { start: 6, end: 9, label: "아침", activity: "산책/조깅" },
   midMorning: { start: 9, end: 12, label: "오전", activity: "야외활동" },
   afternoon: { start: 12, end: 15, label: "점심/오후", activity: "외출" },
@@ -326,18 +326,17 @@ const createBonggongiIcon = () => {
 };
 
 function BonggongiGuide({ regions, selectedRegion, targetGroup = "general" }) {
-  const map = useMap();
   const { profile } = useAuth();
   const markerRef = useRef(null);
   const [position, setPosition] = useState(PATROL_POINTS[0]);
   const [isVisible, setIsVisible] = useState(true);
-  const [patrolIndex, setPatrolIndex] = useState(0);
+  const [_patrolIndex, setPatrolIndex] = useState(0);
   const [hasGreeted, setHasGreeted] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [voicesReady, setVoicesReady] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const hasSpokenGreeting = useRef(false);
-  const [forecastData, setForecastData] = useState([]);
+  const [_forecastData, setForecastData] = useState([]);
   const [outingRecommendation, setOutingRecommendation] = useState(null);
   const prevMessageRef = useRef(null);
   const hasShownOutingRef = useRef(false); // 외출 추천 1회만 표시

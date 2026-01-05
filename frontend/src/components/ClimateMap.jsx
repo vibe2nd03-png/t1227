@@ -7,7 +7,6 @@ import {
   useMap,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import FloatingReports from "./FloatingReports";
 import ReportMapOverlay from "./ReportMapOverlay";
 import RegionRanking from "./RegionRanking";
 import BonggongiGuide from "./BonggongiGuide";
@@ -313,7 +312,7 @@ function AnimatedMarker({
 
 function ClimateMap({ regions, selectedRegion, onRegionSelect, onMapClick }) {
   const [previousRegion, setPreviousRegion] = useState(null);
-  const [showReports, setShowReports] = useState(true);
+  const [showReports] = useState(true);
   const [legendCollapsed, setLegendCollapsed] = useState(true);
   const [nearbyRegions, setNearbyRegions] = useState([]);
   // 구리시 중심, 동두천시(상단)~오산시(하단) 모두 표시

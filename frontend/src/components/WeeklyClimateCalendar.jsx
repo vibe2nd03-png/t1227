@@ -491,7 +491,7 @@ function WeeklyClimateCalendar({ regionName, climateData }) {
 
       {/* 캘린더 그리드 */}
       <div className="calendar-grid">
-        {forecasts.map((day, index) => {
+        {forecasts.map((day) => {
           const dateInfo = formatDate(day.date);
 
           return (

@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { supabase } from "../supabase";
+import React, { useState, useMemo } from "react";
 
 // 경기도 지역별 추천 장소 데이터
 const OUTDOOR_SPOTS = {
@@ -183,14 +182,12 @@ function AirQualityNav({ climateData, onRegionSelect, isModal = false }) {
     }).sort((a, b) => a.avgAirScore - b.avgAirScore);
   }, [cleanZoneRanking]);
 
-  // 야외활동 가능 여부 체크
-  const getOutdoorAdvice = (region) => {
+  // 야외활동 가능 여부 체크 (향후 사용 예정)
+  const _getOutdoorAdvice = (region) => {
     const regionData = cleanZoneRanking.find((r) => r.region === region);
     if (!regionData) return null;
 
     const { grade } = regionData;
-    const pm10 = regionData.climate_data?.pm10 || 50;
-    const pm25 = regionData.climate_data?.pm25 || 25;
 
     if (grade === "good") {
       return {

@@ -13,9 +13,6 @@ export default async function handler(req, res) {
     // 기상청 특보 RSS 피드
     const rssUrl = 'https://www.kma.go.kr/weather/lifenindustry/service/lifeweather_list.rss';
 
-    // 기상청 날씨 예보 RSS (백업)
-    const weatherRssUrl = 'https://www.kma.go.kr/weather/forecast/mid-term-rss3.jsp?stnId=109';
-
     let alerts = [];
 
     // 특보 RSS 가져오기

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "../supabase";
 
 // 경보 유형별 스타일 설정
@@ -77,7 +77,6 @@ function WeatherAlertBanner() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
-  const scrollRef = useRef(null);
 
   // 경보 데이터 로드
   useEffect(() => {

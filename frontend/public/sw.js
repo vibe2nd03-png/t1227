@@ -1,8 +1,7 @@
 // Service Worker for Push Notifications
-const CACHE_NAME = 'gyeonggi-climate-v1';
 
 // 설치 이벤트
-self.addEventListener('install', (event) => {
+self.addEventListener('install', (_event) => {
   console.log('Service Worker 설치됨');
   self.skipWaiting();
 });
@@ -29,7 +28,7 @@ self.addEventListener('push', (event) => {
   if (event.data) {
     try {
       data = { ...data, ...event.data.json() };
-    } catch (e) {
+    } catch (_e) {
       data.body = event.data.text();
     }
   }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Marker, Popup, useMap } from "react-leaflet";
+import { Marker, Popup } from "react-leaflet";
 import L from "leaflet";
-import { supabase, SUPABASE_URL, SUPABASE_ANON_KEY } from "../supabase";
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from "../supabase";
 
 // 떠다니는 제보를 위한 커스텀 아이콘 생성
 const createFloatingIcon = (emoji, comment) => {
@@ -21,7 +21,6 @@ const createFloatingIcon = (emoji, comment) => {
 function FloatingReports({ visible }) {
   const [reports, setReports] = useState([]);
   const [animationOffsets, setAnimationOffsets] = useState({});
-  const map = useMap();
   const animationRef = useRef(null);
 
   // 제보 데이터 로드

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Marker, Popup, useMap } from "react-leaflet";
+import { Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from "../supabase";
 
@@ -46,7 +46,6 @@ function ReportMapOverlay({ visible, onReportClick }) {
   const [reports, setReports] = useState([]);
   const [filter, setFilter] = useState("all");
   const [showLegend, setShowLegend] = useState(false);
-  const map = useMap();
 
   // 제보 데이터 로드
   useEffect(() => {

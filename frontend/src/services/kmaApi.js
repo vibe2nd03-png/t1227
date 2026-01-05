@@ -98,16 +98,6 @@ const formatDateTime = (date) => {
 };
 
 /**
- * 날짜 포맷 (YYYYMMDD)
- */
-const formatDate = (date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}${month}${day}`;
-};
-
-/**
  * API 응답 파싱 (공백 구분 텍스트 형식)
  */
 const parseKmaResponse = (text, columns) => {

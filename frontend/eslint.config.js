@@ -47,7 +47,7 @@ export default [
       "security/detect-possible-timing-attacks": "off",
 
       // General
-      "no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
+      "no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_", caughtErrorsIgnorePattern: "^_" }],
       "no-console": "off",
       "no-debugger": "error",
       "no-alert": "off",

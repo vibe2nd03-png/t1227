@@ -11,7 +11,7 @@ import {
   Legend,
   Filler,
 } from "chart.js";
-import { Line, Bar } from "react-chartjs-2";
+import { Line } from "react-chartjs-2";
 import { getSurfaceDataPeriod, GYEONGGI_STATIONS } from "../services/kmaApi";
 
 // Chart.js 컴포넌트 등록
@@ -57,12 +57,10 @@ function WeatherComparisonChart({ region, climateData }) {
       setError(null);
 
       const station = GYEONGGI_STATIONS[region];
-      const results = [];
 
       try {
         // 각 연도의 오늘 날짜 데이터 조회 (병렬)
         const promises = years.map(async (year) => {
-          const datetime = `${year}${monthDay}1200`; // 정오 12시 기준
           const startTime = `${year}${monthDay}0000`;
           const endTime = `${year}${monthDay}2300`;
 
@@ -127,8 +125,6 @@ function WeatherComparisonChart({ region, climateData }) {
   // 차트 데이터 생성
   const chartData = useMemo(() => {
     if (historicalData.length === 0) return null;
-
-    const labels = historicalData.map((d) => `${d.year}년`);
 
     // 올해 데이터 추가 (현재 기상 데이터)
     const allData = [...historicalData];

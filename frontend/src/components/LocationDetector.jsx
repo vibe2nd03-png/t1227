@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 
 // 경기도 31개 시군 좌표
 const GYEONGGI_COORDINATES = [

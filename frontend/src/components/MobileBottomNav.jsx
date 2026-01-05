@@ -8,7 +8,7 @@ const NAV_ITEMS = [
   { id: "report", icon: "📝", label: "체감제보" },
 ];
 
-function MobileBottomNav({ activeTab, onTabChange, selectedRegion }) {
+function MobileBottomNav({ activeTab, onTabChange, selectedRegion: _selectedRegion }) {
   const handleClick = (itemId) => {
     console.log("Nav clicked:", itemId);
     onTabChange(itemId);

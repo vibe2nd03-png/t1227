@@ -45,7 +45,7 @@ export default async function handler(req, res) {
       const values = line.trim().split(/\s+/);
       const record = {};
       columns.forEach((col, idx) => {
-        let value = values[idx];
+        const value = values[idx];
         if (value && !isNaN(value) && value !== '-9' && value !== '-99.0' && value !== '-9.0') {
           record[col] = parseFloat(value);
         } else if (value === '-9' || value === '-99.0' || value === '-9.0') {

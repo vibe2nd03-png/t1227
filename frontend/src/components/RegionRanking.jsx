@@ -80,14 +80,6 @@ function RegionRanking({ regions, onRegionClick }) {
   // 모바일에서는 렌더링하지 않음
   if (isMobile) return null;
 
-  const getMostFrequent = (arr) => {
-    const counts = arr.reduce((acc, val) => {
-      acc[val] = (acc[val] || 0) + 1;
-      return acc;
-    }, {});
-    return Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] || "🌡️";
-  };
-
   // 현재 월 기준으로 계절 판단 (6~10월: 여름/가을, 11~5월: 겨울/봄)
   const currentMonth = new Date().getMonth() + 1; // 1-12
   const isSummerSeason = currentMonth >= 6 && currentMonth <= 10;
@@ -139,7 +131,6 @@ function RegionRanking({ regions, onRegionClick }) {
     .slice(0, 5);
 
   // 위험 등급별 지역 분류
-  const riskLevelOrder = { danger: 0, warning: 1, caution: 2, safe: 3 };
   const riskLevelLabels = {
     danger: { label: "위험", icon: "🔴", color: "#ef4444" },
     warning: { label: "경고", icon: "🟠", color: "#f97316" },
