@@ -5,59 +5,59 @@
 
 // 경기도 주요 지역 격자 좌표 (기상청 격자)
 const GRID_COORDS = {
-  '수원시': { nx: 60, ny: 121 },
-  '성남시': { nx: 63, ny: 124 },
-  '고양시': { nx: 57, ny: 128 },
-  '용인시': { nx: 64, ny: 119 },
-  '부천시': { nx: 56, ny: 125 },
-  '안산시': { nx: 53, ny: 121 },
-  '안양시': { nx: 59, ny: 123 },
-  '남양주시': { nx: 64, ny: 128 },
-  '화성시': { nx: 57, ny: 119 },
-  '평택시': { nx: 62, ny: 114 },
-  '의정부시': { nx: 61, ny: 130 },
-  '시흥시': { nx: 55, ny: 122 },
-  '파주시': { nx: 56, ny: 131 },
-  '김포시': { nx: 55, ny: 128 },
-  '광명시': { nx: 58, ny: 125 },
-  '광주시': { nx: 65, ny: 123 },
-  '군포시': { nx: 59, ny: 122 },
-  '하남시': { nx: 64, ny: 126 },
-  '오산시': { nx: 62, ny: 118 },
-  '이천시': { nx: 68, ny: 121 },
-  '안성시': { nx: 65, ny: 115 },
-  '의왕시': { nx: 60, ny: 122 },
-  '양주시': { nx: 61, ny: 131 },
-  '포천시': { nx: 64, ny: 134 },
-  '여주시': { nx: 71, ny: 121 },
-  '동두천시': { nx: 61, ny: 134 },
-  '과천시': { nx: 60, ny: 124 },
-  '구리시': { nx: 62, ny: 127 },
-  '연천군': { nx: 61, ny: 138 },
-  '가평군': { nx: 69, ny: 133 },
-  '양평군': { nx: 69, ny: 125 },
+  수원시: { nx: 60, ny: 121 },
+  성남시: { nx: 63, ny: 124 },
+  고양시: { nx: 57, ny: 128 },
+  용인시: { nx: 64, ny: 119 },
+  부천시: { nx: 56, ny: 125 },
+  안산시: { nx: 53, ny: 121 },
+  안양시: { nx: 59, ny: 123 },
+  남양주시: { nx: 64, ny: 128 },
+  화성시: { nx: 57, ny: 119 },
+  평택시: { nx: 62, ny: 114 },
+  의정부시: { nx: 61, ny: 130 },
+  시흥시: { nx: 55, ny: 122 },
+  파주시: { nx: 56, ny: 131 },
+  김포시: { nx: 55, ny: 128 },
+  광명시: { nx: 58, ny: 125 },
+  광주시: { nx: 65, ny: 123 },
+  군포시: { nx: 59, ny: 122 },
+  하남시: { nx: 64, ny: 126 },
+  오산시: { nx: 62, ny: 118 },
+  이천시: { nx: 68, ny: 121 },
+  안성시: { nx: 65, ny: 115 },
+  의왕시: { nx: 60, ny: 122 },
+  양주시: { nx: 61, ny: 131 },
+  포천시: { nx: 64, ny: 134 },
+  여주시: { nx: 71, ny: 121 },
+  동두천시: { nx: 61, ny: 134 },
+  과천시: { nx: 60, ny: 124 },
+  구리시: { nx: 62, ny: 127 },
+  연천군: { nx: 61, ny: 138 },
+  가평군: { nx: 69, ny: 133 },
+  양평군: { nx: 69, ny: 125 },
 };
 
 // 날씨 코드 -> 한글/아이콘 변환
 const SKY_CODES = {
-  '1': { text: '맑음', icon: '☀️' },
-  '3': { text: '구름많음', icon: '⛅' },
-  '4': { text: '흐림', icon: '☁️' },
+  1: { text: "맑음", icon: "☀️" },
+  3: { text: "구름많음", icon: "⛅" },
+  4: { text: "흐림", icon: "☁️" },
 };
 
 const PTY_CODES = {
-  '0': { text: '없음', icon: '' },
-  '1': { text: '비', icon: '🌧️' },
-  '2': { text: '비/눈', icon: '🌨️' },
-  '3': { text: '눈', icon: '❄️' },
-  '4': { text: '소나기', icon: '🌦️' },
+  0: { text: "없음", icon: "" },
+  1: { text: "비", icon: "🌧️" },
+  2: { text: "비/눈", icon: "🌨️" },
+  3: { text: "눈", icon: "❄️" },
+  4: { text: "소나기", icon: "🌦️" },
 };
 
 /**
  * 기상청 단기예보 API 호출
  */
 async function getVilageFcst(nx, ny, baseDate, baseTime) {
-  const serviceKey = 'DbUh4_ekRRi1IeP3pPUYog';
+  const serviceKey = "DbUh4_ekRRi1IeP3pPUYog";
   const url = `https://apihub.kma.go.kr/api/typ02/openApi/VilageFcstInfoService_2.0/getVilageFcst?pageNo=1&numOfRows=1000&dataType=JSON&base_date=${baseDate}&base_time=${baseTime}&nx=${nx}&ny=${ny}&authKey=${serviceKey}`;
 
   const response = await fetch(url);
@@ -69,7 +69,7 @@ async function getVilageFcst(nx, ny, baseDate, baseTime) {
       return json.response.body.items.item;
     }
   } catch (e) {
-    console.error('JSON 파싱 오류:', e);
+    console.error("JSON 파싱 오류:", e);
   }
 
   return null;
@@ -112,8 +112,8 @@ function getBaseDateTime() {
     kst.setUTCDate(kst.getUTCDate() - 1);
   }
 
-  const baseDate = `${kst.getUTCFullYear()}${String(kst.getUTCMonth() + 1).padStart(2, '0')}${String(kst.getUTCDate()).padStart(2, '0')}`;
-  const baseTimeStr = String(baseTime).padStart(2, '0') + '00';
+  const baseDate = `${kst.getUTCFullYear()}${String(kst.getUTCMonth() + 1).padStart(2, "0")}${String(kst.getUTCDate()).padStart(2, "0")}`;
+  const baseTimeStr = String(baseTime).padStart(2, "0") + "00";
 
   return { baseDate, baseTime: baseTimeStr };
 }
@@ -124,7 +124,7 @@ function getBaseDateTime() {
 function parseForecastData(items) {
   const forecasts = {};
 
-  items.forEach(item => {
+  items.forEach((item) => {
     const key = `${item.fcstDate}_${item.fcstTime}`;
     if (!forecasts[key]) {
       forecasts[key] = {
@@ -135,33 +135,35 @@ function parseForecastData(items) {
     }
 
     switch (item.category) {
-      case 'TMP': // 기온
+      case "TMP": // 기온
         forecasts[key].temperature = parseFloat(item.fcstValue);
         break;
-      case 'SKY': // 하늘상태
+      case "SKY": // 하늘상태
         forecasts[key].sky = item.fcstValue;
-        forecasts[key].skyText = SKY_CODES[item.fcstValue]?.text || '알수없음';
-        forecasts[key].skyIcon = SKY_CODES[item.fcstValue]?.icon || '❓';
+        forecasts[key].skyText = SKY_CODES[item.fcstValue]?.text || "알수없음";
+        forecasts[key].skyIcon = SKY_CODES[item.fcstValue]?.icon || "❓";
         break;
-      case 'PTY': // 강수형태
+      case "PTY": // 강수형태
         forecasts[key].pty = item.fcstValue;
-        forecasts[key].ptyText = PTY_CODES[item.fcstValue]?.text || '';
-        forecasts[key].ptyIcon = PTY_CODES[item.fcstValue]?.icon || '';
+        forecasts[key].ptyText = PTY_CODES[item.fcstValue]?.text || "";
+        forecasts[key].ptyIcon = PTY_CODES[item.fcstValue]?.icon || "";
         break;
-      case 'POP': // 강수확률
+      case "POP": // 강수확률
         forecasts[key].pop = parseInt(item.fcstValue);
         break;
-      case 'REH': // 습도
+      case "REH": // 습도
         forecasts[key].humidity = parseInt(item.fcstValue);
         break;
-      case 'WSD': // 풍속
+      case "WSD": // 풍속
         forecasts[key].windSpeed = parseFloat(item.fcstValue);
         break;
-      case 'PCP': // 1시간 강수량
-        forecasts[key].precipitation = item.fcstValue === '강수없음' ? 0 : item.fcstValue;
+      case "PCP": // 1시간 강수량
+        forecasts[key].precipitation =
+          item.fcstValue === "강수없음" ? 0 : item.fcstValue;
         break;
-      case 'SNO': // 적설량
-        forecasts[key].snow = item.fcstValue === '적설없음' ? 0 : item.fcstValue;
+      case "SNO": // 적설량
+        forecasts[key].snow =
+          item.fcstValue === "적설없음" ? 0 : item.fcstValue;
         break;
     }
   });
@@ -172,7 +174,7 @@ function parseForecastData(items) {
       if (a.date !== b.date) return a.date.localeCompare(b.date);
       return a.time.localeCompare(b.time);
     })
-    .map(f => ({
+    .map((f) => ({
       ...f,
       // 강수가 있으면 강수 아이콘, 없으면 하늘상태 아이콘
       icon: f.ptyIcon || f.skyIcon,
@@ -182,15 +184,15 @@ function parseForecastData(items) {
 
 export default async function handler(req, res) {
   // CORS 헤더
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET');
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET");
 
   const { region } = req.query;
 
   if (!region) {
     return res.status(400).json({
       success: false,
-      error: '지역명이 필요합니다 (예: ?region=수원시)',
+      error: "지역명이 필요합니다 (예: ?region=수원시)",
     });
   }
 
@@ -206,18 +208,27 @@ export default async function handler(req, res) {
   try {
     const { baseDate, baseTime } = getBaseDateTime();
 
-    console.log(`[KMA Forecast] ${region} (${coords.nx}, ${coords.ny}) - ${baseDate} ${baseTime}`);
+    console.log(
+      `[KMA Forecast] ${region} (${coords.nx}, ${coords.ny}) - ${baseDate} ${baseTime}`,
+    );
 
     const items = await getVilageFcst(coords.nx, coords.ny, baseDate, baseTime);
 
     if (!items || items.length === 0) {
       // 이전 발표시각으로 재시도
-      const prevBaseTime = String((parseInt(baseTime) - 300 + 2400) % 2400).padStart(4, '0');
-      const retryItems = await getVilageFcst(coords.nx, coords.ny, baseDate, prevBaseTime);
+      const prevBaseTime = String(
+        (parseInt(baseTime) - 300 + 2400) % 2400,
+      ).padStart(4, "0");
+      const retryItems = await getVilageFcst(
+        coords.nx,
+        coords.ny,
+        baseDate,
+        prevBaseTime,
+      );
 
       if (!retryItems || retryItems.length === 0) {
         // API 실패 시 Mock 데이터 반환
-        console.log('[KMA Forecast] API 실패, Mock 데이터 반환');
+        console.log("[KMA Forecast] API 실패, Mock 데이터 반환");
         return res.status(200).json({
           success: true,
           region,
@@ -247,9 +258,8 @@ export default async function handler(req, res) {
       baseTime,
       forecasts: forecasts.slice(0, 24),
     });
-
   } catch (error) {
-    console.error('[KMA Forecast Error]', error);
+    console.error("[KMA Forecast Error]", error);
     // 에러 시에도 Mock 데이터 반환
     const { baseDate, baseTime } = getBaseDateTime();
     return res.status(200).json({
@@ -284,14 +294,14 @@ function generateMockForecast() {
     const temp = baseTemp + Math.floor(Math.random() * 3) - 1;
 
     forecasts.push({
-      date: `${forecastTime.getUTCFullYear()}${String(forecastTime.getUTCMonth() + 1).padStart(2, '0')}${String(forecastTime.getUTCDate()).padStart(2, '0')}`,
-      time: `${String(hour).padStart(2, '0')}00`,
+      date: `${forecastTime.getUTCFullYear()}${String(forecastTime.getUTCMonth() + 1).padStart(2, "0")}${String(forecastTime.getUTCDate()).padStart(2, "0")}`,
+      time: `${String(hour).padStart(2, "0")}00`,
       hour,
       temperature: temp,
-      icon: isNight ? '🌙' : (temp > 0 ? '☀️' : '⛅'),
-      skyIcon: isNight ? '🌙' : '☀️',
-      condition: isNight ? '맑음' : '맑음',
-      skyText: '맑음',
+      icon: isNight ? "🌙" : temp > 0 ? "☀️" : "⛅",
+      skyIcon: isNight ? "🌙" : "☀️",
+      condition: isNight ? "맑음" : "맑음",
+      skyText: "맑음",
       pop: 10,
       humidity: 50 + Math.floor(Math.random() * 20),
       windSpeed: 2 + Math.floor(Math.random() * 3),

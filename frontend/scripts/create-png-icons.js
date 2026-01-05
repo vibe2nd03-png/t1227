@@ -1,9 +1,9 @@
 // PNG 아이콘 생성 스크립트 (의존성 없음)
 // 사용법: node scripts/create-png-icons.js
 
-const fs = require('fs');
-const path = require('path');
-const zlib = require('zlib');
+const fs = require("fs");
+const path = require("path");
+const zlib = require("zlib");
 
 // CRC32 계산
 function crc32(data) {
@@ -22,7 +22,7 @@ function createChunk(type, data) {
   const length = Buffer.alloc(4);
   length.writeUInt32BE(data.length, 0);
 
-  const typeBuffer = Buffer.from(type, 'ascii');
+  const typeBuffer = Buffer.from(type, "ascii");
   const crcData = Buffer.concat([typeBuffer, data]);
   const crc = Buffer.alloc(4);
   crc.writeUInt32BE(crc32(crcData), 0);
@@ -33,17 +33,19 @@ function createChunk(type, data) {
 // 간단한 PNG 생성 (단색 배경 + 그라데이션 효과)
 function createPNG(size) {
   // PNG 시그니처
-  const signature = Buffer.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
+  const signature = Buffer.from([
+    0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+  ]);
 
   // IHDR (이미지 헤더)
   const ihdr = Buffer.alloc(13);
-  ihdr.writeUInt32BE(size, 0);  // width
-  ihdr.writeUInt32BE(size, 4);  // height
-  ihdr[8] = 8;   // bit depth
-  ihdr[9] = 2;   // color type (RGB)
-  ihdr[10] = 0;  // compression
-  ihdr[11] = 0;  // filter
-  ihdr[12] = 0;  // interlace
+  ihdr.writeUInt32BE(size, 0); // width
+  ihdr.writeUInt32BE(size, 4); // height
+  ihdr[8] = 8; // bit depth
+  ihdr[9] = 2; // color type (RGB)
+  ihdr[10] = 0; // compression
+  ihdr[11] = 0; // filter
+  ihdr[12] = 0; // interlace
 
   // 이미지 데이터 생성 (그라데이션)
   const rawData = [];
@@ -102,26 +104,26 @@ function createPNG(size) {
 
   return Buffer.concat([
     signature,
-    createChunk('IHDR', ihdr),
-    createChunk('IDAT', compressed),
-    createChunk('IEND', iend)
+    createChunk("IHDR", ihdr),
+    createChunk("IDAT", compressed),
+    createChunk("IEND", iend),
   ]);
 }
 
 // 아이콘 생성
-const publicDir = path.join(__dirname, '..', 'public');
+const publicDir = path.join(__dirname, "..", "public");
 
-console.log('PWA 아이콘 생성 중...');
+console.log("PWA 아이콘 생성 중...");
 
 // 192x192 아이콘
 const icon192 = createPNG(192);
-fs.writeFileSync(path.join(publicDir, 'icon-192.png'), icon192);
-console.log('✓ icon-192.png 생성 완료');
+fs.writeFileSync(path.join(publicDir, "icon-192.png"), icon192);
+console.log("✓ icon-192.png 생성 완료");
 
 // 512x512 아이콘
 const icon512 = createPNG(512);
-fs.writeFileSync(path.join(publicDir, 'icon-512.png'), icon512);
-console.log('✓ icon-512.png 생성 완료');
+fs.writeFileSync(path.join(publicDir, "icon-512.png"), icon512);
+console.log("✓ icon-512.png 생성 완료");
 
-console.log('');
-console.log('모든 PWA 아이콘이 생성되었습니다!');
+console.log("");
+console.log("모든 PWA 아이콘이 생성되었습니다!");

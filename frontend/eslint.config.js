@@ -47,13 +47,20 @@ export default [
       "security/detect-possible-timing-attacks": "off",
 
       // General
-      "no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_", caughtErrorsIgnorePattern: "^_" }],
+      "no-unused-vars": [
+        "warn",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+        },
+      ],
       "no-console": "off",
       "no-debugger": "error",
       "no-alert": "off",
       "prefer-const": "warn",
       "no-var": "error",
-      "eqeqeq": ["error", "always"],
+      eqeqeq: ["error", "always"],
       "no-misleading-character-class": "off",
       "no-useless-escape": "off",
     },

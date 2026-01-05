@@ -413,12 +413,7 @@ function OotdGenerator({ selectedRegion }) {
 
     try {
       const climate = selectedRegion.climate_data;
-      const { season } = generateFashionPrompt(
-        climate,
-        gender,
-        age,
-        style,
-      );
+      const { season } = generateFashionPrompt(climate, gender, age, style);
 
       // 옷차림 설명 생성 (성별/연령/스타일 맞춤)
       const description = generateDescription(
