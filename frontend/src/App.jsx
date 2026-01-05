@@ -10,8 +10,9 @@ import MobileBottomSheet from "./components/MobileBottomSheet";
 import { getGyeonggiRealtimeWeather } from "./services/kmaApi";
 import { useAuth } from "./contexts/AuthContext";
 
-// AuthModal 지연 로딩
+// AuthModal, UserProfile 지연 로딩
 const AuthModal = lazy(() => import("./components/AuthModal"));
+const UserProfile = lazy(() => import("./components/UserProfile"));
 import {
   TARGET_MULTIPLIERS,
   TARGET_LABELS,
@@ -41,6 +42,7 @@ function App() {
   const [dataSource, setDataSource] = useState("loading");
   const [lastUpdated, setLastUpdated] = useState(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const [isMobileCollapsed, setIsMobileCollapsed] = useState(true);
   const [showComments, setShowComments] = useState(false);
   const [mobileTab, setMobileTab] = useState("map");
@@ -824,40 +826,38 @@ function App() {
     <div className={`app-container ${isMobile ? "mobile" : "desktop"}`}>
       <WeatherAlertBanner />
 
-      {/* 모바일 상단 헤더 */}
-      {isMobile && (
-        <header className="mobile-header">
-          <div className="mobile-header-left">
-            <h1 className="mobile-title">경기 기후</h1>
-            {selectedRegion && (
-              <span className="mobile-region-badge">
-                {selectedRegion.region}
-              </span>
-            )}
-          </div>
-          <div className="mobile-header-right">
-            <LocationDetector
-              onLocationDetected={handleRegionSelect}
-              regions={regions}
-              compact
-            />
-            {selectedRegion && (
-              <button
-                className="mobile-chat-btn"
-                onClick={() => setShowComments(true)}
-              >
-                💬
-              </button>
-            )}
+      {/* 모바일 상단 헤더 - 항상 렌더링, CSS로 표시/숨김 제어 */}
+      <header className="mobile-header">
+        <div className="mobile-header-left">
+          <h1 className="mobile-title">경기기후체감맵</h1>
+          {selectedRegion && (
+            <span className="mobile-region-badge">
+              {selectedRegion.region}
+            </span>
+          )}
+        </div>
+        <div className="mobile-header-right">
+          <LocationDetector
+            onLocationDetected={handleRegionSelect}
+            regions={regions}
+            compact
+          />
+          {selectedRegion && (
             <button
-              className="mobile-user-btn"
-              onClick={() => user ? null : setShowAuthModal(true)}
+              className="mobile-chat-btn"
+              onClick={() => setShowComments(true)}
             >
-              {user ? (profile?.display_name?.charAt(0) || "👤") : "✨"}
+              💬
             </button>
-          </div>
-        </header>
-      )}
+          )}
+          <button
+            className="mobile-user-btn"
+            onClick={() => user ? setShowProfileModal(true) : setShowAuthModal(true)}
+          >
+            {user ? (profile?.display_name?.charAt(0) || "👤") : "로그인"}
+          </button>
+        </div>
+      </header>
 
       {/* 데스크톱 데이터 출처 배지 */}
       {!isMobile && (
@@ -928,40 +928,36 @@ function App() {
         />
       </div>
 
-      {/* 모바일 바텀시트 */}
-      {isMobile && (
-        <MobileBottomSheet
-          isOpen={showMobileSheet}
-          onClose={() => {
-            setShowMobileSheet(false);
-            setMobileTab("map");
-          }}
-          title={selectedRegion?.region || "지역 선택"}
-        >
-          <Sidebar
-            selectedRegion={selectedRegion}
-            explanation={explanation}
-            target={target}
-            onTargetChange={handleTargetChange}
-            loading={false}
-            allRegions={regions}
-            onRegionSelect={handleRegionSelect}
-            onOpenAuthModal={() => setShowAuthModal(true)}
-            isMobileCollapsed={false}
-            setIsMobileCollapsed={() => {}}
-            mobileActiveTab={mobileTab}
-          />
-        </MobileBottomSheet>
-      )}
-
-      {/* 모바일 하단 네비게이션 */}
-      {isMobile && (
-        <MobileBottomNav
-          activeTab={mobileTab}
-          onTabChange={handleMobileTabChange}
+      {/* 모바일 바텀시트 - 항상 렌더링, CSS로 표시/숨김 제어 */}
+      <MobileBottomSheet
+        isOpen={showMobileSheet}
+        onClose={() => {
+          setShowMobileSheet(false);
+          setMobileTab("map");
+        }}
+        title={selectedRegion?.region || "지역 선택"}
+      >
+        <Sidebar
           selectedRegion={selectedRegion}
+          explanation={explanation}
+          target={target}
+          onTargetChange={handleTargetChange}
+          loading={false}
+          allRegions={regions}
+          onRegionSelect={handleRegionSelect}
+          onOpenAuthModal={() => setShowAuthModal(true)}
+          isMobileCollapsed={false}
+          setIsMobileCollapsed={() => {}}
+          mobileActiveTab={mobileTab}
         />
-      )}
+      </MobileBottomSheet>
+
+      {/* 모바일 하단 네비게이션 - 항상 렌더링, CSS로 표시/숨김 제어 */}
+      <MobileBottomNav
+        activeTab={mobileTab}
+        onTabChange={handleMobileTabChange}
+        selectedRegion={selectedRegion}
+      />
 
       {/* 로그인 모달 */}
       {showAuthModal && (
@@ -969,6 +965,16 @@ function App() {
           <AuthModal
             isOpen={showAuthModal}
             onClose={() => setShowAuthModal(false)}
+          />
+        </Suspense>
+      )}
+
+      {/* 프로필 모달 */}
+      {showProfileModal && (
+        <Suspense fallback={null}>
+          <UserProfile
+            isOpen={showProfileModal}
+            onClose={() => setShowProfileModal(false)}
           />
         </Suspense>
       )}

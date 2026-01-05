@@ -4140,70 +4140,88 @@ body::after {
     z-index: 1;
   }
 
-  /* 사이드바가 바텀 시트로 변환 */
-  .sidebar {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
-    max-height: 70vh;
-    z-index: 100;
-    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
-    border-right: none;
-    border-top: 1px solid var(--glass-border);
-    transform: translateY(0);
-    transition: transform var(--transition-slow);
+  /* 새 모바일 UI 시스템 - 메인 사이드바만 숨김 (바텀시트 안은 표시) */
+  .main-content > .sidebar,
+  .main-content > .sidebar.collapsed {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    position: absolute !important;
+    left: -9999px !important;
+    width: 0 !important;
+    height: 0 !important;
   }
 
-  .sidebar.collapsed {
-    transform: translateY(calc(100% - 70px));
+  /* 바텀시트 안의 사이드바 및 모든 하위 요소 표시 */
+  .mobile-bottom-sheet .sidebar,
+  .mobile-bottom-sheet .sidebar * {
+    display: revert !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
   }
 
-  .sidebar::before {
-    display: none;
+  .mobile-bottom-sheet .sidebar {
+    position: relative !important;
+    left: auto !important;
+    width: 100% !important;
+    height: auto !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
   }
 
-  /* 드래그 핸들 */
-  .sidebar::after {
-    content: "";
-    position: absolute;
-    top: 8px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 40px;
-    height: 4px;
-    background: var(--text-muted);
-    border-radius: var(--radius-full);
+  .mobile-bottom-sheet .sidebar-header {
+    display: none !important;
   }
 
-  .sidebar-header {
-    padding: var(--space-xl) var(--space-lg) var(--space-md);
+  .mobile-bottom-sheet .quick-actions {
+    display: none !important;
   }
 
-  .sidebar-header h1 {
-    font-size: 1.2rem;
+  .mobile-bottom-sheet .main-tabs {
+    display: none !important;
   }
 
-  .target-selector {
-    padding: var(--space-md) var(--space-lg);
-  }
-
-  .target-buttons {
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    padding-bottom: var(--space-xs);
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .target-btn {
-    flex-shrink: 0;
-    font-size: 0.75rem;
-    padding: var(--space-xs) var(--space-md);
-  }
-
-  .region-info {
+  .mobile-bottom-sheet .tab-content-area {
+    display: block !important;
     padding: var(--space-md);
+  }
+
+  /* top-action-bar도 숨김 */
+  .top-action-bar {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  /* 데이터 출처 배지 숨김 */
+  .data-source-badge {
+    display: none !important;
+  }
+
+  /* 모바일 헤더 강제 표시 */
+  .mobile-header {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  /* 모바일 하단 네비게이션 강제 표시 */
+  .mobile-bottom-nav {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  /* 맵 컨테이너 - 헤더와 네비 공간 확보 */
+  .map-container {
+    position: fixed !important;
+    top: 56px !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 72px !important;
+    z-index: 1 !important;
   }
 
   /* 랭킹 - 모바일에서 완전 숨김 (새 모바일 UI 시스템 사용) */
@@ -8448,9 +8466,17 @@ body::after {
 /* 제보 필터 패널 */
 .report-filter-panel {
   position: absolute;
-  top: 80px;
-  left: 12px;
+  top: 10px;
+  left: 50px;
   z-index: 1000;
+}
+
+/* 모바일에서 실시간 제보 패널 위치 조정 */
+@media (max-width: 768px) {
+  .report-filter-panel {
+    top: 10px;
+    left: 50px;
+  }
 }
 
 .filter-toggle-btn {
@@ -9105,6 +9131,23 @@ body::after {
    NEW MOBILE UI SYSTEM - 네이티브 앱 스타일
    ═══════════════════════════════════════════════════════════════════════════ */
 
+/* 기본값: 모바일 UI 숨김 (데스크톱) */
+.mobile-header,
+.mobile-bottom-nav {
+  display: none !important;
+}
+
+/* 모바일에서만 표시 */
+@media (max-width: 768px) {
+  .mobile-header {
+    display: flex !important;
+  }
+
+  .mobile-bottom-nav {
+    display: flex !important;
+  }
+}
+
 /* 모바일 컨테이너 */
 .app-container.mobile {
   padding-bottom: 72px; /* 하단 네비 공간 */
@@ -9170,7 +9213,6 @@ body::after {
 }
 
 .mobile-chat-btn,
-.mobile-user-btn,
 .location-btn-compact {
   width: 36px;
   height: 36px;
@@ -9186,11 +9228,32 @@ body::after {
   transition: var(--transition-fast);
 }
 
+.mobile-user-btn {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--accent-primary);
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  white-space: nowrap;
+}
+
 .mobile-chat-btn:active,
-.mobile-user-btn:active,
 .location-btn-compact:active {
   transform: scale(0.95);
   background: var(--bg-elevated);
+}
+
+.mobile-user-btn:active {
+  transform: scale(0.95);
+  opacity: 0.9;
 }
 
 .location-btn-compact.detecting {
@@ -9221,7 +9284,8 @@ body::after {
   justify-content: space-around;
   padding: 0 var(--space-sm);
   padding-bottom: env(safe-area-inset-bottom, 0);
-  z-index: 2000;
+  z-index: 9999;
+  pointer-events: auto !important;
 }
 
 .mobile-bottom-nav .nav-item {
@@ -9239,6 +9303,8 @@ body::after {
   position: relative;
   transition: var(--transition-fast);
   -webkit-tap-highlight-color: transparent;
+  pointer-events: auto !important;
+  touch-action: manipulation;
 }
 
 .mobile-bottom-nav .nav-item:active {
@@ -9494,26 +9560,170 @@ body::after {
 /* ─────────────────────────────────────────────────────────────────────────────
    모바일 선택 카드 스타일
    ───────────────────────────────────────────────────────────────────────────── */
-.app-container.mobile .region-header-compact {
-  padding: var(--space-md);
+.app-container.mobile .region-header-compact,
+.mobile-bottom-sheet .region-header-compact {
+  padding: var(--space-sm) var(--space-md);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-}
-
-.app-container.mobile .climate-grid-compact {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--space-sm);
-  padding: var(--space-md);
-}
-
-.app-container.mobile .climate-item {
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
   align-items: center;
-  gap: 2px;
+}
+
+.region-info-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.region-info-row h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.region-info-row .risk-badge {
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  background: rgba(255,255,255,0.2);
+  border-radius: var(--radius-full);
+}
+
+.region-info-row .score-inline {
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: rgba(255,255,255,0.25);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
+/* 모바일 시간대별 예보 컴팩트 */
+.mobile-bottom-sheet .hourly-forecast {
   padding: var(--space-sm);
-  background: var(--bg-elevated);
+  background: var(--bg-tertiary);
   border-radius: var(--radius-md);
+  margin-top: var(--space-sm);
+}
+
+.mobile-bottom-sheet .forecast-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-xs);
+}
+
+.mobile-bottom-sheet .forecast-header h4 {
+  font-size: 0.8rem;
+  margin: 0;
+}
+
+.mobile-bottom-sheet .forecast-base-time {
+  font-size: 0.65rem;
+}
+
+.mobile-bottom-sheet .forecast-container {
+  position: relative;
+}
+
+.mobile-bottom-sheet .scroll-btn {
+  display: none;
+}
+
+.mobile-bottom-sheet .forecast-scroll {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  padding: 4px 0;
+  margin: 0;
+}
+
+.mobile-bottom-sheet .forecast-item {
+  min-width: 42px;
+  padding: 6px 4px;
+  gap: 2px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-sm);
+}
+
+.mobile-bottom-sheet .forecast-time {
+  font-size: 0.65rem;
+}
+
+.mobile-bottom-sheet .forecast-icon {
+  font-size: 1rem;
+}
+
+.mobile-bottom-sheet .forecast-temp {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.mobile-bottom-sheet .forecast-pop {
+  font-size: 0.6rem;
+}
+
+.mobile-bottom-sheet .forecast-summary {
+  display: flex;
+  justify-content: space-around;
+  padding: var(--space-xs);
+  margin-top: var(--space-xs);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-sm);
+}
+
+.mobile-bottom-sheet .summary-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mobile-bottom-sheet .summary-label {
+  font-size: 0.65rem;
+  color: var(--text-tertiary);
+}
+
+.mobile-bottom-sheet .summary-value {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.app-container.mobile .climate-grid-compact,
+.mobile-bottom-sheet .climate-grid-compact {
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: space-between;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+}
+
+.app-container.mobile .climate-item,
+.mobile-bottom-sheet .climate-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-sm);
+  flex: 1;
+  justify-content: center;
+}
+
+.app-container.mobile .climate-item .icon,
+.mobile-bottom-sheet .climate-item .icon {
+  font-size: 0.9rem;
+}
+
+.app-container.mobile .climate-item .value,
+.mobile-bottom-sheet .climate-item .value {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.app-container.mobile .climate-item .label,
+.mobile-bottom-sheet .climate-item .label {
+  display: none;
 }
 
 .app-container.mobile .climate-item .icon {

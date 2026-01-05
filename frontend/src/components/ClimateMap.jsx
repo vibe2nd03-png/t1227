@@ -498,16 +498,6 @@ function ClimateMap({ regions, selectedRegion, onRegionSelect, onMapClick }) {
               ></div>
               <span>위험 (75-100점)</span>
             </div>
-            <div className="legend-divider"></div>
-            <button
-              className={`report-toggle ${showReports ? "active" : ""}`}
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowReports(!showReports);
-              }}
-            >
-              {showReports ? "💬 제보 숨기기" : "💬 제보 보기"}
-            </button>
           </>
         )}
       </div>

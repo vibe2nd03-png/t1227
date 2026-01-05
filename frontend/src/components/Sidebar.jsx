@@ -50,6 +50,7 @@ function Sidebar({
   onOpenAuthModal,
   isMobileCollapsed,
   setIsMobileCollapsed,
+  mobileActiveTab,
 }) {
   const { user, profile, isAuthenticated, refreshReportStats } = useAuth();
   const { toggleFavorite, isFavorite } = useFavorites();
@@ -58,6 +59,13 @@ function Sidebar({
   const [isNotificationSubscribed, setIsNotificationSubscribed] =
     useState(false);
   const [activeTab, setActiveTab] = useState("info");
+
+  // 모바일 하단 네비게이션과 동기화
+  useEffect(() => {
+    if (mobileActiveTab) {
+      setActiveTab(mobileActiveTab);
+    }
+  }, [mobileActiveTab]);
 
   // 모바일 사이드바 토글 (헤더 클릭 시 펼치기)
   const toggleMobileSidebar = () => {
@@ -1338,28 +1346,23 @@ function RegionCard({ region, explanation, isFavorite, onToggleFavorite }) {
 
   return (
     <div className="region-card-compact">
-      {/* 지역 헤더 */}
+      {/* 지역 헤더 - 한 줄 표시 */}
       <div
         className="region-header-compact"
         style={{ backgroundColor: region.risk_color }}
       >
-        <div className="region-title">
+        <div className="region-info-row">
           <h2>{region.region}</h2>
           <span className="risk-badge">{region.risk_label}</span>
+          <span className="score-inline">{score}점</span>
         </div>
-        <div className="header-actions">
-          <button
-            className={`favorite-toggle-btn ${isFavorite ? "active" : ""}`}
-            onClick={onToggleFavorite}
-            title={isFavorite ? "즐겨찾기 해제" : "즐겨찾기 추가"}
-          >
-            {isFavorite ? "★" : "☆"}
-          </button>
-          <div className="score-badge">
-            <span className="score">{score}</span>
-            <span className="label">점</span>
-          </div>
-        </div>
+        <button
+          className={`favorite-toggle-btn ${isFavorite ? "active" : ""}`}
+          onClick={onToggleFavorite}
+          title={isFavorite ? "즐겨찾기 해제" : "즐겨찾기 추가"}
+        >
+          {isFavorite ? "★" : "☆"}
+        </button>
       </div>
 
       {/* 기후 데이터 그리드 */}

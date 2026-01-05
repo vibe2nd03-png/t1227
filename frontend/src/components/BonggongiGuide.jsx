@@ -24,19 +24,29 @@ const speakMessage = (text, onEnd) => {
 
   const utterance = new SpeechSynthesisUtterance(cleanText);
 
-  // 한국어 음성 찾기
+  // 한국어 남성 음성 우선 선택 (5살 남자아이 톤에 적합)
   const voices = window.speechSynthesis.getVoices();
-  const koreanVoice = voices.find((v) => v.lang.includes("ko")) || voices[0];
+  const koreanVoices = voices.filter((v) => v.lang.includes("ko"));
+
+  // 남성 음성 우선 (name에 male, 남성, 민수 등 포함)
+  const maleVoice = koreanVoices.find((v) =>
+    v.name.toLowerCase().includes("male") ||
+    v.name.includes("남성") ||
+    v.name.includes("민수") ||
+    v.name.includes("준서")
+  );
+
+  const koreanVoice = maleVoice || koreanVoices[0] || voices[0];
 
   if (koreanVoice) {
     utterance.voice = koreanVoice;
   }
 
-  // 5살 남자아이 목소리 설정 (매우 높은 피치, 귀여운 톤)
+  // 5살 남자아이 목소리 설정 (자연스러운 어린이 톤)
   utterance.lang = "ko-KR";
-  utterance.pitch = 1.9; // 매우 높은 피치 (5살 아이 목소리)
-  utterance.rate = 0.95; // 약간 느린 속도 (어린아이 말투)
-  utterance.volume = 0.85; // 볼륨
+  utterance.pitch = 1.0; // 기본 피치 (자연스러운 톤)
+  utterance.rate = 0.9; // 약간 느린 속도
+  utterance.volume = 0.9; // 볼륨
 
   if (onEnd) {
     utterance.onend = onEnd;
