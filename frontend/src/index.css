@@ -9483,6 +9483,24 @@ body::after {
 .app-container.mobile .top-action-bar,
 .app-container.mobile .region-ranking {
   display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* 미디어 쿼리 오버라이드 - 모바일에서 랭킹 완전 숨김 */
+@media (max-width: 768px) {
+  .region-ranking,
+  .region-ranking.expanded,
+  .region-ranking .risk-level-section,
+  .region-ranking .risk-level-section.always-visible {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    position: absolute !important;
+    left: -9999px !important;
+  }
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
