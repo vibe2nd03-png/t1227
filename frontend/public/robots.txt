@@ -1,0 +1,6 @@
+# Robots.txt for 경기 기후 체감 맵
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://frontend-mu-rust-96.vercel.app/sitemap.xml
