@@ -110,3 +110,20 @@ SUPABASE_KEY=your_service_role_key
 - Vite 프록시: 개발 시 `/api/*` 요청은 `localhost:8000`으로 프록시
 - Vite 빌드: vendor 청크 분리 (react, leaflet, chart.js, supabase)
 - Supabase RLS: 공개 읽기 허용, 쓰기는 인증 필요
+
+## Lighthouse 성능 점수 (2026-01-06)
+
+| 카테고리 | 모바일 | 데스크톱 |
+|----------|--------|----------|
+| 성능 (Performance) | 90 | 97 |
+| 접근성 (Accessibility) | 95 | 95 |
+| Best Practices | 96 | 96 |
+| SEO | 100 | 100 |
+
+### 적용된 최적화
+- 외부 폰트 제거 (시스템 폰트 사용)
+- 초기 렌더링용 Mock 데이터로 즉시 표시
+- Auth 초기화 지연 (requestIdleCallback)
+- Lazy loading (React.lazy + Suspense)
+- fetchpriority="high" 적용
+- Critical CSS 인라인화
