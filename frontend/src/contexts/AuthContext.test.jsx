@@ -55,6 +55,9 @@ function TestComponent() {
         {auth.isAuthenticated ? "true" : "false"}
       </span>
       <span data-testid="user">{auth.user ? auth.user.id : "null"}</span>
+      <span data-testid="profile">
+        {auth.profile ? auth.profile.nickname : "null"}
+      </span>
     </div>
   );
 }
@@ -189,6 +192,30 @@ describe("AuthContext", () => {
         expect(authContext.getFavoriteRegions).toBeTypeOf("function");
         expect(authContext.getMyReports).toBeTypeOf("function");
         expect(authContext.deleteMyReport).toBeTypeOf("function");
+        expect(authContext.refreshReportStats).toBeTypeOf("function");
+      });
+    });
+
+    it("should provide auth state", async () => {
+      let authContext;
+
+      function CaptureAuth() {
+        authContext = useAuth();
+        return null;
+      }
+
+      render(
+        <AuthProvider>
+          <CaptureAuth />
+        </AuthProvider>,
+      );
+
+      await waitFor(() => {
+        expect(authContext).toHaveProperty("user");
+        expect(authContext).toHaveProperty("profile");
+        expect(authContext).toHaveProperty("loading");
+        expect(authContext).toHaveProperty("authError");
+        expect(authContext).toHaveProperty("isAuthenticated");
       });
     });
   });
@@ -280,6 +307,38 @@ describe("AuthContext", () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toBe("Signup failed");
+    });
+
+    it("should auto login when no session returned", async () => {
+      mockSignUp.mockResolvedValue({
+        data: { user: { id: "new-user", identities: [{}] }, session: null },
+        error: null,
+      });
+      mockSignInWithPassword.mockResolvedValue({
+        data: { user: { id: "new-user" }, session: {} },
+        error: null,
+      });
+
+      let authContext;
+      function CaptureAuth() {
+        authContext = useAuth();
+        return null;
+      }
+
+      render(
+        <AuthProvider>
+          <CaptureAuth />
+        </AuthProvider>,
+      );
+
+      await waitFor(() => expect(authContext.signUpWithEmail).toBeDefined());
+
+      const result = await authContext.signUpWithEmail(
+        "new@test.com",
+        "password",
+      );
+
+      expect(result.success).toBe(true);
     });
   });
 
@@ -399,11 +458,12 @@ describe("AuthContext", () => {
 
       await waitFor(() => expect(authContext.sendPhoneOtp).toBeDefined());
 
-      await authContext.sendPhoneOtp("01012345678");
+      const result = await authContext.sendPhoneOtp("01012345678");
 
       expect(mockSignInWithOtp).toHaveBeenCalledWith({
         phone: "+821012345678",
       });
+      expect(result.success).toBe(true);
     });
 
     it("should not modify already formatted phone", async () => {
@@ -428,6 +488,89 @@ describe("AuthContext", () => {
       expect(mockSignInWithOtp).toHaveBeenCalledWith({
         phone: "+821012345678",
       });
+    });
+
+    it("should handle OTP send errors", async () => {
+      mockSignInWithOtp.mockResolvedValue({
+        error: { message: "OTP send failed" },
+      });
+
+      let authContext;
+      function CaptureAuth() {
+        authContext = useAuth();
+        return null;
+      }
+
+      render(
+        <AuthProvider>
+          <CaptureAuth />
+        </AuthProvider>,
+      );
+
+      await waitFor(() => expect(authContext.sendPhoneOtp).toBeDefined());
+
+      const result = await authContext.sendPhoneOtp("01012345678");
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("OTP send failed");
+    });
+  });
+
+  describe("verifyPhoneOtp", () => {
+    it("should verify OTP correctly", async () => {
+      mockVerifyOtp.mockResolvedValue({
+        data: { user: { id: "user-1" } },
+        error: null,
+      });
+
+      let authContext;
+      function CaptureAuth() {
+        authContext = useAuth();
+        return null;
+      }
+
+      render(
+        <AuthProvider>
+          <CaptureAuth />
+        </AuthProvider>,
+      );
+
+      await waitFor(() => expect(authContext.verifyPhoneOtp).toBeDefined());
+
+      const result = await authContext.verifyPhoneOtp("01012345678", "123456");
+
+      expect(mockVerifyOtp).toHaveBeenCalledWith({
+        phone: "+821012345678",
+        token: "123456",
+        type: "sms",
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("should handle OTP verification errors", async () => {
+      mockVerifyOtp.mockResolvedValue({
+        data: null,
+        error: { message: "Invalid OTP" },
+      });
+
+      let authContext;
+      function CaptureAuth() {
+        authContext = useAuth();
+        return null;
+      }
+
+      render(
+        <AuthProvider>
+          <CaptureAuth />
+        </AuthProvider>,
+      );
+
+      await waitFor(() => expect(authContext.verifyPhoneOtp).toBeDefined());
+
+      const result = await authContext.verifyPhoneOtp("01012345678", "000000");
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("Invalid OTP");
     });
   });
 
@@ -497,6 +640,239 @@ describe("AuthContext", () => {
       const result = await authContext.getMyReports();
 
       expect(result).toEqual([]);
+    });
+
+    it("addFavoriteRegion should require authentication", async () => {
+      mockGetSession.mockResolvedValue({ data: { session: null } });
+
+      let authContext;
+      function CaptureAuth() {
+        authContext = useAuth();
+        return null;
+      }
+
+      render(
+        <AuthProvider>
+          <CaptureAuth />
+        </AuthProvider>,
+      );
+
+      await waitFor(() => expect(authContext.addFavoriteRegion).toBeDefined());
+
+      const result = await authContext.addFavoriteRegion("수원시");
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("로그인");
+    });
+
+    it("removeFavoriteRegion should require authentication", async () => {
+      mockGetSession.mockResolvedValue({ data: { session: null } });
+
+      let authContext;
+      function CaptureAuth() {
+        authContext = useAuth();
+        return null;
+      }
+
+      render(
+        <AuthProvider>
+          <CaptureAuth />
+        </AuthProvider>,
+      );
+
+      await waitFor(() =>
+        expect(authContext.removeFavoriteRegion).toBeDefined(),
+      );
+
+      const result = await authContext.removeFavoriteRegion("수원시");
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("로그인");
+    });
+
+    it("deleteMyReport should require authentication", async () => {
+      mockGetSession.mockResolvedValue({ data: { session: null } });
+
+      let authContext;
+      function CaptureAuth() {
+        authContext = useAuth();
+        return null;
+      }
+
+      render(
+        <AuthProvider>
+          <CaptureAuth />
+        </AuthProvider>,
+      );
+
+      await waitFor(() => expect(authContext.deleteMyReport).toBeDefined());
+
+      const result = await authContext.deleteMyReport("report-123");
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain("로그인");
+    });
+  });
+
+  describe("authenticated profile operations", () => {
+    const setupAuthenticatedUser = () => {
+      const mockUser = { id: "user-123", email: "test@test.com" };
+      mockGetSession.mockResolvedValue({
+        data: {
+          session: {
+            user: mockUser,
+            access_token: "test-token",
+          },
+        },
+      });
+    };
+
+    it("getFavoriteRegions should fetch favorites when authenticated", async () => {
+      setupAuthenticatedUser();
+      fetch.mockImplementation((url) => {
+        if (url.includes("user_favorite_regions")) {
+          return Promise.resolve({
+            ok: true,
+            json: () =>
+              Promise.resolve([{ region: "수원시" }, { region: "성남시" }]),
+          });
+        }
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve([]),
+        });
+      });
+
+      let authContext;
+      function CaptureAuth() {
+        authContext = useAuth();
+        return null;
+      }
+
+      render(
+        <AuthProvider>
+          <CaptureAuth />
+        </AuthProvider>,
+      );
+
+      await waitFor(() => expect(authContext.user).not.toBeNull());
+
+      const result = await authContext.getFavoriteRegions();
+
+      expect(result).toEqual(["수원시", "성남시"]);
+    });
+
+    it("getMyReports should fetch reports when authenticated", async () => {
+      setupAuthenticatedUser();
+      fetch.mockImplementation((url) => {
+        if (url.includes("user_reports")) {
+          return Promise.resolve({
+            ok: true,
+            json: () =>
+              Promise.resolve([
+                { id: "report-1", content: "Test report" },
+                { id: "report-2", content: "Another report" },
+              ]),
+          });
+        }
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve([]),
+        });
+      });
+
+      let authContext;
+      function CaptureAuth() {
+        authContext = useAuth();
+        return null;
+      }
+
+      render(
+        <AuthProvider>
+          <CaptureAuth />
+        </AuthProvider>,
+      );
+
+      await waitFor(() => expect(authContext.user).not.toBeNull());
+
+      const result = await authContext.getMyReports();
+
+      expect(result.length).toBe(2);
+      expect(result[0].id).toBe("report-1");
+    });
+
+    it("addFavoriteRegion should add region when authenticated", async () => {
+      setupAuthenticatedUser();
+      fetch.mockImplementation((url, options) => {
+        if (
+          url.includes("user_favorite_regions") &&
+          options?.method === "POST"
+        ) {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve([{ region: "수원시" }]),
+          });
+        }
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve([]),
+        });
+      });
+
+      let authContext;
+      function CaptureAuth() {
+        authContext = useAuth();
+        return null;
+      }
+
+      render(
+        <AuthProvider>
+          <CaptureAuth />
+        </AuthProvider>,
+      );
+
+      await waitFor(() => expect(authContext.user).not.toBeNull());
+
+      const result = await authContext.addFavoriteRegion("수원시");
+
+      expect(result.success).toBe(true);
+    });
+
+    it("removeFavoriteRegion should remove region when authenticated", async () => {
+      setupAuthenticatedUser();
+      fetch.mockImplementation((url, options) => {
+        if (
+          url.includes("user_favorite_regions") &&
+          options?.method === "DELETE"
+        ) {
+          return Promise.resolve({
+            ok: true,
+            status: 204,
+          });
+        }
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve([]),
+        });
+      });
+
+      let authContext;
+      function CaptureAuth() {
+        authContext = useAuth();
+        return null;
+      }
+
+      render(
+        <AuthProvider>
+          <CaptureAuth />
+        </AuthProvider>,
+      );
+
+      await waitFor(() => expect(authContext.user).not.toBeNull());
+
+      const result = await authContext.removeFavoriteRegion("수원시");
+
+      expect(result.success).toBe(true);
     });
   });
 });
