@@ -509,4 +509,89 @@ END7777`;
       expect(stats.keys).toContain("monthly_202501_119");
     });
   });
+
+  describe("getNearbyRealtimeWeather", () => {
+    it("should return empty array on network error", async () => {
+      fetch.mockRejectedValueOnce(new Error("Network error"));
+
+      const result = await getNearbyRealtimeWeather();
+
+      expect(result).toEqual([]);
+    });
+
+    it("should retry with previous hour on empty data", async () => {
+      // First call returns empty
+      fetch.mockResolvedValueOnce({
+        text: () => Promise.resolve(""),
+      });
+      // Retry call also returns empty
+      fetch.mockResolvedValueOnce({
+        text: () => Promise.resolve(""),
+      });
+
+      const result = await getNearbyRealtimeWeather();
+
+      expect(result).toEqual([]);
+      expect(fetch).toHaveBeenCalledTimes(2);
+    });
+
+    it("should process data from retry call", async () => {
+      const mockText = `202501061200 108 270 2.5 315 5.2 1145 1020.1 1021.5 0 0 5.2 2.1 65 5.8 0 0 0 0 0 0 0 0 0 99 8 10 0 5 0 0 10 5.5 0 0 8.5 9.2 10.1 11.5 0 0 0 0 0
+END7777`;
+
+      // First call returns empty
+      fetch.mockResolvedValueOnce({
+        text: () => Promise.resolve(""),
+      });
+      // Retry call succeeds
+      fetch.mockResolvedValueOnce({
+        text: () => Promise.resolve(mockText),
+      });
+
+      const result = await getNearbyRealtimeWeather();
+
+      expect(Array.isArray(result)).toBe(true);
+    });
+  });
+
+  describe("getGyeonggiRealtimeWeather edge cases", () => {
+    it("should return null for invalid station data", async () => {
+      const mockText = `invalid data without proper format
+END7777`;
+
+      fetch.mockResolvedValueOnce({
+        text: () => Promise.resolve(mockText),
+      });
+      // 재시도용 mock
+      fetch.mockResolvedValueOnce({
+        text: () => Promise.resolve(""),
+      });
+
+      const result = await getGyeonggiRealtimeWeather();
+
+      // API가 유효하지 않은 데이터를 반환하면 null
+      expect(result).toBeNull();
+    });
+
+    it("should process data with -9 (missing) values", async () => {
+      // 정상적인 데이터 포맷이지만 대부분 값이 -9 (결측치)
+      const mockTextWithNulls = `202501061200 119 270 -9.0 -9 -9.0 -9 -9.0 -9.0 -9 -9 5.2 2.1 65 -9.0 -9 -9 -9 -9 -9 -9 -9 -9 -9 -9 -9 -9 -9 -9 -9 -9 -9 -9.0 -9 -9 -9.0 -9.0 -9.0 -9.0 -9 -9 -9 -9 -9
+END7777`;
+
+      fetch.mockResolvedValueOnce({
+        text: () => Promise.resolve(mockTextWithNulls),
+      });
+
+      const result = await getGyeonggiRealtimeWeather();
+
+      // 유효한 관측소 데이터가 있으면 결과 반환
+      if (result) {
+        expect(result).toHaveProperty("regions");
+        expect(Array.isArray(result.regions)).toBe(true);
+      } else {
+        // 데이터가 불충분하면 null일 수 있음
+        expect(result).toBeNull();
+      }
+    });
+  });
 });

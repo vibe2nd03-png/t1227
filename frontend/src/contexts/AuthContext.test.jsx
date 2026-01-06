@@ -965,5 +965,135 @@ describe("AuthContext", () => {
       expect(result.success).toBe(false);
       expect(result.error).toBeDefined();
     });
+
+    it("getFavoriteRegions should return empty array on fetch error", async () => {
+      setupAuthenticatedUser();
+      fetch.mockImplementation((url) => {
+        if (url.includes("user_favorite_regions")) {
+          return Promise.reject(new Error("Network error"));
+        }
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve([]),
+        });
+      });
+
+      let authContext;
+      function CaptureAuth() {
+        authContext = useAuth();
+        return null;
+      }
+
+      render(
+        <AuthProvider>
+          <CaptureAuth />
+        </AuthProvider>,
+      );
+
+      await waitFor(() => expect(authContext.user).not.toBeNull());
+
+      const result = await authContext.getFavoriteRegions();
+
+      expect(result).toEqual([]);
+    });
+
+    it("getFavoriteRegions should return empty array on non-ok response", async () => {
+      setupAuthenticatedUser();
+      fetch.mockImplementation((url) => {
+        if (url.includes("user_favorite_regions")) {
+          return Promise.resolve({
+            ok: false,
+            status: 500,
+          });
+        }
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve([]),
+        });
+      });
+
+      let authContext;
+      function CaptureAuth() {
+        authContext = useAuth();
+        return null;
+      }
+
+      render(
+        <AuthProvider>
+          <CaptureAuth />
+        </AuthProvider>,
+      );
+
+      await waitFor(() => expect(authContext.user).not.toBeNull());
+
+      const result = await authContext.getFavoriteRegions();
+
+      expect(result).toEqual([]);
+    });
+
+    it("getMyReports should return empty array on fetch error", async () => {
+      setupAuthenticatedUser();
+      fetch.mockImplementation((url) => {
+        if (url.includes("user_reports")) {
+          return Promise.reject(new Error("Network error"));
+        }
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve([]),
+        });
+      });
+
+      let authContext;
+      function CaptureAuth() {
+        authContext = useAuth();
+        return null;
+      }
+
+      render(
+        <AuthProvider>
+          <CaptureAuth />
+        </AuthProvider>,
+      );
+
+      await waitFor(() => expect(authContext.user).not.toBeNull());
+
+      const result = await authContext.getMyReports();
+
+      expect(result).toEqual([]);
+    });
+
+    it("getMyReports should return empty array on non-ok response", async () => {
+      setupAuthenticatedUser();
+      fetch.mockImplementation((url) => {
+        if (url.includes("user_reports")) {
+          return Promise.resolve({
+            ok: false,
+            status: 500,
+          });
+        }
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve([]),
+        });
+      });
+
+      let authContext;
+      function CaptureAuth() {
+        authContext = useAuth();
+        return null;
+      }
+
+      render(
+        <AuthProvider>
+          <CaptureAuth />
+        </AuthProvider>,
+      );
+
+      await waitFor(() => expect(authContext.user).not.toBeNull());
+
+      const result = await authContext.getMyReports();
+
+      expect(result).toEqual([]);
+    });
   });
 });
