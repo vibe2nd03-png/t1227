@@ -14,18 +14,28 @@ export function AuthProvider({ children }) {
   const [authError, setAuthError] = useState(null);
   const [accessToken, setAccessToken] = useState(null);
 
-  // 초기 세션 확인
+  // 초기 세션 확인 (지연 로드로 LCP 최적화)
   useEffect(() => {
-    // 현재 세션 가져오기
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setAccessToken(session?.access_token ?? null);
-      if (session?.user) {
-        // 세션의 access_token을 직접 전달
-        fetchProfile(session.user.id, session.access_token);
-      }
-      setLoading(false);
-    });
+    // requestIdleCallback으로 초기 렌더링 차단 방지
+    const initAuth = () => {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        setUser(session?.user ?? null);
+        setAccessToken(session?.access_token ?? null);
+        if (session?.user) {
+          // 세션의 access_token을 직접 전달
+          fetchProfile(session.user.id, session.access_token);
+        }
+        setLoading(false);
+      });
+    };
+
+    // 브라우저 유휴 시간에 Auth 초기화 (FCP 최적화)
+    if ("requestIdleCallback" in window) {
+      requestIdleCallback(initAuth, { timeout: 2000 });
+    } else {
+      // 폴백: 100ms 후 실행
+      setTimeout(initAuth, 100);
+    }
 
     // 인증 상태 변경 리스너
     const {

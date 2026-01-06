@@ -2,6 +2,15 @@ import React, { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { getGyeonggiRealtimeWeather } from "./services/kmaApi";
 import { useAuth } from "./contexts/AuthContext";
 
+// 초기 렌더링용 최소 Mock 데이터 (LCP 최적화)
+const INITIAL_REGIONS = [
+  { region: "수원시", lat: 37.2636, lng: 127.0286, score: 35, adjusted_score: 35, risk_level: "caution", risk_label: "주의", risk_color: "#FFEB3B", climate_data: { temperature: 5, apparent_temperature: 2, humidity: 55 } },
+  { region: "고양시", lat: 37.6584, lng: 126.832, score: 30, adjusted_score: 30, risk_level: "safe", risk_label: "안전", risk_color: "#4CAF50", climate_data: { temperature: 4, apparent_temperature: 1, humidity: 50 } },
+  { region: "성남시", lat: 37.4449, lng: 127.1389, score: 32, adjusted_score: 32, risk_level: "caution", risk_label: "주의", risk_color: "#FFEB3B", climate_data: { temperature: 5, apparent_temperature: 2, humidity: 52 } },
+  { region: "용인시", lat: 37.2411, lng: 127.1776, score: 28, adjusted_score: 28, risk_level: "safe", risk_label: "안전", risk_color: "#4CAF50", climate_data: { temperature: 6, apparent_temperature: 3, humidity: 48 } },
+  { region: "부천시", lat: 37.5034, lng: 126.766, score: 25, adjusted_score: 25, risk_level: "safe", risk_label: "안전", risk_color: "#2196F3", climate_data: { temperature: 5, apparent_temperature: 2, humidity: 50 } },
+];
+
 // 핵심 컴포넌트 지연 로딩 (LCP 최적화)
 const ClimateMap = lazy(() => import("./components/ClimateMap"));
 const Sidebar = lazy(() => import("./components/Sidebar"));
@@ -72,12 +81,13 @@ const getThemeFromRisk = (riskLevel, score) => {
 
 function App() {
   const { user, profile } = useAuth();
-  const [regions, setRegions] = useState([]);
+  // 초기 Mock 데이터로 즉시 렌더링 (LCP 최적화)
+  const [regions, setRegions] = useState(INITIAL_REGIONS);
   const [selectedRegion, setSelectedRegion] = useState(null);
   const [explanation, setExplanation] = useState(null);
   const [target, setTarget] = useState("general");
-  const [loading, setLoading] = useState(true);
-  const [dataSource, setDataSource] = useState("loading");
+  const [loading, setLoading] = useState(false); // 즉시 렌더링
+  const [dataSource, setDataSource] = useState("initial"); // 초기 데이터 표시
   const [lastUpdated, setLastUpdated] = useState(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -148,14 +158,13 @@ function App() {
     }
   }, [user, profile, regions]);
 
-  // 데이터 로드 (기상청 API 우선, 10초 타임아웃)
+  // 데이터 로드 (백그라운드에서 기상청 API 호출, 5초 타임아웃)
   const loadAllRegions = async () => {
-    setLoading(true);
-
+    // 초기 데이터가 있으므로 loading 상태 변경하지 않음 (LCP 최적화)
     try {
-      // 기상청 API 호출 (10초 타임아웃)
+      // 기상청 API 호출 (5초 타임아웃 - 더 빠른 폴백)
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
 
       const kmaData = await getGyeonggiRealtimeWeather();
       clearTimeout(timeoutId);
@@ -184,21 +193,21 @@ function App() {
         setRegions(formattedRegions);
         setDataSource("kma");
         setLastUpdated(kmaData.datetime);
-        setLoading(false);
         log.info("기상청 데이터 로드 완료", {
           regionCount: formattedRegions.length,
         });
         return;
       }
     } catch (e) {
-      log.warn("KMA API 실패", { error: e.message });
+      log.warn("KMA API 실패, Mock 데이터 유지", { error: e.message });
     }
 
-    // 실패 시 즉시 Mock 데이터 표시
-    log.info("Mock 데이터 사용");
-    loadMockData();
-    setDataSource("mock");
-    setLoading(false);
+    // 실패 시 전체 Mock 데이터로 업데이트 (이미 초기 데이터 표시 중)
+    if (dataSource === "initial") {
+      log.info("전체 Mock 데이터로 업데이트");
+      loadMockData();
+      setDataSource("mock");
+    }
   };
 
   // Mock 데이터 (겨울철 기준)
