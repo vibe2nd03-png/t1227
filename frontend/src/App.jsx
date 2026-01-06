@@ -136,7 +136,7 @@ function App() {
   const [selectedRegion, setSelectedRegion] = useState(null);
   const [explanation, setExplanation] = useState(null);
   const [target, setTarget] = useState("general");
-  const [loading, setLoading] = useState(false); // 즉시 렌더링
+  const [loading, _setLoading] = useState(false); // 즉시 렌더링 (setLoading 미사용)
   const [dataSource, setDataSource] = useState("initial"); // 초기 데이터 표시
   const [lastUpdated, setLastUpdated] = useState(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
