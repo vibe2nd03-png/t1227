@@ -47,7 +47,6 @@
 
     <!-- 프리커넥트: 외부 리소스 연결 최적화 -->
     <link rel="preconnect" href="https://unpkg.com" crossorigin />
-    <link rel="preconnect" href="https://tile.openstreetmap.org" crossorigin />
     <link rel="dns-prefetch" href="https://unpkg.com" />
     <link rel="dns-prefetch" href="https://tile.openstreetmap.org" />
 
@@ -116,16 +115,13 @@
         padding: 20px;
         background: #fff;
       }
-      @keyframes shimmer {
-        0% {
-          background-position: 200% 0;
-        }
-        100% {
-          background-position: -200% 0;
-        }
-      }
       .skeleton-pulse {
-        animation: shimmer 1.5s infinite linear;
+        background: linear-gradient(
+          90deg,
+          #f0f0f0 0%,
+          #e8e8e8 50%,
+          #f0f0f0 100%
+        );
       }
       /* LCP 최적화: 초기 컨텐츠 빠른 표시 */
       .app-container {
@@ -149,8 +145,8 @@
           align-items: center;
           justify-content: center;
           height: 100vh;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          color: white;
+          background: #667eea;
+          color: #fff;
           font-size: 1.5rem;
           font-weight: 600;
         "
@@ -158,6 +154,6 @@
         경기 기후 체감 맵
       </div>
     </div>
-    <script type="module" src="/src/main.jsx"></script>
+    <script type="module" src="/src/main.jsx" fetchpriority="high"></script>
   </body>
 </html>
