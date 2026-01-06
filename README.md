@@ -176,19 +176,21 @@ gyeonggi-climate-map/
 
 ## 성능 최적화
 
-### Lighthouse 점수 목표
-| 카테고리 | 목표 점수 |
-|----------|----------|
-| Performance | 70+ |
-| Accessibility | 95+ |
-| Best Practices | 90+ |
-| SEO | 100 |
+### Lighthouse 점수 (2026-01-06 기준)
+| 카테고리 | 모바일 | 데스크톱 |
+|----------|--------|----------|
+| Performance | 90 | 97 |
+| Accessibility | 95 | 95 |
+| Best Practices | 96 | 96 |
+| SEO | 100 | 100 |
 
 ### 적용된 최적화
+- **외부 폰트 제거**: 시스템 폰트 사용으로 네트워크 요청 최적화
+- **초기 렌더링 최적화**: Mock 데이터로 즉시 표시 (API 응답 대기 없음)
+- **Auth 지연 로드**: requestIdleCallback으로 메인 스레드 차단 방지
 - **코드 분할**: React.lazy() 및 Suspense 활용
-- **프리로드**: 외부 리소스 preconnect/preload
 - **Critical CSS**: 초기 로딩 스타일 인라인화
-- **이미지 최적화**: WebP 형식 및 lazy loading
+- **fetchpriority**: 메인 스크립트에 high 우선순위 적용
 - **캐싱**: Service Worker 오프라인 캐싱
 
 ## SEO 설정
@@ -221,6 +223,22 @@ gyeonggi-climate-map/
 | 자외선지수 | 10% |
 | 지표면온도 | 5% |
 
+## 테스트
+
+### 테스트 커버리지 (72.74%)
+```bash
+# 테스트 실행
+npm test
+
+# 커버리지 리포트 생성
+npm run test:coverage
+```
+
+| 파일 | 커버리지 |
+|------|----------|
+| services/kmaApi.js | 90%+ |
+| contexts/AuthContext.jsx | 70%+ |
+
 ## 스크립트
 
 ```bash
@@ -229,6 +247,12 @@ npm run dev
 
 # 프로덕션 빌드
 npm run build
+
+# 테스트 실행
+npm test
+
+# 테스트 커버리지
+npm run test:coverage
 
 # ESLint 검사
 npm run lint

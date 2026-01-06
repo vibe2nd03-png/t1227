@@ -431,8 +431,6 @@ function OotdGenerator({ selectedRegion }) {
       const seed = Math.floor(Math.random() * 100000);
       const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=512&height=768&seed=${seed}&nologo=true`;
 
-      console.log("OOTD 이미지 URL:", imageUrl);
-
       // 타임아웃 설정 (30초)
       const timeoutId = setTimeout(() => {
         setError("이미지 생성 시간이 초과되었습니다. 다시 시도해주세요.");

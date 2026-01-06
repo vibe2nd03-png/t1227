@@ -9,11 +9,11 @@ if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker
       .register("/sw.js")
-      .then((registration) => {
-        console.log("SW 등록 성공:", registration.scope);
+      .then(() => {
+        // SW 등록 성공
       })
-      .catch((error) => {
-        console.log("SW 등록 실패:", error);
+      .catch(() => {
+        // SW 등록 실패 (무시)
       });
   });
 }

@@ -89,8 +89,8 @@ function NotificationManager({ climateData, isOpen, onClose }) {
           },
         );
         setIsSubscribed(parsed.isActive || false);
-      } catch (e) {
-        console.log("로컬 설정 파싱 오류:", e);
+      } catch {
+        // 로컬 설정 파싱 오류 무시
       }
     }
 
@@ -116,8 +116,8 @@ function NotificationManager({ climateData, isOpen, onClose }) {
           );
           setIsSubscribed(data.is_active);
         }
-      } catch (error) {
-        console.log("DB 설정 로드:", error);
+      } catch {
+        // DB 설정 로드 오류 무시
       }
     }
   };
@@ -155,8 +155,7 @@ function NotificationManager({ climateData, isOpen, onClose }) {
           },
           { onConflict: "user_id" },
         )
-        .then(() => console.log("DB 저장 완료"))
-        .catch((e) => console.error("DB 저장 실패:", e));
+        .catch(() => {});
     }
 
     setIsSubscribed(true);
@@ -176,8 +175,7 @@ function NotificationManager({ climateData, isOpen, onClose }) {
         .from("notification_subscriptions")
         .update({ is_active: false })
         .eq("user_id", user.id)
-        .then(() => console.log("DB 해제 완료"))
-        .catch((e) => console.error("구독 해제 오류:", e));
+        .catch(() => {});
     }
 
     localStorage.removeItem("notificationSettings");

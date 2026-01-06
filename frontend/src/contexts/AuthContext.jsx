@@ -71,7 +71,6 @@ export function AuthProvider({ children }) {
         const data = await response.json();
         if (data && data.length > 0) {
           setProfile(data[0]);
-          console.log("프로필 조회 성공:", data[0]);
           // 로그인 시 제보 통계 동기화
           await syncReportStats(userId, authToken);
         } else {
@@ -120,12 +119,6 @@ export function AuthProvider({ children }) {
       // 3. 평판 점수 계산: 제보 1건 = 1점, 좋아요 1개 = 2점
       const reputationScore = totalReports + totalLikes * 2;
 
-      console.log("제보 통계 동기화:", {
-        totalReports,
-        totalLikes,
-        reputationScore,
-      });
-
       // 4. 프로필 업데이트
       const patchUrl = `${SUPABASE_URL}/rest/v1/user_profiles?id=eq.${userId}`;
       const patchRes = await fetch(patchUrl, {
@@ -147,21 +140,18 @@ export function AuthProvider({ children }) {
         const data = await patchRes.json();
         if (data && data.length > 0) {
           setProfile(data[0]);
-          console.log("프로필 통계 동기화 완료:", data[0]);
         }
       }
-    } catch (error) {
-      console.error("제보 통계 동기화 오류:", error);
+    } catch {
+      // 제보 통계 동기화 오류 무시
     }
   };
 
   // 이메일+비밀번호 회원가입 (이메일 인증 없이 즉시 가입)
   const signUpWithEmail = async (email, password) => {
     setAuthError(null);
-    console.log("회원가입 시도:", email);
 
     try {
-      console.log("Supabase 회원가입 호출 시작");
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -171,8 +161,6 @@ export function AuthProvider({ children }) {
           },
         },
       });
-
-      console.log("Supabase 회원가입 응답:", { data, error });
 
       if (error) throw error;
 
@@ -201,7 +189,6 @@ export function AuthProvider({ children }) {
 
       return { success: true, needsConfirmation: false };
     } catch (error) {
-      console.error("회원가입 오류:", error);
       setAuthError(error.message);
       return { success: false, error: error.message };
     }
@@ -210,12 +197,8 @@ export function AuthProvider({ children }) {
   // 이메일+비밀번호 로그인
   const signInWithEmail = async (email, password) => {
     setAuthError(null);
-    console.log("로그인 시도:", email);
 
     try {
-      console.log("Supabase 로그인 호출 시작");
-      console.log("Supabase URL:", "${SUPABASE_URL}");
-
       // 타임아웃 추가 (15초)
       const timeoutPromise = new Promise((_, reject) => {
         setTimeout(() => {
@@ -232,12 +215,9 @@ export function AuthProvider({ children }) {
 
       const { data, error } = await Promise.race([authPromise, timeoutPromise]);
 
-      console.log("Supabase 로그인 응답:", { data, error });
-
       if (error) throw error;
       return { success: true, data };
     } catch (error) {
-      console.error("로그인 오류:", error);
       setAuthError(error.message);
       return { success: false, error: error.message };
     }
@@ -290,7 +270,6 @@ export function AuthProvider({ children }) {
 
   // 로그아웃 (로컬 상태 초기화)
   const signOut = async () => {
-    console.log("로그아웃 시도");
     // 로컬 상태 즉시 초기화
     setUser(null);
     setProfile(null);
@@ -299,14 +278,12 @@ export function AuthProvider({ children }) {
     // localStorage에서 supabase 세션 제거
     try {
       localStorage.removeItem("sb-pcdmrofcfqtyywtzyrfo-auth-token");
-    } catch (e) {
-      console.log("localStorage 정리 실패:", e);
+    } catch {
+      // localStorage 정리 실패 무시
     }
 
     // 백그라운드에서 서버 로그아웃 시도 (응답 기다리지 않음)
     supabase.auth.signOut().catch(() => {});
-
-    console.log("로그아웃 완료");
   };
 
   // 사용자 토큰 가져오기 (저장된 토큰 사용)
@@ -318,11 +295,8 @@ export function AuthProvider({ children }) {
   const updateProfile = async (updates) => {
     if (!user) return { success: false, error: "로그인이 필요합니다" };
 
-    console.log("프로필 업데이트 시도:", updates);
-
     try {
       const token = getUserToken();
-      console.log("토큰 확인:", token ? "있음" : "없음");
       if (!token) return { success: false, error: "인증 토큰이 없습니다" };
 
       const profileData = {
@@ -332,7 +306,6 @@ export function AuthProvider({ children }) {
 
       // 먼저 PATCH로 업데이트 시도
       const patchUrl = `${SUPABASE_URL}/rest/v1/user_profiles?id=eq.${user.id}`;
-      console.log("PATCH 시도:", patchUrl);
 
       const patchResponse = await fetch(patchUrl, {
         method: "PATCH",
@@ -345,29 +318,22 @@ export function AuthProvider({ children }) {
         body: JSON.stringify(profileData),
       });
 
-      console.log("PATCH 응답:", patchResponse.status);
-
       if (patchResponse.ok) {
         const data = await patchResponse.json();
-        console.log("PATCH 결과:", data);
 
         // PATCH가 성공했지만 데이터가 없으면 INSERT 필요
         if (Array.isArray(data) && data.length === 0) {
-          console.log("프로필 없음, INSERT 시도");
           return await createProfile(token, updates);
         }
 
         const updatedProfile = Array.isArray(data) ? data[0] : data;
         setProfile(updatedProfile);
-        console.log("프로필 업데이트 성공:", updatedProfile);
         return { success: true, data: updatedProfile };
       }
 
       // PATCH 실패시 INSERT 시도
-      console.log("PATCH 실패, INSERT 시도");
       return await createProfile(token, updates);
     } catch (error) {
-      console.error("프로필 업데이트 오류:", error);
       return { success: false, error: error.message };
     }
   };
@@ -392,26 +358,20 @@ export function AuthProvider({ children }) {
       body: JSON.stringify(profileData),
     });
 
-    console.log("POST 응답:", postResponse.status);
-
     if (postResponse.ok) {
       const data = await postResponse.json();
       const newProfile = Array.isArray(data) ? data[0] : data;
       setProfile(newProfile);
-      console.log("프로필 생성 성공:", newProfile);
       return { success: true, data: newProfile };
     }
 
     const errorText = await postResponse.text();
-    console.error("프로필 생성 실패:", postResponse.status, errorText);
     throw new Error(errorText || "프로필 생성 실패");
   };
 
   // 즐겨찾기 지역 추가 (직접 fetch)
   const addFavoriteRegion = async (region) => {
     if (!user) return { success: false, error: "로그인이 필요합니다" };
-
-    console.log("즐겨찾기 추가 시도:", region);
 
     try {
       const token = getUserToken();
@@ -432,14 +392,11 @@ export function AuthProvider({ children }) {
       );
 
       if (response.ok) {
-        console.log("즐겨찾기 추가 성공");
         return { success: true };
       }
       const errorData = await response.json();
-      console.error("즐겨찾기 추가 실패:", errorData);
       throw new Error(errorData.message || "추가 실패");
     } catch (error) {
-      console.error("즐겨찾기 추가 오류:", error);
       return { success: false, error: error.message };
     }
   };
@@ -447,8 +404,6 @@ export function AuthProvider({ children }) {
   // 즐겨찾기 지역 삭제 (직접 fetch)
   const removeFavoriteRegion = async (region) => {
     if (!user) return { success: false, error: "로그인이 필요합니다" };
-
-    console.log("즐겨찾기 삭제 시도:", region);
 
     try {
       const token = getUserToken();
@@ -464,12 +419,10 @@ export function AuthProvider({ children }) {
       });
 
       if (response.ok || response.status === 204) {
-        console.log("즐겨찾기 삭제 성공");
         return { success: true };
       }
       throw new Error("삭제 실패");
     } catch (error) {
-      console.error("즐겨찾기 삭제 오류:", error);
       return { success: false, error: error.message };
     }
   };
@@ -477,8 +430,6 @@ export function AuthProvider({ children }) {
   // 즐겨찾기 목록 조회 (직접 fetch)
   const getFavoriteRegions = async () => {
     if (!user) return [];
-
-    console.log("즐겨찾기 조회 시도:", user.id);
 
     try {
       const token = getUserToken();
@@ -492,12 +443,10 @@ export function AuthProvider({ children }) {
 
       if (response.ok) {
         const data = await response.json();
-        console.log("즐겨찾기 조회 성공:", data.length, "개");
         return data?.map((r) => r.region) || [];
       }
       return [];
-    } catch (error) {
-      console.error("즐겨찾기 조회 오류:", error);
+    } catch {
       return [];
     }
   };
@@ -505,8 +454,6 @@ export function AuthProvider({ children }) {
   // 내 제보 목록 조회 (직접 fetch)
   const getMyReports = async () => {
     if (!user) return [];
-
-    console.log("내 제보 조회 시도:", user.id);
 
     try {
       const token = getUserToken();
@@ -520,12 +467,10 @@ export function AuthProvider({ children }) {
 
       if (response.ok) {
         const data = await response.json();
-        console.log("내 제보 조회 성공:", data.length, "개");
         return data || [];
       }
       return [];
-    } catch (error) {
-      console.error("내 제보 조회 오류:", error);
+    } catch {
       return [];
     }
   };
@@ -533,8 +478,6 @@ export function AuthProvider({ children }) {
   // 제보 삭제 (직접 fetch)
   const deleteMyReport = async (reportId) => {
     if (!user) return { success: false, error: "로그인이 필요합니다" };
-
-    console.log("제보 삭제 시도:", reportId);
 
     try {
       const token = getUserToken();
@@ -550,14 +493,12 @@ export function AuthProvider({ children }) {
       });
 
       if (response.ok || response.status === 204) {
-        console.log("제보 삭제 성공");
         // 제보 삭제 후 프로필 통계 업데이트
         await refreshReportStats();
         return { success: true };
       }
       throw new Error("삭제 실패");
     } catch (error) {
-      console.error("제보 삭제 오류:", error);
       return { success: false, error: error.message };
     }
   };
@@ -601,8 +542,6 @@ export function AuthProvider({ children }) {
       // 3. 평판 점수 계산: 제보 1건 = 1점, 좋아요 1개 = 2점
       const reputationScore = totalReports + totalLikes * 2;
 
-      console.log("제보 통계:", { totalReports, totalLikes, reputationScore });
-
       // 4. 프로필 업데이트
       if (token) {
         const patchUrl = `${SUPABASE_URL}/rest/v1/user_profiles?id=eq.${user.id}`;
@@ -625,12 +564,11 @@ export function AuthProvider({ children }) {
           const data = await patchRes.json();
           if (data && data.length > 0) {
             setProfile(data[0]);
-            console.log("프로필 통계 업데이트 완료:", data[0]);
           }
         }
       }
-    } catch (error) {
-      console.error("제보 통계 갱신 오류:", error);
+    } catch {
+      // 제보 통계 갱신 오류 무시
     }
   };
 

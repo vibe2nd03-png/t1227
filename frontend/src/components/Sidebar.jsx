@@ -5,7 +5,7 @@ import WeeklyClimateCalendar from "./WeeklyClimateCalendar";
 import FavoriteRegions from "./FavoriteRegions";
 import { useAuth } from "../contexts/AuthContext";
 import { useFavorites } from "../hooks/useFavorites";
-import { supabase, SUPABASE_URL, SUPABASE_ANON_KEY } from "../supabase";
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from "../supabase";
 import {
   getWeatherType,
   getRandomMessage,
@@ -1166,7 +1166,6 @@ function UserReportPanelInline({ selectedRegion, onReportSubmit }) {
     if (!selectedFeeling || !selectedRegion) return;
 
     setIsSubmitting(true);
-    console.log("제보 시작:", selectedRegion.region, selectedFeeling.label);
 
     const reportData = {
       region: selectedRegion.region,
@@ -1182,10 +1181,6 @@ function UserReportPanelInline({ selectedRegion, onReportSubmit }) {
     };
 
     try {
-      console.log("Supabase insert 시작:", reportData);
-      console.log("Supabase 클라이언트 확인:", supabase);
-      console.log("Supabase URL:", supabase?.supabaseUrl);
-
       // fetch로 직접 요청
       const response = await fetch(`${SUPABASE_URL}/rest/v1/user_reports`, {
         method: "POST",
@@ -1198,30 +1193,18 @@ function UserReportPanelInline({ selectedRegion, onReportSubmit }) {
         body: JSON.stringify(reportData),
       });
 
-      console.log("fetch 응답 상태:", response.status);
       const result = await response.json();
-      console.log("fetch 응답 데이터:", result);
 
       if (!response.ok) {
         throw new Error(result.message || "저장 실패");
       }
 
       const insertedData = Array.isArray(result) ? result[0] : result;
-      const error = null;
-
-      console.log("Supabase insert 결과:", { insertedData, error });
-
-      if (error) {
-        console.error("Insert 오류 상세:", error);
-        throw new Error(error.message);
-      }
 
       if (!insertedData) {
-        console.error("Insert 실패: 데이터가 반환되지 않음");
         throw new Error("저장 실패 - 권한을 확인해주세요");
       }
 
-      console.log("제보 저장 성공! ID:", insertedData.id);
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 2000);
 

@@ -14,7 +14,6 @@ function MobileBottomNav({
   selectedRegion: _selectedRegion,
 }) {
   const handleClick = (itemId) => {
-    console.log("Nav clicked:", itemId);
     onTabChange(itemId);
   };
 

@@ -24,8 +24,8 @@ export function useFavorites() {
         const session = JSON.parse(stored);
         return session?.access_token;
       }
-    } catch (e) {
-      console.error("토큰 로드 실패:", e);
+    } catch {
+      // 토큰 로드 실패 무시
     }
     return null;
   }, [accessToken]);
@@ -53,20 +53,17 @@ export function useFavorites() {
         if (response.ok) {
           const data = await response.json();
           const regions = data?.map((d) => d.region) || [];
-          console.log("즐겨찾기 로드 성공:", regions.length, "개");
           setFavorites(regions);
           // localStorage도 동기화
           localStorage.setItem(STORAGE_KEY, JSON.stringify(regions));
         } else {
-          console.error("즐겨찾기 로드 실패:", response.status);
           loadFromLocalStorage();
         }
       } else {
         // 비로그인 - localStorage 사용
         loadFromLocalStorage();
       }
-    } catch (error) {
-      console.error("즐겨찾기 로드 실패:", error);
+    } catch {
       loadFromLocalStorage();
     } finally {
       setLoading(false);
@@ -80,8 +77,8 @@ export function useFavorites() {
       if (stored) {
         setFavorites(JSON.parse(stored));
       }
-    } catch (e) {
-      console.error("localStorage 로드 실패:", e);
+    } catch {
+      // localStorage 로드 실패 무시
     }
   };
 
@@ -102,25 +99,18 @@ export function useFavorites() {
       if (isAuthenticated && user) {
         try {
           const token = getToken();
-          const response = await fetch(
-            `${SUPABASE_URL}/rest/v1/user_favorite_regions`,
-            {
-              method: "POST",
-              headers: {
-                apikey: SUPABASE_ANON_KEY,
-                Authorization: `Bearer ${token || SUPABASE_ANON_KEY}`,
-                "Content-Type": "application/json",
-                Prefer: "return=representation",
-              },
-              body: JSON.stringify({ user_id: user.id, region }),
+          await fetch(`${SUPABASE_URL}/rest/v1/user_favorite_regions`, {
+            method: "POST",
+            headers: {
+              apikey: SUPABASE_ANON_KEY,
+              Authorization: `Bearer ${token || SUPABASE_ANON_KEY}`,
+              "Content-Type": "application/json",
+              Prefer: "return=representation",
             },
-          );
-
-          if (!response.ok) {
-            console.error("Supabase 저장 실패:", response.status);
-          }
-        } catch (error) {
-          console.error("Supabase 저장 실패:", error);
+            body: JSON.stringify({ user_id: user.id, region }),
+          });
+        } catch {
+          // Supabase 저장 실패 무시 (localStorage에 이미 저장됨)
         }
       }
 
@@ -140,7 +130,7 @@ export function useFavorites() {
       if (isAuthenticated && user) {
         try {
           const token = getToken();
-          const response = await fetch(
+          await fetch(
             `${SUPABASE_URL}/rest/v1/user_favorite_regions?user_id=eq.${user.id}&region=eq.${encodeURIComponent(region)}`,
             {
               method: "DELETE",
@@ -150,12 +140,8 @@ export function useFavorites() {
               },
             },
           );
-
-          if (!response.ok) {
-            console.error("Supabase 삭제 실패:", response.status);
-          }
-        } catch (error) {
-          console.error("Supabase 삭제 실패:", error);
+        } catch {
+          // Supabase 삭제 실패 무시 (localStorage에서 이미 삭제됨)
         }
       }
 
