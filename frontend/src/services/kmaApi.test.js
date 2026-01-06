@@ -10,6 +10,7 @@ import {
   getNearbyRealtimeWeather,
   getObservationData,
   getHistorical10YearAverage,
+  getHistorical10YearMonthlyAverages,
   clearCache,
   getCacheStats,
 } from "./kmaApi";
@@ -422,6 +423,59 @@ END7777`;
       expect(result).not.toBeNull();
       expect(result.region).toBe("수원시");
       expect(result.month).toBe(1);
+    });
+  });
+
+  describe("getHistorical10YearMonthlyAverages", () => {
+    it("should return null for unknown region", async () => {
+      const result = await getHistorical10YearMonthlyAverages("알수없는지역");
+
+      expect(result).toEqual([]);
+    });
+
+    it("should return 12 months of data for valid region", async () => {
+      const mockText = `202401 119 25.5 28.0 23.0 32.0 15 18.0 25 55 4.5 12.0 10 270 100.0 50.0 5 20.0 8 10.0 3 15.0 5 180.0 2500 4 2
+END7777`;
+
+      // Mock 10 years x 12 months = 120 fetch calls
+      for (let i = 0; i < 120; i++) {
+        fetch.mockResolvedValueOnce({
+          text: () => Promise.resolve(mockText),
+        });
+      }
+
+      const result = await getHistorical10YearMonthlyAverages("수원시");
+
+      expect(Array.isArray(result)).toBe(true);
+      expect(result.length).toBe(12);
+      result.forEach((data, index) => {
+        expect(data.region).toBe("수원시");
+        expect(data.month).toBe(index + 1);
+      });
+    });
+
+    it("should handle partial failures gracefully", async () => {
+      const mockText = `202401 119 25.5 28.0 23.0 32.0 15 18.0 25 55 4.5 12.0 10 270 100.0 50.0 5 20.0 8 10.0 3 15.0 5 180.0 2500 4 2
+END7777`;
+
+      // Mock some successful and some failed responses
+      for (let month = 0; month < 12; month++) {
+        for (let year = 0; year < 10; year++) {
+          if (month < 6) {
+            fetch.mockResolvedValueOnce({
+              text: () => Promise.resolve(mockText),
+            });
+          } else {
+            fetch.mockRejectedValueOnce(new Error("Network error"));
+          }
+        }
+      }
+
+      const result = await getHistorical10YearMonthlyAverages("수원시");
+
+      expect(Array.isArray(result)).toBe(true);
+      // Should have at least the successful months
+      expect(result.length).toBeGreaterThanOrEqual(6);
     });
   });
 

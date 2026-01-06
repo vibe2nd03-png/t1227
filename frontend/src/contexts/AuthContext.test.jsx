@@ -874,5 +874,96 @@ describe("AuthContext", () => {
 
       expect(result.success).toBe(true);
     });
+
+    it("deleteMyReport should delete report when authenticated", async () => {
+      setupAuthenticatedUser();
+      fetch.mockImplementation((url, options) => {
+        if (url.includes("user_reports") && options?.method === "DELETE") {
+          return Promise.resolve({
+            ok: true,
+            status: 204,
+          });
+        }
+        // Mock for refreshReportStats calls
+        if (url.includes("user_reports") && url.includes("select=id")) {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve([{ id: "report-1" }]),
+          });
+        }
+        if (url.includes("user_reports") && url.includes("select=likes")) {
+          return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve([{ likes: 5 }]),
+          });
+        }
+        if (url.includes("user_profiles") && options?.method === "PATCH") {
+          return Promise.resolve({
+            ok: true,
+            json: () =>
+              Promise.resolve([
+                { id: "user-123", total_reports: 1, reputation_score: 11 },
+              ]),
+          });
+        }
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve([]),
+        });
+      });
+
+      let authContext;
+      function CaptureAuth() {
+        authContext = useAuth();
+        return null;
+      }
+
+      render(
+        <AuthProvider>
+          <CaptureAuth />
+        </AuthProvider>,
+      );
+
+      await waitFor(() => expect(authContext.user).not.toBeNull());
+
+      const result = await authContext.deleteMyReport("report-123");
+
+      expect(result.success).toBe(true);
+    });
+
+    it("deleteMyReport should handle delete failure", async () => {
+      setupAuthenticatedUser();
+      fetch.mockImplementation((url, options) => {
+        if (url.includes("user_reports") && options?.method === "DELETE") {
+          return Promise.resolve({
+            ok: false,
+            status: 500,
+          });
+        }
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve([]),
+        });
+      });
+
+      let authContext;
+      function CaptureAuth() {
+        authContext = useAuth();
+        return null;
+      }
+
+      render(
+        <AuthProvider>
+          <CaptureAuth />
+        </AuthProvider>,
+      );
+
+      await waitFor(() => expect(authContext.user).not.toBeNull());
+
+      const result = await authContext.deleteMyReport("report-123");
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBeDefined();
+    });
   });
 });
