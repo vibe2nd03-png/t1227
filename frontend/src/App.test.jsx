@@ -209,22 +209,6 @@ describe("App", () => {
       expect(screen.getByTestId("selected")?.textContent).toBe("성남시");
     });
   });
-
-  it("should render data source badge on desktop", async () => {
-    render(<App />);
-    await waitFor(() => {
-      const badge = document.querySelector(".data-source-badge");
-      expect(badge).toBeInTheDocument();
-    });
-  });
-
-  it("should show offline data message initially", async () => {
-    render(<App />);
-    await waitFor(() => {
-      const badge = document.querySelector(".data-source-badge");
-      expect(badge?.textContent).toContain("오프라인");
-    });
-  });
 });
 
 describe("App mobile behavior", () => {

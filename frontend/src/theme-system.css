@@ -326,11 +326,6 @@ body::after {
   color: var(--theme-text-tertiary) !important;
 }
 
-.data-source-badge {
-  background: var(--theme-bg-secondary) !important;
-  border-color: var(--theme-border) !important;
-  color: var(--theme-text-secondary) !important;
-}
 
 .modal-content,
 .air-quality-modal {
