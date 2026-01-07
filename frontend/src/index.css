@@ -292,6 +292,7 @@ body::after {
   font-weight: 700;
   letter-spacing: -0.02em;
   margin-bottom: var(--space-xs);
+  white-space: nowrap;
   background: linear-gradient(
     135deg,
     var(--text-primary) 0%,
@@ -4236,6 +4237,7 @@ a:focus-visible {
   font-family: var(--font-display);
   font-size: 1.3rem;
   font-weight: 700;
+  white-space: nowrap;
   background: linear-gradient(
     135deg,
     var(--text-primary) 0%,
