@@ -326,7 +326,6 @@ body::after {
   color: var(--theme-text-tertiary) !important;
 }
 
-
 .modal-content,
 .air-quality-modal {
   background: var(--theme-bg-secondary) !important;
