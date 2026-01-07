@@ -3,6 +3,10 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
+  // 프로덕션 빌드에서 console 제거
+  esbuild: {
+    drop: ["console", "debugger"],
+  },
   server: {
     port: 3000,
     proxy: {
@@ -13,6 +17,13 @@ export default defineConfig({
     },
   },
   build: {
+    // 프로덕션 최적화
+    target: "es2020",
+    minify: "esbuild",
+    // CSS 최적화
+    cssMinify: true,
+    // 소스맵 비활성화 (프로덕션)
+    sourcemap: false,
     rollupOptions: {
       output: {
         manualChunks: {
