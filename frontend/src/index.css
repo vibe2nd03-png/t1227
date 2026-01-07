@@ -5761,7 +5761,7 @@ a:focus-visible {
   --theme-text-primary: #1a2a3a;
   --theme-text-secondary: #4a5a6a;
   --theme-text-tertiary: #7a8a9a;
-  --theme-accent: #3b82f6;
+  --theme-accent: #2563eb;
   --theme-accent-light: rgba(59, 130, 246, 0.1);
   --theme-border: rgba(0, 0, 0, 0.08);
   --theme-shadow: rgba(0, 0, 0, 0.1);
@@ -5782,7 +5782,7 @@ a:focus-visible {
   --theme-text-primary: #064e3b;
   --theme-text-secondary: #047857;
   --theme-text-tertiary: #059669;
-  --theme-accent: #10b981;
+  --theme-accent: #047857;
   --theme-accent-light: rgba(16, 185, 129, 0.1);
   --theme-border: rgba(16, 185, 129, 0.15);
   --theme-shadow: rgba(16, 185, 129, 0.1);
@@ -5803,7 +5803,7 @@ a:focus-visible {
   --theme-text-primary: #78350f;
   --theme-text-secondary: #92400e;
   --theme-text-tertiary: #b45309;
-  --theme-accent: #f59e0b;
+  --theme-accent: #d97706;
   --theme-accent-light: rgba(245, 158, 11, 0.1);
   --theme-border: rgba(245, 158, 11, 0.2);
   --theme-shadow: rgba(245, 158, 11, 0.1);
@@ -5824,7 +5824,7 @@ a:focus-visible {
   --theme-text-primary: #7c2d12;
   --theme-text-secondary: #9a3412;
   --theme-text-tertiary: #c2410c;
-  --theme-accent: #f97316;
+  --theme-accent: #ea580c;
   --theme-accent-light: rgba(249, 115, 22, 0.1);
   --theme-border: rgba(249, 115, 22, 0.2);
   --theme-shadow: rgba(249, 115, 22, 0.1);
@@ -5845,7 +5845,7 @@ a:focus-visible {
   --theme-text-primary: #7f1d1d;
   --theme-text-secondary: #991b1b;
   --theme-text-tertiary: #b91c1c;
-  --theme-accent: #ef4444;
+  --theme-accent: #dc2626;
   --theme-accent-light: rgba(239, 68, 68, 0.1);
   --theme-border: rgba(239, 68, 68, 0.15);
   --theme-shadow: rgba(239, 68, 68, 0.1);
