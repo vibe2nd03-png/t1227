@@ -261,6 +261,7 @@ function WeatherComparisonChart({ region, climateData }) {
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
+    resizeDelay: 100, // 리사이즈 딜레이로 무한 루프 방지
     plugins: {
       legend: {
         position: "top",
@@ -286,6 +287,10 @@ function WeatherComparisonChart({ region, climateData }) {
         grid: { color: "rgba(0, 0, 0, 0.05)" },
       },
       x: { grid: { display: false } },
+    },
+    // 애니메이션 최적화
+    animation: {
+      duration: 300,
     },
   };
 
@@ -325,8 +330,8 @@ function WeatherComparisonChart({ region, climateData }) {
         ))}
       </div>
 
-      {/* 차트 영역 */}
-      <div className="chart-container">
+      {/* 차트 영역 - 고정 높이로 무한 확장 방지 */}
+      <div className="chart-container" style={{ height: "250px", maxHeight: "250px", position: "relative" }}>
         {isLoading ? (
           <div className="chart-loading">
             <span>🔄 과거 10년 데이터 로딩 중...</span>
