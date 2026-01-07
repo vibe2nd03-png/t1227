@@ -293,7 +293,6 @@ describe("App desktop interactions", () => {
       expect(screen.queryByTestId("auth-modal")).not.toBeInTheDocument();
     });
   });
-
 });
 
 describe("App mobile sheet interactions", () => {
