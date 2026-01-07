@@ -20,7 +20,7 @@ const ALERT_STYLES = {
     priority: 3,
   },
   info: {
-    backgroundColor: "#2196F3",
+    backgroundColor: "#1565C0",
     icon: "ℹ️",
     priority: 4,
   },

@@ -26,7 +26,7 @@
   /* 텍스트 계층 구조 */
   --text-primary: #f4f4f6;
   --text-secondary: #a0a0b0;
-  --text-tertiary: #505068;
+  --text-tertiary: #454560;
   --text-muted: #444455;
 
   /* 위험도 색상 - 차별화된 팔레트 */
@@ -47,7 +47,7 @@
   --risk-danger-bg: linear-gradient(135deg, #3d1020 0%, #4a1828 100%);
 
   /* 강조 색상 */
-  --accent-primary: #5558e8;
+  --accent-primary: #4f52d9;
   --accent-secondary: #8b5cf6;
   --accent-glow: rgba(99, 102, 241, 0.3);
 
