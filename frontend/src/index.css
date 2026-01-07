@@ -160,8 +160,8 @@ body::after {
    SCROLLBAR
    ───────────────────────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
 }
 
 ::-webkit-scrollbar-track {
@@ -229,29 +229,11 @@ body::after {
 /* ─────────────────────────────────────────────────────────────────────────────
    DATA SOURCE BADGE
    ───────────────────────────────────────────────────────────────────────────── */
-.data-source-badge {
-  position: fixed;
-  bottom: var(--space-lg);
-  left: var(--space-lg);
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  padding: var(--space-sm) var(--space-md);
-  background: var(--glass-bg);
-  backdrop-filter: blur(20px);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-full);
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  color: var(--text-secondary);
-  z-index: 1000;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-}
+.data-source-badge {  position: fixed;  bottom: 4px;  left: 4px;  display: flex;  align-items: center;  gap: 3px;  padding: 2px 5px;  background: rgba(0, 0, 0, 0.5);  backdrop-filter: blur(8px);  border: none;  border-radius: 4px;  font-family: var(--font-mono);  font-size: 0.5rem;  color: rgba(255, 255, 255, 0.5);  z-index: 1000;  letter-spacing: 0;  text-transform: none;  opacity: 0.6;}
 
 .source-indicator {
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
   background: var(--text-muted);
   animation: pulse 2s ease-in-out infinite;
@@ -528,8 +510,8 @@ body::after {
 
 .risk-badge::before {
   content: "";
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
   background: currentColor;
   animation: pulse 2s ease-in-out infinite;
