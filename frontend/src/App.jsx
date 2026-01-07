@@ -922,7 +922,7 @@ function App() {
   return (
     <div className={`app-container ${isMobile ? "mobile" : "desktop"}`}>
       <Suspense fallback={null}>
-        <WeatherAlertBanner />
+        <WeatherAlertBanner dataSourceText={formatDataSource()} />
       </Suspense>
 
       {/* 모바일 상단 헤더 - 항상 렌더링, CSS로 표시/숨김 제어 */}
@@ -959,25 +959,6 @@ function App() {
           </button>
         </div>
       </header>
-
-      {/* 데스크톱 데이터 출처 배지 */}
-      {!isMobile && (
-        <div className="data-source-badge">
-          <span className={`source-indicator ${dataSource}`}></span>
-          {dataSource === "kma" ? (
-            <a
-              href="https://climate.gg.go.kr"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="source-link"
-            >
-              {formatDataSource()}
-            </a>
-          ) : (
-            <span>{formatDataSource()}</span>
-          )}
-        </div>
-      )}
 
       {/* 데스크톱 위치 감지 & 커뮤니티 버튼 */}
       {!isMobile && (

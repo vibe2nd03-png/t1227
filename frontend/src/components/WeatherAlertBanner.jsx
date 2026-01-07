@@ -72,7 +72,7 @@ const getDefaultAlerts = () => {
   }
 };
 
-function WeatherAlertBanner() {
+function WeatherAlertBanner({ dataSourceText }) {
   const [alerts, setAlerts] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
@@ -190,8 +190,8 @@ function WeatherAlertBanner() {
               : currentAlert.message.slice(0, 60) +
                 (currentAlert.message.length > 60 ? "..." : "")}
           </span>
-          {currentAlert.region && (
-            <span className="alert-region">[{currentAlert.region}]</span>
+          {dataSourceText && (
+            <span className="alert-region">{dataSourceText}</span>
           )}
         </div>
 
