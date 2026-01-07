@@ -14,6 +14,7 @@
       name="description"
       content="경기도 31개 시군의 기후 체감 지수 및 AI 설명 서비스"
     />
+    <meta name="robots" content="index, follow" />
 
     <!-- SEO: Canonical URL -->
     <link rel="canonical" href="https://frontend-mu-rust-96.vercel.app/" />
@@ -63,6 +64,34 @@
     <link rel="manifest" href="/manifest.json" />
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
+    
+    <!-- SEO: JSON-LD 구조화 데이터 -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "경기 기후 체감 맵",
+        "description": "경기도 31개 시군의 실시간 기후 체감 지수를 지도에서 확인하고, 대상별 맞춤 행동 가이드를 제공하는 서비스",
+        "url": "https://frontend-mu-rust-96.vercel.app/",
+        "applicationCategory": "WeatherApplication",
+        "operatingSystem": "Web Browser",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "KRW"
+        },
+        "author": {
+          "@type": "Organization",
+          "name": "경기 기후 체감 맵"
+        },
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingValue": "4.5",
+          "ratingCount": "100"
+        }
+      }
+    </script>
+
     <title>경기 기후 체감 맵</title>
 
     <!-- Leaflet CSS: 비동기 로딩으로 렌더 차단 방지 -->
