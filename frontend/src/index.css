@@ -4443,7 +4443,7 @@ a:focus-visible {
   background: transparent;
   border: none;
   border-bottom: 2px solid transparent;
-  color: var(--text-tertiary);
+  color: #5a6270;
   font-size: 0.65rem;
   cursor: pointer;
   transition: var(--transition-fast);
