@@ -42,6 +42,11 @@ self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
+  // http/https가 아닌 요청 무시 (chrome-extension 등)
+  if (!url.protocol.startsWith("http")) {
+    return;
+  }
+
   // API 요청은 네트워크 우선
   if (
     url.pathname.startsWith("/api/") ||
