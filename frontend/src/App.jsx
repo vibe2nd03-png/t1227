@@ -904,7 +904,7 @@ function App() {
       const time = lastUpdated
         ? `${lastUpdated.slice(8, 10)}:${lastUpdated.slice(10, 12)}`
         : "";
-      return `경기기후플랫폼+기상청실시간 (${time} 관측)`;
+      return `경기기후플랫폼 (${time} 관측)`;
     } else if (dataSource === "supabase") {
       return "Supabase DB";
     }
