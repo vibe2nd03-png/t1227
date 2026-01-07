@@ -253,3 +253,111 @@ describe("App mobile behavior", () => {
     });
   });
 });
+
+describe("App desktop interactions", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    Object.defineProperty(window, "innerWidth", {
+      writable: true,
+      value: 1024,
+    });
+  });
+
+  it("should handle target change from sidebar", async () => {
+    render(<App />);
+    await waitFor(() => {
+      expect(screen.getByTestId("sidebar")).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByTestId("change-target"));
+    await waitFor(() => {
+      expect(screen.getByTestId("current-target").textContent).toBe("elderly");
+    });
+  });
+
+  it("should open auth modal from sidebar", async () => {
+    render(<App />);
+    fireEvent.click(screen.getByTestId("open-auth"));
+    await waitFor(() => {
+      expect(screen.getByTestId("auth-modal")).toBeInTheDocument();
+    });
+  });
+
+  it("should close auth modal", async () => {
+    render(<App />);
+    fireEvent.click(screen.getByTestId("open-auth"));
+    await waitFor(() => {
+      expect(screen.getByTestId("auth-modal")).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByTestId("close-auth"));
+    await waitFor(() => {
+      expect(screen.queryByTestId("auth-modal")).not.toBeInTheDocument();
+    });
+  });
+
+});
+
+describe("App mobile sheet interactions", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    Object.defineProperty(window, "innerWidth", {
+      writable: true,
+      value: 375,
+    });
+    window.dispatchEvent(new Event("resize"));
+  });
+
+  it("should show mobile sheet when region is selected", async () => {
+    render(<App />);
+    fireEvent.click(screen.getByTestId("select-region"));
+    await waitFor(() => {
+      expect(screen.getByTestId("mobile-sheet")).toBeInTheDocument();
+    });
+  });
+
+  it("should close mobile sheet", async () => {
+    render(<App />);
+    fireEvent.click(screen.getByTestId("select-region"));
+    await waitFor(() => {
+      expect(screen.getByTestId("mobile-sheet")).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByTestId("close-sheet"));
+    await waitFor(() => {
+      expect(screen.queryByTestId("mobile-sheet")).not.toBeInTheDocument();
+    });
+  });
+
+  it("should handle tab change to info", async () => {
+    render(<App />);
+    fireEvent.click(screen.getByTestId("tab-info"));
+    await waitFor(() => {
+      expect(screen.getByTestId("active-tab").textContent).toBe("info");
+    });
+  });
+});
+
+describe("App window resize", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should respond to window resize from desktop to mobile", async () => {
+    Object.defineProperty(window, "innerWidth", {
+      writable: true,
+      value: 1024,
+    });
+    render(<App />);
+    await waitFor(() => {
+      const container = document.querySelector(".app-container");
+      expect(container?.classList.contains("desktop")).toBe(true);
+    });
+    Object.defineProperty(window, "innerWidth", {
+      writable: true,
+      value: 375,
+    });
+    window.dispatchEvent(new Event("resize"));
+    await waitFor(() => {
+      const container = document.querySelector(".app-container");
+      expect(container?.classList.contains("desktop")).toBe(false);
+    });
+  });
+});
