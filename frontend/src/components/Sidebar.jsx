@@ -1,22 +1,26 @@
 import React, { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import { createPortal } from "react-dom";
-import HourlyForecast from "./HourlyForecast";
-import WeeklyClimateCalendar from "./WeeklyClimateCalendar";
 import FavoriteRegions from "./FavoriteRegions";
 import { useAuth } from "../contexts/AuthContext";
 import { useFavorites } from "../hooks/useFavorites";
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from "../supabase";
-import {
-  getWeatherType,
-  getRandomMessage,
-  getStyleTip,
-  getEmojiSet,
-} from "../data/clothingRecommendations";
 
 // 무거운 컴포넌트 지연 로딩 (탭/모달별 분리)
 const UserProfile = lazy(() => import("./UserProfile"));
 const NotificationManager = lazy(() => import("./NotificationManager"));
 const WeatherComparisonChart = lazy(() => import("./WeatherComparisonChart"));
+// 기후정보 탭 컴포넌트 지연 로딩
+const HourlyForecast = lazy(() => import("./HourlyForecast"));
+const WeeklyClimateCalendar = lazy(() => import("./WeeklyClimateCalendar"));
+
+// 옷차림 추천 데이터 동적 로딩
+let clothingModule = null;
+const loadClothingRecommendations = async () => {
+  if (!clothingModule) {
+    clothingModule = await import("../data/clothingRecommendations");
+  }
+  return clothingModule;
+};
 
 // 로딩 폴백 컴포넌트
 const LoadingFallback = () => <div className="lazy-loading">로딩 중...</div>;
@@ -840,7 +844,7 @@ function OotdGeneratorInline({ selectedRegion }) {
     return outfits[tempCategory][styleValue] || outfits[tempCategory].casual;
   };
 
-  const generateOutfit = () => {
+  const generateOutfit = async () => {
     if (!selectedRegion?.climate_data) return;
 
     setIsGenerating(true);
@@ -848,6 +852,11 @@ function OotdGeneratorInline({ selectedRegion }) {
 
     const climate = selectedRegion.climate_data;
     const temp = climate.apparent_temperature || climate.temperature || 25;
+
+    // 옷차림 추천 데이터 동적 로딩 (필요할 때만 로드)
+    const clothingData = await loadClothingRecommendations();
+    const { getWeatherType, getRandomMessage, getStyleTip, getEmojiSet } =
+      clothingData;
 
     // 날씨 타입 및 맞춤 메시지 가져오기
     const weatherType = getWeatherType(temp);
