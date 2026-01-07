@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -35,18 +35,20 @@ const CHART_TYPES = [
   { id: "uv", label: "자외선", unit: "UV", color: "#9966FF" },
 ];
 
+// 날짜 값을 컴포넌트 외부에서 한 번만 계산 (리렌더링 방지)
+const TODAY = new Date();
+const CURRENT_YEAR = TODAY.getFullYear();
+const CURRENT_MONTH = TODAY.getMonth() + 1;
+const CURRENT_DATE = TODAY.getDate();
+const MONTH_DAY = `${String(CURRENT_MONTH).padStart(2, "0")}${String(CURRENT_DATE).padStart(2, "0")}`;
+const YEARS = Array.from({ length: 10 }, (_, i) => CURRENT_YEAR - 9 + i);
+
 function WeatherComparisonChart({ region, climateData }) {
   const [activeChart, setActiveChart] = useState("temperature");
   const [historicalData, setHistoricalData] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-
-  const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 10 }, (_, i) => currentYear - 9 + i); // 10년 전부터 올해까지
-
-  // 오늘 날짜 (MMDD)
-  const today = new Date();
-  const monthDay = `${String(today.getMonth() + 1).padStart(2, "0")}${String(today.getDate()).padStart(2, "0")}`;
+  const chartRef = useRef(null);
 
   // 연도별 오늘 날짜 데이터 로드
   useEffect(() => {
@@ -60,9 +62,9 @@ function WeatherComparisonChart({ region, climateData }) {
 
       try {
         // 각 연도의 오늘 날짜 데이터 조회 (병렬)
-        const promises = years.map(async (year) => {
-          const startTime = `${year}${monthDay}0000`;
-          const endTime = `${year}${monthDay}2300`;
+        const promises = YEARS.map(async (year) => {
+          const startTime = `${year}${MONTH_DAY}0000`;
+          const endTime = `${year}${MONTH_DAY}2300`;
 
           try {
             const data = await getSurfaceDataPeriod(
@@ -101,7 +103,7 @@ function WeatherComparisonChart({ region, climateData }) {
     };
 
     loadHistoricalData();
-  }, [region, monthDay]);
+  }, [region]);
 
   // 시정으로 미세먼지 추정
   const estimatePM = (visibility) => {
@@ -122,15 +124,15 @@ function WeatherComparisonChart({ region, climateData }) {
     return uvByMonth[month] || 3;
   };
 
-  // 차트 데이터 생성
+  // 차트 데이터 생성 (안정적인 의존성만 사용)
   const chartData = useMemo(() => {
     if (historicalData.length === 0) return null;
 
     // 올해 데이터 추가 (현재 기상 데이터)
     const allData = [...historicalData];
-    if (climateData && !allData.find((d) => d.year === currentYear)) {
+    if (climateData && !allData.find((d) => d.year === CURRENT_YEAR)) {
       allData.push({
-        year: currentYear,
+        year: CURRENT_YEAR,
         temperature: climateData.temperature,
         humidity: climateData.humidity,
         visibility: climateData.visibility,
@@ -145,7 +147,7 @@ function WeatherComparisonChart({ region, climateData }) {
         labels: finalLabels,
         datasets: [
           {
-            label: `${today.getMonth() + 1}월 ${today.getDate()}일 온도`,
+            label: `${CURRENT_MONTH}월 ${CURRENT_DATE}일 온도`,
             data: sortedData.map((d) => d.temperature),
             borderColor: "#FF6384",
             backgroundColor: "rgba(255, 99, 132, 0.2)",
@@ -153,10 +155,10 @@ function WeatherComparisonChart({ region, climateData }) {
             tension: 0.3,
             pointRadius: 6,
             pointBackgroundColor: sortedData.map((d) =>
-              d.year === currentYear ? "#FF6384" : "rgba(255, 99, 132, 0.6)",
+              d.year === CURRENT_YEAR ? "#FF6384" : "rgba(255, 99, 132, 0.6)",
             ),
             pointBorderWidth: sortedData.map((d) =>
-              d.year === currentYear ? 3 : 1,
+              d.year === CURRENT_YEAR ? 3 : 1,
             ),
           },
         ],
@@ -165,7 +167,7 @@ function WeatherComparisonChart({ region, climateData }) {
         labels: finalLabels,
         datasets: [
           {
-            label: `${today.getMonth() + 1}월 ${today.getDate()}일 습도`,
+            label: `${CURRENT_MONTH}월 ${CURRENT_DATE}일 습도`,
             data: sortedData.map((d) => d.humidity),
             borderColor: "#36A2EB",
             backgroundColor: "rgba(54, 162, 235, 0.2)",
@@ -173,10 +175,10 @@ function WeatherComparisonChart({ region, climateData }) {
             tension: 0.3,
             pointRadius: 6,
             pointBackgroundColor: sortedData.map((d) =>
-              d.year === currentYear ? "#36A2EB" : "rgba(54, 162, 235, 0.6)",
+              d.year === CURRENT_YEAR ? "#36A2EB" : "rgba(54, 162, 235, 0.6)",
             ),
             pointBorderWidth: sortedData.map((d) =>
-              d.year === currentYear ? 3 : 1,
+              d.year === CURRENT_YEAR ? 3 : 1,
             ),
           },
         ],
@@ -208,8 +210,8 @@ function WeatherComparisonChart({ region, climateData }) {
         labels: finalLabels,
         datasets: [
           {
-            label: `${today.getMonth() + 1}월 자외선지수 (추정)`,
-            data: sortedData.map(() => estimateUV(today.getMonth())),
+            label: `${CURRENT_MONTH}월 자외선지수 (추정)`,
+            data: sortedData.map(() => estimateUV(CURRENT_MONTH - 1)),
             borderColor: "#9966FF",
             backgroundColor: "rgba(153, 102, 255, 0.2)",
             fill: true,
@@ -219,7 +221,7 @@ function WeatherComparisonChart({ region, climateData }) {
         ],
       },
     };
-  }, [historicalData, climateData, currentYear, today]);
+  }, [historicalData, climateData]);
 
   // 통계 계산
   const stats = useMemo(() => {
@@ -258,41 +260,42 @@ function WeatherComparisonChart({ region, climateData }) {
     };
   }, [historicalData, climateData]);
 
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    resizeDelay: 100, // 리사이즈 딜레이로 무한 루프 방지
-    plugins: {
-      legend: {
-        position: "top",
-        labels: { boxWidth: 12, padding: 8, font: { size: 11 } },
-      },
-      tooltip: {
-        callbacks: {
-          label: (context) => {
-            const value = context.parsed.y;
-            if (value === null) return null;
-            let unit = "";
-            if (activeChart === "temperature") unit = "°C";
-            else if (activeChart === "humidity") unit = "%";
-            else if (activeChart === "pm") unit = "μg/m³";
-            return `${context.dataset.label}: ${value}${unit}`;
+  // chartOptions를 useMemo로 메모이제이션 (무한 리렌더링 방지)
+  const chartOptions = useMemo(
+    () => ({
+      responsive: true,
+      maintainAspectRatio: false,
+      resizeDelay: 200,
+      plugins: {
+        legend: {
+          position: "top",
+          labels: { boxWidth: 12, padding: 8, font: { size: 11 } },
+        },
+        tooltip: {
+          callbacks: {
+            label: (context) => {
+              const value = context.parsed.y;
+              if (value === null) return null;
+              let unit = "";
+              if (activeChart === "temperature") unit = "°C";
+              else if (activeChart === "humidity") unit = "%";
+              else if (activeChart === "pm") unit = "μg/m³";
+              return `${context.dataset.label}: ${value}${unit}`;
+            },
           },
         },
       },
-    },
-    scales: {
-      y: {
-        beginAtZero: activeChart !== "temperature",
-        grid: { color: "rgba(0, 0, 0, 0.05)" },
+      scales: {
+        y: {
+          beginAtZero: activeChart !== "temperature",
+          grid: { color: "rgba(0, 0, 0, 0.05)" },
+        },
+        x: { grid: { display: false } },
       },
-      x: { grid: { display: false } },
-    },
-    // 애니메이션 최적화
-    animation: {
-      duration: 300,
-    },
-  };
+      animation: false, // 애니메이션 비활성화로 리사이즈 문제 방지
+    }),
+    [activeChart],
+  );
 
   if (!region || !climateData) {
     return (
@@ -312,7 +315,7 @@ function WeatherComparisonChart({ region, climateData }) {
       <div className="chart-header">
         <h3>📊 {region} 10년 비교</h3>
         <span className="chart-date">
-          {today.getMonth() + 1}월 {today.getDate()}일 기준
+          {CURRENT_MONTH}월 {CURRENT_DATE}일 기준
         </span>
       </div>
 
@@ -331,7 +334,16 @@ function WeatherComparisonChart({ region, climateData }) {
       </div>
 
       {/* 차트 영역 - 고정 높이로 무한 확장 방지 */}
-      <div className="chart-container" style={{ height: "250px", maxHeight: "250px", position: "relative" }}>
+      <div
+        className="chart-container"
+        style={{
+          height: "250px",
+          maxHeight: "250px",
+          minHeight: "250px",
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
         {isLoading ? (
           <div className="chart-loading">
             <span>🔄 과거 10년 데이터 로딩 중...</span>
@@ -341,7 +353,12 @@ function WeatherComparisonChart({ region, climateData }) {
             <span>⚠️ {error}</span>
           </div>
         ) : chartData ? (
-          <Line data={chartData[activeChart]} options={chartOptions} />
+          <Line
+            ref={chartRef}
+            key={`chart-${activeChart}-${region}`}
+            data={chartData[activeChart]}
+            options={chartOptions}
+          />
         ) : (
           <div className="chart-loading">
             <span>데이터 없음</span>
@@ -401,8 +418,8 @@ function WeatherComparisonChart({ region, climateData }) {
       {/* 데이터 출처 */}
       <div className="data-source-note">
         <span>
-          📌 기상청 API 허브 - 연도별 {today.getMonth() + 1}월 {today.getDate()}
-          일 12시 관측자료
+          📌 기상청 API 허브 - 연도별 {CURRENT_MONTH}월 {CURRENT_DATE}일 12시
+          관측자료
         </span>
         <a
           href="https://apihub.kma.go.kr"
